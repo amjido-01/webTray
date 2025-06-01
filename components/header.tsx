@@ -1,20 +1,17 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import logo from "@/public/logo.svg";
+import Image from "next/image";
 
 export default function Header() {
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm"></div>
-            </div>
-            <span className="text-xl font-semibold text-gray-900">WebTray</span>
+          <div className="">
+            <Image className=" object-cover " src={logo} alt="log image" />
           </div>
 
-          {/* Navigation */}
           <nav className="hidden text-[#4D4D4D] md:flex space-x-8">
             <Link className="font-medium text-[16px] hover:text-[#1A1A1A]" href="#">
               Feature
@@ -27,10 +24,9 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Actions */}
           <div className="flex items-center space-x-4">
-            <Button variant="link" className=" cursor-pointer font-medium text-[16px] hover:text-[#1A1A1A]">Sign In</Button>
-            <Button className=" hover:bg-[#30343e] cursor-pointer rounded-full bg-[#111827] font-medium text-[16px] text-[#FFFFFF] px-[16px] py-[14px]">Get Started for Free</Button>
+            <Button size="lg" variant="link" className=" cursor-pointer font-medium text-[16px] hover:text-[#1A1A1A]">Sign In</Button>
+            <Button size="lg" className=" hover:bg-[#30343e] cursor-pointer rounded-full bg-[#111827] font-medium text-[16px] text-[#FFFFFF] px-[16px] py-[14px]">Get Started for Free</Button>
           </div>
         </div>
       </div>
