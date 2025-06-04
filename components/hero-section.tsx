@@ -27,9 +27,9 @@ export default function Hero() {
               Contact for Enquiries
             </Button>
           </div>
-        <Image className="absolute w-[300px] h-[300px] -left-5 border-2 top-22" src={confeti_left} alt="confeti" />
+        <Image className="absolute w-[300px] h-[300px] -left-5 top-22" src={confeti_left} alt="confeti" />
 
-        <Image className="absolute w-[300px] h-[300px] -right-5 border-2 top-22" src={confeti_right} alt="confeti" />
+        <Image className="absolute w-[300px] h-[300px] -right-5 top-22" src={confeti_right} alt="confeti" />
 
         </div>
 
