@@ -3,11 +3,10 @@
 import * as React from "react"
 import {
   IconChartBar,
-  IconDashboard,
   IconFolder,
-  IconInnerShadowTop,
-  IconListDetails,
   IconUsers,
+  IconLayoutDashboard,
+  IconPackage
 } from "@tabler/icons-react"
 
 // import { NavDocuments } from "@/components/nav-documents"
@@ -22,11 +21,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import logo from "@/public/logo.svg";
+import Image from "next/image"
 
 const data = {
   user: {
-    name: "shadcn",
+    name: "Ala Jido",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
@@ -34,31 +35,31 @@ const data = {
     {
       title: "Dashboard",
       url: "/dashboard",
-      icon: IconDashboard,
+      icon: IconLayoutDashboard,
     },
     {
       title: "Inventory",
-      url: "dashboard/inventory",
-      icon: IconListDetails,
+      url: "/dashboard/inventory",
+      icon: IconPackage,
     },
     {
       title: "Order",
-      url: "#",
+      url: "/dashboard/order",
       icon: IconChartBar,
     },
     {
       title: "Storefront",
-      url: "#",
+      url: "/dashboard/storefront",
       icon: IconFolder,
     },
     {
       title: "Customer",
-      url: "#",
+      url: "/dashboard/customer",
       icon: IconUsers,
     },
     {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard/analytics",
       icon: IconUsers,
     },
   ],
@@ -66,8 +67,8 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+    <Sidebar className="" collapsible="offcanvas" {...props}>
+      <SidebarHeader className="my-[30px]">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -75,8 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <Image src={logo} alt="logo" />
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
