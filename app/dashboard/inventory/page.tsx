@@ -1,26 +1,52 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+"use client";
 import ProductsTable from "@/components/products-table";
-import SalesDashboard from "@/components/sales-dashboard"
+ import { InventoryManagement } from "@/components/inventory-management";
+import { TrendingDown, TrendingUp, Package } from "lucide-react";
+import { StatCard } from "@/components/stat-card";
+
+const stats = [
+  {
+    title: "Products",
+    icon: <Package className="h-4 w-4 text-muted-foreground" />,
+    value: 64,
+    note: "+4 new this week",
+    minWidth: "min-w-[150px]",
+  },
+  {
+    title: "Low Stock Items",
+    icon: <TrendingDown className="h-4 w-4 text-red-500" />,
+    value: "+2,350",
+    note: "Need Attention",
+    noteColor: "text-red-500",
+  },
+  {
+    title: "Total Value",
+    icon: <TrendingUp className="h-4 w-4 text-green-500" />,
+    value: "N200,000",
+    note: "Inventory Value",
+  },
+  {
+    title: "Category",
+    icon: <Package className="h-4 w-4 text-muted-foreground" />,
+    value: 6,
+    note: "Product Categories",
+  },
+];
+
 export default function Page() {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex justify-between items-center">
-        <div className="text-[#4D4D4D]">
-          <h2 className=" font-bold text-[20px] mb-2 leading-6">Inventory Management</h2>
-          <p className=" font-normal text-[16px] leading-6">Manage your products and track stock levels</p>
+      <InventoryManagement />
+      <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {stats.map((stat, i) => (
+                <StatCard key={i} {...stat} />
+              ))}
+            </div>
+          <ProductsTable />
         </div>
-        <Button className="rounded-full">
-          <Plus />
-          Add Product
-          </Button>
       </div>
-        <div className="@container/main flex flex-1 flex-col gap-2">
-           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SalesDashboard />
-              <ProductsTable />
-             </div>
-        </div>
     </div>
-  )
+  );
 }

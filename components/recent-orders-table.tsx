@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { CreateOrderModal } from "./add-order-modal";
+import { ModalForm } from "./modal-form";
 
 interface Order {
   id: string;
@@ -31,7 +31,7 @@ const getStatusColor = (status: string) => {
 };
 
 export function RecentOrdersTable({ data }: DataTableProps) {
-  const [isAddStoreModalOpen, setIsAddStoreModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="">
@@ -46,7 +46,7 @@ export function RecentOrdersTable({ data }: DataTableProps) {
             </div>
             <Button
               size="sm"
-              onClick={() => setIsAddStoreModalOpen(true)}
+              onClick={() => setIsOpen(true)}
               className="rounded-full"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -94,9 +94,34 @@ export function RecentOrdersTable({ data }: DataTableProps) {
             </div>
           </CardContent>
         </Card>
-        <CreateOrderModal
-          isOpen={isAddStoreModalOpen}
-          onOpenChange={setIsAddStoreModalOpen}
+        <ModalForm
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+          title="Create Order"
+          submitLabel="Create Order"
+          onSubmit={(data) => console.log("Order:", data)}
+          fields={[
+            {
+              id: "customerName",
+              label: "Customer Name",
+              placeholder: "Enter your customer name",
+              required: true,
+            },
+            {
+              id: "price",
+              label: "Price",
+              type: "currency",
+              placeholder: "Enter price",
+              required: true,
+            },
+            {
+              id: "status",
+              label: "Status",
+              type: "select",
+              options: ["Processing", "Pending", "Completed"],
+              required: true,
+            },
+          ]}
         />
       </div>
     </div>
