@@ -23,7 +23,7 @@ export default function DashboardLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <main className="flex flex-1 overflow-auto flex-col p-4">{children}</main>
+        <main className="flex flex-1 overflow-auto flex-col p-4 bg-[#F8F8F8]">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )
