@@ -2,7 +2,7 @@ import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 
-export default function Component() {
+export default function SearchComponent() {
   return (
     <div className="w-[363px]">
       <div className="relative">

@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function SalesDashboard() {
   return (
-    <div className="p-4 w-full">
-      <div className="flex flex-wrap gap-4">
+    <div className="py-4 w-full">
+      <div className="flex flex-wrap gap-2">
         <Card className="flex-1 min-w-[150px] bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Products</CardTitle>
