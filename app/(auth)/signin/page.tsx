@@ -14,15 +14,13 @@ import { Label } from "@/components/ui/label"
 import logo from "@/public/logo.svg"
 
 const schema = yup.object().shape({
-  fullName: yup.string().required("Full Name is required"),
-  businessName: yup.string().required("Business Name is required"),
   email: yup.string().email("Invalid email address").required("Email is required"),
-  password: yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
+  password: yup.string().required("Password is required"),
 })
 
 type FormData = yup.InferType<typeof schema>
 
-export default function SignUpPage() {
+export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
 
@@ -35,25 +33,20 @@ export default function SignUpPage() {
   } = useForm<FormData>({
     resolver: yupResolver(schema),
   })
-  
-  const watchedFields = watch() // 👈 get all field values
 
-const isFormFilled =
-  watchedFields.fullName?.trim() &&
-  watchedFields.businessName?.trim() &&
-  watchedFields.email?.trim() &&
-  watchedFields.password?.trim()
+  const watchedFields = watch()
 
+  const isFormFilled = watchedFields.email?.trim() && watchedFields.password?.trim()
 
   const onSubmit = async (data: FormData) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Submitted Data:", data)
+      console.log("Login Data:", data)
       setSubmitSuccess(true)
       reset()
       setTimeout(() => setSubmitSuccess(false), 2000)
     } catch (error) {
-      console.error("Submission error:", error)
+      console.error("Login error:", error)
     }
   }
 
@@ -62,47 +55,24 @@ const isFormFilled =
       <main className="flex-grow grid md:grid-cols-2">
         <div className="bg-white p-6 md:p-10 flex items-center justify-center">
           <div className="w-full max-w-md">
-           <div className="mb-[40px]">
-            <Image src={logo} alt="logo" />
-           </div>
+            <div className="mb-[40px]">
+              <Image src={logo} alt="logo" />
+            </div>
 
             <div className="mb-[18px]">
               <h2 className="text-[20px] leading-[24px] font-bold text-[#4D4D4D] mb-2">
-                Take Control of Your Business, All from One Place
+                Let’s Get Back to Business
               </h2>
               <p className="text-[#676767] text-[14px] leading-[22px]">
-                Sign up to build your online store, manage your inventory, and start accepting orders — without juggling
-                five different tools.
+                Access your dashboard to manage inventory, track orders, and grow your sales — all in one place.
               </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <Label className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px] font-normal" htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  placeholder="Enter your full name"
-                  {...register("fullName")}
-                  aria-invalid={!!errors.fullName}
-                  className="h-[44px] shadow-none text-[14px] leading-[24px] text-[#1A1A1A]"
-                />
-                {errors.fullName && <p className="text-sm mt-[8px] text-red-600">{errors.fullName.message}</p>}
-              </div>
-
-              <div>
-                <Label  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px] font-normal" htmlFor="businessName">Business Name</Label>
-                <Input
-                  id="businessName"
-                  placeholder="Enter your business name"
-                  {...register("businessName")}
-                  aria-invalid={!!errors.businessName}
-                  className="h-[44px] shadow-none text-[14px] leading-[24px] text-[#1A1A1A]"
-                />
-                {errors.businessName && <p className="text-sm mt-[8px] text-red-600">{errors.businessName.message}</p>}
-              </div>
-
-              <div>
-                <Label  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px] font-normal" htmlFor="email">Email Address</Label>
+                <Label className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]" htmlFor="email">
+                  Email Address
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -115,7 +85,9 @@ const isFormFilled =
               </div>
 
               <div>
-                <Label  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px] font-normal" htmlFor="password">Password</Label>
+                <Label className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]" htmlFor="password">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -139,7 +111,7 @@ const isFormFilled =
 
               {submitSuccess && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-                  Your account has been created successfully!
+                  Logged in successfully!
                 </div>
               )}
 
@@ -149,21 +121,21 @@ const isFormFilled =
                 disabled={isSubmitting || !isFormFilled}
                 className="w-full md:w-1/2 py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
               >
-                {isSubmitting ? "Creating Account..." : "Create My Business Account"}
+                {isSubmitting ? "Logging in..." : "Login to Dashboard"}
               </Button>
             </form>
 
             <p className="text-sm leading-[22px] font-normal text-[#676767]">
-              Already have an account?{" "}
-              <Link href="/signin" className="text-[#365BEB] hover:text-blue-700 font-medium">
-                Login
+              Don’t have an account?{" "}
+              <Link href="/signup" className="text-[#365BEB] hover:text-blue-700 font-medium">
+                Create one
               </Link>
             </p>
           </div>
         </div>
 
         <div className="hidden md:block relative">
-          <Image src="/register_img.png" alt="Business owner using tablet" fill className="object-cover" priority />
+          <Image src="/login.png" alt="User logging in" fill className="object-cover" priority />
         </div>
       </main>
     </div>
