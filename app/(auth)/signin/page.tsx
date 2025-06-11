@@ -7,6 +7,8 @@ import { Eye, EyeOff } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,8 +23,12 @@ const schema = yup.object().shape({
 type FormData = yup.InferType<typeof schema>
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+
+  console.log(process.env.NEXT_PUBLIC_API_BASE_URL)
 
   const {
     register,
@@ -40,11 +46,10 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Login Data:", data)
+      await login(data)
       setSubmitSuccess(true)
       reset()
-      setTimeout(() => setSubmitSuccess(false), 2000)
+      router.push("/dashboard")
     } catch (error) {
       console.error("Login error:", error)
     }
