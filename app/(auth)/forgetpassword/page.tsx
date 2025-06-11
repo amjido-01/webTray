@@ -2,8 +2,6 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import { EyeOff, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import logo from "@/public/logo.svg";
@@ -11,10 +9,6 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 
 export default function Component() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [showError, setShowError] = useState(true);
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -41,7 +35,7 @@ export default function Component() {
               className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]"
               htmlFor="email"
             >
-             Email Address (registered email)
+              Email Address (registered email)
             </Label>
             <Input
               id="email"
@@ -50,12 +44,6 @@ export default function Component() {
               className="h-[44px] mt-2 shadow-none text-[14px] leading-[24px] text-[#1A1A1A]"
             />
           </div>
-
-          {submitSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-              Logged in successfully!
-            </div>
-          )}
 
           {/* Verify Button */}
           <div className="flex items-center justify-center">

@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import {  EyeOff, Eye } from "lucide-react";
+import { EyeOff, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import logo from "@/public/logo.svg";
@@ -11,15 +11,7 @@ import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 
 export default function Component() {
-    const [showPassword, setShowPassword] = useState(false)
-    const [submitSuccess, setSubmitSuccess] = useState(false)
-  const [showError, setShowError] = useState(true);
-
-  
-      // Auto-focus next input
- 
-
-
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -32,17 +24,16 @@ export default function Component() {
 
       {/* Main Content */}
       <div className="flex-col flex items-center justify-start w-[30%] mx-auto ">
-
         <div className="mb-[18px]">
           <h2 className="text-[20px] leading-[24px] text-center font-bold text-[#4D4D4D] mb-2">
-           Set a Fresh, Secure Password
+            Set a Fresh, Secure Password
           </h2>
           <p className="text-[#676767] text-center text-[14px] leading-[22px]">
-           Create a new password to access your business dashboard, make it something strong but easy for you to remember.
+            Create a new password to access your business dashboard, make it
+            something strong but easy for you to remember.
           </p>
         </div>
-        <form  className="space-y-10 w-full ">
-        
+        <form className="space-y-10 w-full ">
           <div>
             <Label
               className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]"
@@ -55,9 +46,7 @@ export default function Component() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-              
                 className="pr-10 shadow-none h-[44px]"
-              
               />
               <button
                 type="button"
@@ -68,7 +57,6 @@ export default function Component() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          
           </div>
           <div>
             <Label
@@ -82,9 +70,7 @@ export default function Component() {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-              
                 className="pr-10 shadow-none h-[44px]"
-              
               />
               <button
                 type="button"
@@ -95,33 +81,27 @@ export default function Component() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          
           </div>
 
-          {submitSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
-              Logged in successfully!
-            </div>
-          )}
+          {/* Verify Button */}
+          <div className="flex items-center justify-center">
+            <Button
+              className=" px-10 bg-[#111827] hover:bg-slate-900 text-white  rounded-full text-[16px] "
+              size="lg"
+            >
+              Reset Password
+            </Button>
+          </div>
 
-        
-                  {/* Verify Button */}
-                  <div className="flex items-center justify-center">
-                    <Button
-                      className=" px-10 bg-[#111827] hover:bg-slate-900 text-white  rounded-full text-[16px] "
-                      size="lg"
-                    >
-                      Reset Password
-                    </Button>
-                  </div>
-        
-                  {/* Resend Link */}
-                  <div className="text-center">
-                    <p className="text-gray-600">
-                      {"Didn't receive code? "}
-                      <button className="text-blue-600 hover:text-blue-800 font-medium">Resend</button>
-                    </p>
-                  </div>
+          {/* Resend Link */}
+          <div className="text-center">
+            <p className="text-gray-600">
+              {"Didn't receive code? "}
+              <button className="text-blue-600 hover:text-blue-800 font-medium">
+                Resend
+              </button>
+            </p>
+          </div>
         </form>
       </div>
     </div>
