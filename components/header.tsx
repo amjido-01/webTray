@@ -1,9 +1,13 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import logo from "@/public/logo.svg";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const router = useRouter()
   return (
     <header className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,8 +29,8 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button size="lg" variant="link" className=" cursor-pointer font-medium text-[16px] hover:text-[#1A1A1A]">Sign In</Button>
-            <Button size="lg" className=" hover:bg-[#30343e] cursor-pointer rounded-full bg-[#111827] font-medium text-[16px] text-[#FFFFFF] px-[16px] py-[14px]">Get Started for Free</Button>
+            <Button  onClick={() => router.push("/signin")} size="lg" variant="link" className=" cursor-pointer font-medium text-[16px] hover:text-[#1A1A1A]">Sign In</Button>
+            <Button  onClick={() => router.push("/signup")} size="lg" className=" hover:bg-[#30343e] cursor-pointer rounded-full bg-[#111827] font-medium text-[16px] text-[#FFFFFF] px-[16px] py-[14px]">Get Started for Free</Button>
           </div>
         </div>
       </div>

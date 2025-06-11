@@ -19,6 +19,11 @@ interface RegisterPayload {
   password: string;
 }
 
+interface VerifyOtpPayload {
+  otp: string;
+  email: string;
+}
+
 interface LoginPayload {
   email: string;
   password: string;
@@ -30,12 +35,12 @@ interface AuthState {
   loading: boolean;
   isLoggedIn: () => boolean;
   login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<string>;
+  verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   refreshToken: () => Promise<void>;
 }
-
 
 export const useAuthStore = create(
   persist<AuthState>(
@@ -51,16 +56,41 @@ export const useAuthStore = create(
       register: async (payload: RegisterPayload) => {
         try {
           const response = await api.post("/api/v1/auth/register", payload);
-          const { user, accessToken } =
-            response.data.responseBody;
-          set({ user, accessToken });
+
+          const { responseSuccessful, responseMessage } = response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "Registration failed");
+          }
+
+          return payload.email;
+        } catch (error) {
+          console.error("Registration failed:", error);
+          throw error;
+        }
+      },
+
+      verifyOtp: async (payload) => {
+        try {
+          const response = await api.post("/api/v1/auth/verify", payload);
+          const { responseSuccessful, responseBody, responseMessage } =
+            response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "OTP verification failed");
+          }
+
+          const { user, accessToken, refreshToken } = responseBody;
+
+          // Update headers for authenticated requests
           api.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${accessToken}`;
 
-          // Note: We don't set tokens here as they're typically not provided upon registration
+          // Update store
+          set({ user, accessToken, refreshToken });
         } catch (error) {
-          console.error("Registration failed:", error);
+          console.error("OTP verification error:", error);
           throw error;
         }
       },

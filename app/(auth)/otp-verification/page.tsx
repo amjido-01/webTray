@@ -1,47 +1,74 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { X, AlertTriangle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import Image from "next/image"
-import logo from "@/public/logo.svg"
-
+import { useState } from "react";
+import { X, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
+import logo from "@/public/logo.svg";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Component() {
-  const [code, setCode] = useState(["", "", "", "", ""])
-  const [showError, setShowError] = useState(true)
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const router = useRouter();
+  const { verifyOtp } = useAuthStore();
+
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [showError, setShowError] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (index: number, value: string) => {
     if (value.length <= 1) {
-      const newCode = [...code]
-      newCode[index] = value
-      setCode(newCode)
+      const newCode = [...code];
+      newCode[index] = value;
+      setCode(newCode);
 
-      // Auto-focus next input
-      if (value && index < 4) {
-        const nextInput = document.getElementById(`code-${index + 1}`)
-        nextInput?.focus()
+      if (value && index < code.length - 1) {
+        const nextInput = document.getElementById(`code-${index + 1}`);
+        nextInput?.focus();
       }
     }
-  }
+  };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !code[index] && index > 0) {
-      const prevInput = document.getElementById(`code-${index - 1}`)
-      prevInput?.focus()
+      const prevInput = document.getElementById(`code-${index - 1}`);
+      prevInput?.focus();
     }
-  }
+  };
+
+
+   const handleVerify = async () => {
+    if (!email) return;
+    const otp = code.join("");
+
+    if (otp.length !== 6) {
+      setShowError(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await verifyOtp({ email, otp });
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Registration failed:", error);
+      setShowError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <div className="p-4">
         <div className="flex items-center gap-2">
-      <Image src={logo} alt="logo"/>
-        
+          <Image src={logo} alt="logo" />
         </div>
       </div>
 
@@ -52,11 +79,12 @@ export default function Component() {
           {showError && (
             <Alert className="bg-[#FDE8E8] p-6 relative">
               <div className=" bg-[#FAC8C8] p-1   rounded-full absolute top-1/3 left-2">
-
-              <AlertTriangle className="h-4 w-4 text-[#EF4444] " />
+                <AlertTriangle className="h-4 w-4 text-[#EF4444] " />
               </div>
               <AlertDescription className=" pl-4 text-[#1A1A1A] text-[14px]">
-                {"Oops, that code doesn't match. Try again or request a new one."}
+                {
+                  "Oops, that code doesn't match. Try again or request a new one."
+                }
               </AlertDescription>
               <Button
                 variant="ghost"
@@ -64,7 +92,6 @@ export default function Component() {
                 className="absolute right-2 top-1/16 h-6 w-6 p-0 text-[#141B34] bg-[#FAFAFA] rounded-full hover:text-red-800 hover:bg-red-100"
                 onClick={() => setShowError(false)}
               >
-                
                 <X className="h-4 w-4" />
               </Button>
             </Alert>
@@ -72,9 +99,13 @@ export default function Component() {
 
           {/* Title and Description */}
           <div className="text-center space-y-3">
-            <h1 className="text-[20px] font-semibold text-[#4D4D4D]">Just One More Step to Go</h1>
+            <h1 className="text-[20px] font-semibold text-[#4D4D4D]">
+              Just One More Step to Go
+            </h1>
             <p className="text-gray-600 text-[14px]">
-              {"We've sent a code to your email. Enter it below to confirm your account."}
+              {
+                "We've sent a code to your email. Enter it below to confirm your account."
+              }
             </p>
           </div>
 
@@ -101,6 +132,8 @@ export default function Component() {
             <Button
               className=" px-10 bg-[#111827] hover:bg-slate-900 text-white  rounded-full text-[16px] "
               size="lg"
+              disabled={loading}
+              onClick={handleVerify}
             >
               Verify & Continue
             </Button>
@@ -110,11 +143,13 @@ export default function Component() {
           <div className="text-center">
             <p className="text-gray-600">
               {"Didn't receive code? "}
-              <button className="text-blue-600 hover:text-blue-800 font-medium">Resend</button>
+              <button className="text-blue-600 hover:text-blue-800 font-medium">
+                Resend
+              </button>
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
