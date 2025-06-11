@@ -1,28 +1,31 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Eye, EyeOff } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { yupResolver } from "@hookform/resolvers/yup"
-import * as yup from "yup"
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import logo from "@/public/logo.svg"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import logo from "@/public/logo.svg";
 
 const schema = yup.object().shape({
-  email: yup.string().email("Invalid email address").required("Email is required"),
+  email: yup
+    .string()
+    .email("Invalid email address")
+    .required("Email is required"),
   password: yup.string().required("Password is required"),
-})
+});
 
-type FormData = yup.InferType<typeof schema>
+type FormData = yup.InferType<typeof schema>;
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const {
     register,
@@ -32,23 +35,24 @@ export default function LoginPage() {
     watch,
   } = useForm<FormData>({
     resolver: yupResolver(schema),
-  })
+  });
 
-  const watchedFields = watch()
+  const watchedFields = watch();
 
-  const isFormFilled = watchedFields.email?.trim() && watchedFields.password?.trim()
+  const isFormFilled =
+    watchedFields.email?.trim() && watchedFields.password?.trim();
 
   const onSubmit = async (data: FormData) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log("Login Data:", data)
-      setSubmitSuccess(true)
-      reset()
-      setTimeout(() => setSubmitSuccess(false), 2000)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("Login Data:", data);
+      setSubmitSuccess(true);
+      reset();
+      setTimeout(() => setSubmitSuccess(false), 2000);
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("Login error:", error);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -64,13 +68,17 @@ export default function LoginPage() {
                 Let’s Get Back to Business
               </h2>
               <p className="text-[#676767] text-[14px] leading-[22px]">
-                Access your dashboard to manage inventory, track orders, and grow your sales — all in one place.
+                Access your dashboard to manage inventory, track orders, and
+                grow your sales — all in one place.
               </p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <Label className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]" htmlFor="email">
+                <Label
+                  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]"
+                  htmlFor="email"
+                >
                   Email Address
                 </Label>
                 <Input
@@ -81,11 +89,18 @@ export default function LoginPage() {
                   aria-invalid={!!errors.email}
                   className="h-[44px] shadow-none text-[14px] leading-[24px] text-[#1A1A1A]"
                 />
-                {errors.email && <p className="text-sm mt-[8px] text-red-600">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="text-sm mt-[8px] text-red-600">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]" htmlFor="password">
+                <Label
+                  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px]"
+                  htmlFor="password"
+                >
                   Password
                 </Label>
                 <div className="relative">
@@ -101,12 +116,18 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm mt-[8px] text-red-600">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-sm mt-[8px] text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               {submitSuccess && (
@@ -127,7 +148,10 @@ export default function LoginPage() {
 
             <p className="text-sm leading-[22px] font-normal text-[#676767]">
               Don’t have an account?{" "}
-              <Link href="/signup" className="text-[#365BEB] hover:text-blue-700 font-medium">
+              <Link
+                href="/signup"
+                className="text-[#365BEB] hover:text-blue-700 font-medium"
+              >
                 Create one
               </Link>
             </p>
@@ -135,9 +159,15 @@ export default function LoginPage() {
         </div>
 
         <div className="hidden md:block relative">
-          <Image src="/login.png" alt="User logging in" fill className="object-cover" priority />
+          <Image
+            src="/login.png"
+            alt="User logging in"
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
       </main>
     </div>
-  )
+  );
 }
