@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/public/logo.svg";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { AlertCircleIcon } from "lucide-react"
+
 
 const schema = yup.object().shape({
   fullname: yup.string().required("Full Name is required"),
@@ -34,6 +41,7 @@ export default function SignUpPage() {
   const { register: signup } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const {
     register,
@@ -55,17 +63,23 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const email = await signup(data); // `email` comes from returned payload
+      const email = await signup(data);
       setSubmitSuccess(true);
       reset();
+       localStorage.setItem("fromRegistration", "true")
       router.push(
         `/otp-verification?email=${encodeURIComponent(
           email
         )}&verification_sent=1`
       );
-    } catch (error) {
-      console.error("Submission error:", error);
+    } catch (error: unknown) {
+    let errorMessage = "Something went wrong";
+    if (error instanceof Error) {
+      errorMessage = error.message;
     }
+    setError(errorMessage)
+    console.error("Submission error:", errorMessage);
+  }
   };
 
   return (
@@ -86,7 +100,18 @@ export default function SignUpPage() {
                 start accepting orders — without juggling five different tools.
               </p>
             </div>
-
+            <div>
+             <div className="mb-[18px]">
+               {error && 
+                <Alert variant="destructive">
+        <AlertCircleIcon />
+        <AlertTitle>{error}</AlertTitle>
+        <AlertDescription>
+        </AlertDescription>
+      </Alert>
+              }
+             </div>
+            </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <Label
@@ -196,7 +221,7 @@ export default function SignUpPage() {
                 size="lg"
                 type="submit"
                 disabled={isSubmitting || !isFormFilled}
-                className="w-full md:w-1/2 py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
+                className="w-full  md:text-[16px] md:w-1/2 py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
               >
                 {isSubmitting
                   ? "Creating Account..."

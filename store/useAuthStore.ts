@@ -1,33 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import api from "@/lib/axios";
-
-interface User {
-  id: number;
-  email: string;
-  password: string;
-  name: string;
-  frequency: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface RegisterPayload {
-  fullname: string;
-  phone: string;
-  email: string;
-  password: string;
-}
-
-interface VerifyOtpPayload {
-  otp: string;
-  email: string;
-}
-
-interface LoginPayload {
-  email: string;
-  password: string;
-}
+import { AxiosError } from "axios";
+import { User, RegisterPayload, VerifyOtpPayload, LoginPayload } from "@/types";
 
 interface AuthState {
   user: User | null;
@@ -37,6 +12,7 @@ interface AuthState {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
   verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   refreshToken: () => Promise<void>;
@@ -58,15 +34,21 @@ export const useAuthStore = create(
           const response = await api.post("/api/v1/auth/register", payload);
 
           const { responseSuccessful, responseMessage } = response.data;
+          console.log(responseMessage, "response messages");
 
           if (!responseSuccessful) {
             throw new Error(responseMessage || "Registration failed");
           }
 
           return payload.email;
-        } catch (error) {
-          console.error("Registration failed:", error);
-          throw error;
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+
+          const customMessage =
+            error.response?.data?.responseMessage || "Registration failed";
+
+          console.error("Registration failed:", customMessage);
+          throw new Error(customMessage);
         }
       },
 
@@ -89,9 +71,32 @@ export const useAuthStore = create(
 
           // Update store
           set({ user, accessToken, refreshToken });
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+
+          const customMessage =
+            error.response?.data?.responseMessage || "OTP Verificatio failed";
+
+          console.error("OTP Verificatio failed:", customMessage);
+          throw new Error(customMessage);
+        }
+      },
+
+      resendOtp: async (email: string) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/api/v1/auth/resend", { email });
+          const { responseSuccessful, responseMessage } = response.data;
+          console.log(responseMessage, "hell");
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "OTP resend failed");
+          }
         } catch (error) {
-          console.error("OTP verification error:", error);
+          console.error("Resend OTP error:", error);
           throw error;
+        } finally {
+          set({ loading: false });
         }
       },
 
@@ -139,7 +144,6 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/refresh-token");
           const { accessToken } = response.data;
-          console.log(accessToken, "refreshtoken");
 
           set({ accessToken });
           api.defaults.headers.common[
