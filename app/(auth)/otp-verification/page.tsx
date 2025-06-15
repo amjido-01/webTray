@@ -1,20 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/useAuthStore"
-
-import { CustomAlert, 
- // AlertType
- } from "@/components/CustomAlert"
+import { CustomAlert } from "@/components/CustomAlert"
 import { OTPInput } from "@/components/OTPInput"
 import { useResendTimer } from "@/hooks/useResendTimer"
 import { useAlertManager } from "@/hooks/useAlertManager"
 
-export default function OTPVerification() {
+function OTPContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
   const router = useRouter()
@@ -27,21 +24,20 @@ export default function OTPVerification() {
   const [showError, setShowError] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
-  const { 
-    //countdown, 
+  const {
     isDisabled: resendDisabled,
     formattedTime,
     startTimer,
     resetTimer,
-    initializeTimer 
+    initializeTimer
   } = useResendTimer()
 
-  const { 
-    showAlert, 
-    alertType, 
-    alertMessage, 
-    showAlertMessage, 
-    hideAlert 
+  const {
+    showAlert,
+    alertType,
+    alertMessage,
+    showAlertMessage,
+    hideAlert
   } = useAlertManager()
 
   useEffect(() => {
@@ -51,9 +47,7 @@ export default function OTPVerification() {
     const hasActiveTimer = initializeTimer()
 
     if (fromRegistration === "true") {
-      if (!hasActiveTimer) {
-        startTimer()
-      }
+      if (!hasActiveTimer) startTimer()
       showAlertMessage("success", "OTP has been sent to your email")
       localStorage.removeItem("fromRegistration")
     }
@@ -63,7 +57,6 @@ export default function OTPVerification() {
 
   const handleVerify = async () => {
     if (!email) return
-    
     const otp = code.join("")
     if (otp.length !== 6) {
       setError("Please enter a valid 6-digit code")
@@ -83,7 +76,6 @@ export default function OTPVerification() {
       const errorMessage = error instanceof Error ? error.message : "Something went wrong"
       setError(errorMessage)
       setShowError(true)
-      console.error("Verification error:", errorMessage)
     } finally {
       setLoading(false)
     }
@@ -109,11 +101,9 @@ export default function OTPVerification() {
   const isFormValid = code.every(digit => digit !== "")
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="p-4">
-        <div className="flex items-center gap-2">
-          <Image src="/logo.svg" width={140} height={40} alt="logo" />
-        </div>
+    <div className="p-4">
+      <div className="flex items-center gap-2">
+        <Image src="/logo.svg" width={140} height={40} alt="logo" />
       </div>
 
       <div className="flex-col flex items-center justify-start px-8">
@@ -143,11 +133,7 @@ export default function OTPVerification() {
             </p>
           </div>
 
-          <OTPInput
-            code={code}
-            onChange={setCode}
-            hasError={showError}
-          />
+          <OTPInput code={code} onChange={setCode} hasError={showError} />
 
           <div className="flex items-center justify-center">
             <Button
@@ -183,5 +169,13 @@ export default function OTPVerification() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OTPVerification() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OTPContent />
+    </Suspense>
   )
 }

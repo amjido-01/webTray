@@ -1,4 +1,3 @@
-// hooks/useAlertManager.ts
 import { useState } from "react"
 import { AlertType } from "@/components/CustomAlert"
 
