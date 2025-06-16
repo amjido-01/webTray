@@ -6,7 +6,6 @@ import { useState } from "react";
 import { EyeOff, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import logo from "@/public/logo.svg";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/components/ui/input";
 
@@ -18,7 +17,7 @@ export default function Component() {
       {/* Header */}
       <div className="p-4">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="logo" />
+          <Image src="/logo.svg" width={140} height={40} alt="logo" />
         </div>
       </div>
 

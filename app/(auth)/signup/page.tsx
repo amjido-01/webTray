@@ -100,6 +100,7 @@ export default function SignUpPage() {
                 start accepting orders — without juggling five different tools.
               </p>
             </div>
+            
             <div>
              <div className="mb-[18px]">
                {error && 

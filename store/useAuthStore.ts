@@ -13,6 +13,7 @@ interface AuthState {
   register: (payload: RegisterPayload) => Promise<string>;
   verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   refreshToken: () => Promise<void>;
@@ -87,7 +88,6 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/api/v1/auth/resend", { email });
           const { responseSuccessful, responseMessage } = response.data;
-          console.log(responseMessage, "hell");
 
           if (!responseSuccessful) {
             throw new Error(responseMessage || "OTP resend failed");
@@ -113,6 +113,27 @@ export const useAuthStore = create(
         } catch (error) {
           console.error("Login failed:", error);
           throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      forgotPassword: async (email: string) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/api/v1/auth/forgot", { email });
+          const { responseSuccessful, responseMessage } = response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "Failed to send reset email");
+          }
+
+          return responseMessage;
+        } catch (err) {
+            const error = err as AxiosError<{ responseMessage: string }>;
+           const customMessage = error?.response?.data?.responseMessage;
+          console.error("Forgot password failed:", customMessage);
+          throw new Error(customMessage);
         } finally {
           set({ loading: false });
         }
