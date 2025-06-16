@@ -121,17 +121,19 @@ export const useAuthStore = create(
       forgotPassword: async (email: string) => {
         set({ loading: true });
         try {
-          const response = await api.post("/api/v1/auth/forgot", {email});
+          const response = await api.post("/api/v1/auth/forgot", { email });
           const { responseSuccessful, responseMessage } = response.data;
 
-           if (!responseSuccessful) {
+          if (!responseSuccessful) {
             throw new Error(responseMessage || "Failed to send reset email");
           }
 
-          return responseMessage
-        } catch (error) {
-          console.error("Forgot password failed:", error);
-          throw error;
+          return responseMessage;
+        } catch (err) {
+            const error = err as AxiosError<{ responseMessage: string }>;
+           const customMessage = error?.response?.data?.responseMessage;
+          console.error("Forgot password failed:", customMessage);
+          throw new Error(customMessage);
         } finally {
           set({ loading: false });
         }

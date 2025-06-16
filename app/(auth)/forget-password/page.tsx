@@ -25,8 +25,7 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function Component() {
   const { forgotPassword } = useAuthStore();
-  const { alertType, alertMessage, showAlertMessage } =
-    useAlertManager();
+  const { alertType, alertMessage, showAlertMessage } = useAlertManager();
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
   const [showError, setShowError] = useState(false);
@@ -50,25 +49,24 @@ export default function Component() {
     try {
       setError("");
       await forgotPassword(data.email);
+
       showAlertMessage(
         "success",
-        " Password reset link has been sent to your email. Please check your inbox and follow the instructions to reset your password."
+        "Password reset link has been sent to your email. Please check your inbox."
       );
       setSubmitSuccess(true);
       setShowSuccessAlert(true);
       reset();
 
-      // Hide success alert after 10 seconds
       setTimeout(() => {
         setShowSuccessAlert(false);
       }, 10000);
     } catch (error: unknown) {
-      let errorMessage = "Something went wrong";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong";
+
       setError(errorMessage);
-      showAlertMessage("error", "Failed to send Link. Please try again.");
+      showAlertMessage("error", errorMessage);
       setShowError(true);
       console.error("Forgot password error:", errorMessage);
     }
@@ -96,7 +94,7 @@ export default function Component() {
           <CustomAlert
             type={alertType}
             message={alertMessage}
-            onClose={()=>setShowSuccessAlert(false)}
+            onClose={() => setShowSuccessAlert(false)}
           />
         )}
 
@@ -139,8 +137,14 @@ export default function Component() {
               disabled={isSubmitting || !isFormFilled}
               className="w-full md:text-[16px] md:w-1/2 py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
             >
-              {isSubmitting ? <><Loader2Icon className="animate-spin" />
-      Sending...</> : "Send Reset Link"}
+              {isSubmitting ? (
+                <>
+                  <Loader2Icon className="animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Reset Link"
+              )}
             </Button>
           </div>
 
