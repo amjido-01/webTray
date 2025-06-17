@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import api from "@/lib/axios";
 import { AxiosError } from "axios";
-import { User, RegisterPayload, VerifyOtpPayload, LoginPayload } from "@/types";
+import { User, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, LoginPayload } from "@/types";
 
 interface AuthState {
   user: User | null;
@@ -14,6 +14,7 @@ interface AuthState {
   verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   refreshToken: () => Promise<void>;
@@ -139,6 +140,29 @@ export const useAuthStore = create(
         }
       },
 
+      resetPassword: async (payload: ResetPasswordPayload) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/api/v1/auth/reset", payload);
+          const { responseSuccessful, responseMessage } = response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "Failed to reset password");
+          }
+
+          return responseMessage || "Password reset successfully";
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+          const customMessage =
+            error.response?.data?.responseMessage || "Failed to reset password";
+          
+          console.error("Reset password failed:", customMessage);
+          throw new Error(customMessage);
+        } finally {
+          set({ loading: false });
+        }
+      },
+
       checkAuth: async () => {
         const accessToken = get().accessToken;
 
@@ -163,8 +187,9 @@ export const useAuthStore = create(
       // generate refresh token
       refreshToken: async () => {
         try {
-          const response = await api.post("/refresh-token");
+          const response = await api.post("/refresh");
           const { accessToken } = response.data;
+          console.log(response.data, "re")
 
           set({ accessToken });
           api.defaults.headers.common[
