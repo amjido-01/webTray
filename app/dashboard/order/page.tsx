@@ -1,7 +1,7 @@
 "use client";
 
 
-import { TrendingDown, TrendingUp, Package, ShoppingCart } from "lucide-react";
+import { TrendingDown, TrendingUp, ShoppingCart } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 import { OrderManagement } from "@/components/order-managemet";
 import OrderProductsTable from "@/components/order-products-table";
