@@ -81,15 +81,7 @@ export default function Component() {
       </div>
 
       <div className="flex-col flex items-center justify-start w-[30%] mx-auto ">
-        <div className="mb-[18px]">
-          <h2 className="text-[20px] leading-[24px] text-center font-bold text-[#4D4D4D] mb-2">
-            We’ve Got You Covered
-          </h2>
-          <p className="text-[#676767] text-center text-[14px] leading-[22px]">
-            Forgot your password? Just enter your email and we’ll send you a
-            secure link to reset it, no stress.
-          </p>
-        </div>
+
         {showSuccessAlert && submitSuccess && (
           <CustomAlert
             type={alertType}
@@ -105,6 +97,17 @@ export default function Component() {
             onClose={() => setShowError(false)}
           />
         )}
+
+        <div className="mb-[18px] mt-[40px]">
+          <h2 className="text-[20px] leading-[24px] text-center font-bold text-[#4D4D4D] mb-2">
+            We’ve Got You Covered
+          </h2>
+          <p className="text-[#676767] text-center text-[14px] leading-[22px]">
+            Forgot your password? Just enter your email and we’ll send you a
+            secure link to reset it, no stress.
+          </p>
+        </div>
+        
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 w-full ">
           <div>
@@ -129,7 +132,6 @@ export default function Component() {
             )}
           </div>
 
-          {/* Verify Button */}
           <div className="flex items-center justify-center">
             <Button
               size="lg"
@@ -148,7 +150,6 @@ export default function Component() {
             </Button>
           </div>
 
-          {/* Resend Link */}
           <div className="text-center">
             <p className="text-gray-600">
               {"Remember your password?"}
