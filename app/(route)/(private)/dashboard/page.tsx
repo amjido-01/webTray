@@ -1,4 +1,3 @@
-"use client";
 import { orders } from "@/lib/orders";
 import { SectionCards } from "@/components/section-cards";
 import { RecentOrdersTable } from "@/components/recent-orders-table";

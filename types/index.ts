@@ -1,12 +1,15 @@
 export interface User {
   id: number;
   email: string;
+  phone: string;
+  fullname: string;
+  status: string | null;
   password: string;
-  name: string;
-  frequency: string;
-  createdAt: string;
-  updatedAt: string;
+  refreshToken: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
 
 export interface RegisterPayload {
   fullname: string;
@@ -24,4 +27,10 @@ export interface VerifyOtpPayload {
 export interface LoginPayload {
   email: string;
   password: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmNewPassword: string;
 }
