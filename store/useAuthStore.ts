@@ -2,12 +2,23 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import api from "@/lib/axios";
 import { AxiosError } from "axios";
-import { User, RegisterPayload, ResetPasswordPayload, VerifyOtpPayload, LoginPayload } from "@/types";
+import {
+  User,
+  RegisterPayload,
+  ResetPasswordPayload,
+  VerifyOtpPayload,
+  LoginPayload,
+} from "@/types";
 
-interface AuthState {
+
+
+interface AuthState  {
   user: User | null;
   accessToken: string | null;
+  refreshTokenValue: string | null;
   loading: boolean;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   isLoggedIn: () => boolean;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
@@ -20,23 +31,31 @@ interface AuthState {
   refreshToken: () => Promise<void>;
 }
 
+
 export const useAuthStore = create(
   persist<AuthState>(
     (set, get) => ({
       user: null,
       accessToken: null,
+      refreshTokenValue: null,
       loading: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
 
       isLoggedIn: () => {
-        return !!get().accessToken;
+        const state = get();
+        const hasToken = !!state.accessToken;
+        console.log("🔍 isLoggedIn check:", hasToken);
+        return hasToken;
       },
 
       register: async (payload: RegisterPayload) => {
         try {
-          const response = await api.post("/api/v1/auth/register", payload);
-
+          const response = await api.post("/auth/register", payload);
           const { responseSuccessful, responseMessage } = response.data;
-          console.log(responseMessage, "response messages");
 
           if (!responseSuccessful) {
             throw new Error(responseMessage || "Registration failed");
@@ -45,18 +64,15 @@ export const useAuthStore = create(
           return payload.email;
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
-
           const customMessage =
             error.response?.data?.responseMessage || "Registration failed";
-
-          console.error("Registration failed:", customMessage);
           throw new Error(customMessage);
         }
       },
 
       verifyOtp: async (payload) => {
         try {
-          const response = await api.post("/api/v1/auth/verify", payload);
+          const response = await api.post("/auth/verify", payload);
           const { responseSuccessful, responseBody, responseMessage } =
             response.data;
 
@@ -66,20 +82,12 @@ export const useAuthStore = create(
 
           const { user, accessToken, refreshToken } = responseBody;
 
-          // Update headers for authenticated requests
-          api.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
-
-          // Update store
+          console.log("✅ OTP verified, tokens received");
           set({ user, accessToken, refreshToken });
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
-
           const customMessage =
-            error.response?.data?.responseMessage || "OTP Verificatio failed";
-
-          console.error("OTP Verificatio failed:", customMessage);
+            error.response?.data?.responseMessage || "OTP verification failed";
           throw new Error(customMessage);
         }
       },
@@ -94,7 +102,6 @@ export const useAuthStore = create(
             throw new Error(responseMessage || "OTP resend failed");
           }
         } catch (error) {
-          console.error("Resend OTP error:", error);
           throw error;
         } finally {
           set({ loading: false });
@@ -104,15 +111,24 @@ export const useAuthStore = create(
       login: async (payload: LoginPayload) => {
         set({ loading: true });
         try {
-          const response = await api.post("/api/v1/auth/login", payload);
-          const { accessToken, responseBody } = response.data;
+          console.log("🔄 Logging in...");
+          const response = await api.post("/auth/login", payload, {withCredentials:  true});
+          const { responseBody } = response.data;
+          const accessToken = responseBody.accessToken;
+          const refreshToken = responseBody.refreshToken;
 
-          set({ accessToken, user: responseBody.user });
-          api.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
+          console.log("✅ Login successful, tokens received");
+          console.log("🔍 Access token:", accessToken ? "Present" : "Missing");
+
+          set({
+            accessToken,
+            refreshToken,
+            user: responseBody.user,
+          });
+
+          console.log("✅ Auth store updated");
         } catch (error) {
-          console.error("Login failed:", error);
+          console.error("❌ Login failed:", error);
           throw error;
         } finally {
           set({ loading: false });
@@ -122,7 +138,7 @@ export const useAuthStore = create(
       forgotPassword: async (email: string) => {
         set({ loading: true });
         try {
-          const response = await api.post("/api/v1/auth/forgot", { email });
+          const response = await api.post("/auth/forgot", { email });
           const { responseSuccessful, responseMessage } = response.data;
 
           if (!responseSuccessful) {
@@ -131,9 +147,8 @@ export const useAuthStore = create(
 
           return responseMessage;
         } catch (err) {
-            const error = err as AxiosError<{ responseMessage: string }>;
-           const customMessage = error?.response?.data?.responseMessage;
-          console.error("Forgot password failed:", customMessage);
+          const error = err as AxiosError<{ responseMessage: string }>;
+          const customMessage = error?.response?.data?.responseMessage;
           throw new Error(customMessage);
         } finally {
           set({ loading: false });
@@ -143,7 +158,7 @@ export const useAuthStore = create(
       resetPassword: async (payload: ResetPasswordPayload) => {
         set({ loading: true });
         try {
-          const response = await api.post("/api/v1/auth/reset", payload);
+          const response = await api.post("/auth/reset", payload);
           const { responseSuccessful, responseMessage } = response.data;
 
           if (!responseSuccessful) {
@@ -155,8 +170,6 @@ export const useAuthStore = create(
           const error = err as AxiosError<{ responseMessage: string }>;
           const customMessage =
             error.response?.data?.responseMessage || "Failed to reset password";
-          
-          console.error("Reset password failed:", customMessage);
           throw new Error(customMessage);
         } finally {
           set({ loading: false });
@@ -166,55 +179,71 @@ export const useAuthStore = create(
       checkAuth: async () => {
         const accessToken = get().accessToken;
 
-        // If there's no access token, assume the user is not logged in
         if (!accessToken) {
-          console.warn("Access token not found. User not logged in.");
+          console.warn(" Access token not found. User not logged in.");
           set({ user: null, loading: false });
           return false;
         }
+
         try {
           const response = await api.get("/profile");
-          const { user } = response.data;
-          set({ user });
+          const { responseBody } = response.data;
+          set({ user: responseBody });
+          console.log("✅ Auth check successful");
           return true;
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("❌ Error fetching user data:", error);
           set({ user: null, loading: false });
           return false;
         }
       },
 
-      // generate refresh token
       refreshToken: async () => {
         try {
-          const response = await api.post("/refresh");
+          console.log("🔄 Refreshing token...");
+          const response = await api.post("/auth/refresh");
           const { accessToken } = response.data;
-          console.log(response.data, "re")
 
+          console.log("✅ Token refreshed successfully");
           set({ accessToken });
-          api.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${accessToken}`;
         } catch (error) {
-          console.error("Error refreshing token:", error);
-          set({ user: null, accessToken: null });
+          console.error("❌ Error refreshing token:", error);
+          set({ user: null, accessToken: null, refreshTokenValue: null });
+          throw error;
         }
       },
 
-      // login function
       logout: async () => {
         try {
           await api.post("/auth/logout");
         } catch (error) {
           console.warn("Logout failed, but clearing user data anyway:", error);
         }
-        set({ user: null, accessToken: null });
-        delete api.defaults.headers.common["Authorization"];
+
+        console.log("🔄 Logging out...");
+        set({ user: null, accessToken: null, refreshTokenValue: null });
       },
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshTokenValue: state.refreshTokenValue,
+      }),
+
+      onRehydrateStorage: () => (state) => {
+        console.log("🔄 Store hydrated");
+        if (state) {
+          state.setHasHydrated(true);
+          console.log("🔍 Hydrated state:", {
+            hasUser: !!state.user,
+            hasAccessToken: !!state.accessToken,
+            hasRefreshToken: !!state.refreshTokenValue,
+          });
+        }
+      },
     }
   )
 );

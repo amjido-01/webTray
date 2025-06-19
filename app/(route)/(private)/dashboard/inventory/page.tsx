@@ -1,8 +1,9 @@
 "use client";
 import ProductsTable from "@/components/products-table";
- import { InventoryManagement } from "@/components/inventory-management";
+import { InventoryManagement } from "@/components/inventory-management";
 import { TrendingDown, TrendingUp, Package } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
+import { useCategory } from "@/hooks/useCategory";
 
 const stats = [
   {
@@ -34,16 +35,26 @@ const stats = [
 ];
 
 export default function Page() {
+  const {
+    categories,
+    isFetchingCategories,
+    categoriesError,
+    // refetchCategories,
+  } = useCategory();
+
+   if (isFetchingCategories) return <p>Loading...</p>;
+  if (categoriesError) return <p>Error loading categories</p>;
+   console.log(categories, "hello")
   return (
     <div className="flex flex-1 flex-col">
       <InventoryManagement />
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, i) => (
-                <StatCard key={i} {...stat} />
-              ))}
-            </div>
+          <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat, i) => (
+              <StatCard key={i} {...stat} />
+            ))}
+          </div>
           <ProductsTable />
         </div>
       </div>

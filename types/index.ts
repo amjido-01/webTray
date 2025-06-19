@@ -1,12 +1,15 @@
 export interface User {
   id: number;
   email: string;
+  phone: string;
+  fullname: string;
+  status: string | null;
   password: string;
-  name: string;
-  frequency: string;
-  createdAt: string;
-  updatedAt: string;
+  refreshToken: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
 
 export interface RegisterPayload {
   fullname: string;
