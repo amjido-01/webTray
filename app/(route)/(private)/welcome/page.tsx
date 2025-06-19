@@ -5,7 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import confetti from "canvas-confetti";
 import Image from "next/image";
+import { useAuthStore } from "@/store/useAuthStore";
+import { capitalizeFirstLetter } from "@/lib/capitalize";
+
 export default function WelcomePage() {
+  const { user } = useAuthStore()
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -31,26 +35,21 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Confetti canvas */}
       <canvas
         ref={confettiCanvasRef}
         className="fixed inset-0 pointer-events-none z-50"
         style={{ width: "100%", height: "100%" }}
       />
 
-      {/* Header */}
       <header className="p-6">
         <Image src="/logo.svg" alt="logo" width={100} height={24} />
       </header>
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        {/* Blue dots background pattern */}
         <div className="absolute top-0 left-0 right-0 h-64 overflow-hidden z-0">
           <div className="w-full h-full bg-blue-dots-pattern opacity-20"></div>
         </div>
 
-        {/* Illustration */}
         <div className="relative z-10 mb-8">
           <Image
             src="/welcome.svg"
@@ -60,9 +59,8 @@ export default function WelcomePage() {
           />
         </div>
 
-        {/* Welcome text */}
         <h1 className="text-xl font-bold leading-[24px] text-[#4D4D4D] mb-[8px]">
-          Welcome to WebTray, [Business Name]!
+          Welcome to WebTray, {capitalizeFirstLetter(user?.fullname)}!
         </h1>
 
         <p className="text-[#676767] leading-[22px] text-[14px] font-normal max-w-md mb-[50px]">
@@ -71,7 +69,6 @@ export default function WelcomePage() {
           place.
         </p>
 
-        {/* Dashboard button */}
         <Button
           className="bg-[#111827] hover:bg-[#2a2f46] text-white rounded-full px-8 py-6 font-medium text-[16px] leading-[100%]"
           asChild
@@ -79,7 +76,6 @@ export default function WelcomePage() {
           <Link href="/dashboard">Go to Dashboard</Link>
         </Button>
 
-        {/* Registration link */}
         <div className="mt-12 text-gray-600">
           Click here to{" "}
           <Link href="/registration" className="text-blue-600 hover:underline">
