@@ -165,7 +165,7 @@ export default function LoginPage() {
 
         <div className="hidden md:block relative">
           <Image
-            src="/login.png"
+            src="/login_img.png"
             alt="User logging in"
             fill
             className="object-cover"
