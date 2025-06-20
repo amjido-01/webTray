@@ -1,30 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/axios";
-
-// Types
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateCategoryPayload {
-  name: string;
-  description: string;
-}
+import { ApiResponse, Category, CreateCategoryPayload } from "@/types";
 
 interface UpdateCategoryPayload extends CreateCategoryPayload {
   id: number;
 }
 
-interface ApiResponse<T> {
-  responseSuccessful: boolean;
-  responseMessage: string;
-  responseBody: T;
-}
 
 // Query Keys
 export const categoryKeys = {
