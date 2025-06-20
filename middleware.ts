@@ -15,10 +15,11 @@ export default async function middleware(
  
   const auth = await cookies()
   const token = auth.get("refreshToken")?.value
+  console.log(token)
  
   // 4. Redirect to /login if the user is not authenticated
   // note that this will change later
-  if (isProtectedRoute && !!token) {
+  if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/signin', req.nextUrl))
   }
  
