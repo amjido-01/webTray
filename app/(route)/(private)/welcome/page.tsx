@@ -78,7 +78,7 @@ export default function WelcomePage() {
 
         <div className="mt-12 text-gray-600">
           Click here to{" "}
-          <Link href="/registration" className="text-blue-600 hover:underline">
+          <Link href="/register-business" className="text-blue-600 hover:underline">
             Complete Business Registration
           </Link>
         </div>
