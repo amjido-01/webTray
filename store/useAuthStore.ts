@@ -9,16 +9,16 @@ import {
   VerifyOtpPayload,
   LoginPayload,
 } from "@/types";
-
-
-
-interface AuthState  {
+// {"state":{"user":{"id":2,"email":"amastudioagency@gmail.com","phone":"08086259124","fullname":"ala","status":null,"password":"$2b$10$PGRGBOaq7JxmHfSRlm0qCOawCX0UnD93gFBeT/HIBPjZisjlXDVGe","refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJhbWFzdHVkaW9hZ2VuY3lAZ21haWwuY29tIiwiaWF0IjoxNzUwNDI0NjIzLCJleHAiOjE3NTEwMjk0MjN9.OLIx5khu9SZrJsmYE7ZBHtbcaDdtqGPpdWYF0qIHCEM","createdAt":"2025-06-18T12:36:00.103Z","updatedAt":"2025-06-20T13:03:44.005Z"},"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJhbWFzdHVkaW9hZ2VuY3lAZ21haWwuY29tIiwiaWF0IjoxNzUwNDI4NzkxLCJleHAiOjE3NTA0MzIzOTF9.8uCAsfagPh7zr-97xqwRm_zG4Q3kekZ35pkbR7JK61I","refreshTokenValue":null,"hasBusiness":true},"version":0}
+interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshTokenValue: string | null;
+  hasBusiness: boolean;
   loading: boolean;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
+  setHasBusiness: (state: boolean) => void;
   isLoggedIn: () => boolean;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
@@ -31,11 +31,11 @@ interface AuthState  {
   refreshToken: () => Promise<void>;
 }
 
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      hasBusiness: false,
       accessToken: null,
       refreshTokenValue: null,
       loading: false,
@@ -44,7 +44,9 @@ export const useAuthStore = create<AuthState>()(
       setHasHydrated: (state: boolean) => {
         set({ _hasHydrated: state });
       },
-
+       setHasBusiness: (state) => {
+        set({ hasBusiness: state });
+      },
       isLoggedIn: () => {
         const state = get();
         const hasToken = !!state.accessToken;
@@ -81,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, accessToken, refreshToken } = responseBody;
 
-          set({ user, accessToken, refreshToken });
+          set({ user, accessToken, refreshToken, hasBusiness: Boolean(user?.businessId)});
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
           const customMessage =
@@ -109,7 +111,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (payload: LoginPayload) => {
         set({ loading: true });
         try {
-          const response = await api.post("/auth/login", payload, {withCredentials:  true});
+          const response = await api.post("/auth/login", payload, {
+            withCredentials: true,
+          });
           const { responseBody } = response.data;
           const accessToken = responseBody.accessToken;
           const refreshToken = responseBody.refreshToken;
@@ -117,8 +121,8 @@ export const useAuthStore = create<AuthState>()(
             accessToken,
             refreshToken,
             user: responseBody.user,
+             hasBusiness: Boolean(responseBody?.user?.businessId),
           });
-
         } catch (error) {
           console.error("Login failed:", error);
           throw error;
@@ -177,9 +181,12 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await api.get("/profile");
-          const { responseBody } = response.data;
-          set({ user: responseBody });
+          const response = await api.get("/user/profile");
+          const { user, business } = response.data.responseBody;
+          set({
+            user,
+            hasBusiness: business !== null,
+          });
           return true;
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -187,7 +194,6 @@ export const useAuthStore = create<AuthState>()(
           return false;
         }
       },
-
       refreshToken: async () => {
         try {
           const response = await api.post("/auth/refresh");
@@ -218,6 +224,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshTokenValue: state.refreshTokenValue,
+        hasBusiness: state.hasBusiness,
       }),
 
       onRehydrateStorage: () => (state) => {

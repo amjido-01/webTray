@@ -3,7 +3,7 @@ import ProductsTable from "@/components/products-table";
 import { InventoryManagement } from "@/components/inventory-management";
 import { TrendingDown, TrendingUp, Package } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
-import { useCategory } from "@/hooks/useCategory";
+// import { useCategory } from "@/hooks/useCategory";
 
 const stats = [
   {
@@ -35,16 +35,16 @@ const stats = [
 ];
 
 export default function Page() {
-  const {
-    categories,
-    isFetchingCategories,
-    categoriesError,
-    // refetchCategories,
-  } = useCategory();
+  // const {
+  //   categories,
+  //   isFetchingCategories,
+  //   categoriesError,
+  //   // refetchCategories,
+  // } = useCategory();
 
-   if (isFetchingCategories) return <p>Loading...</p>;
-  if (categoriesError) return <p>Error loading categories</p>;
-   console.log(categories, "hello")
+  //  if (isFetchingCategories) return <p>Loading...</p>;
+  // if (categoriesError) return <p>Error loading categories</p>;
+  //  console.log(categories, "hello")
   return (
     <div className="flex flex-1 flex-col">
       <InventoryManagement />
