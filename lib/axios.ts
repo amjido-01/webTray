@@ -15,7 +15,7 @@ api.interceptors.request.use(
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     } else {
-      console.log('No token available');
+      console.warn('No token available');
     }
     
     return config;
@@ -28,7 +28,6 @@ api.interceptors.request.use(
 // RESPONSE INTERCEPTOR - Enhanced with better debugging
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ Response successful:', response.config.url);
     return response;
   },
   async (error) => {
@@ -47,7 +46,7 @@ api.interceptors.response.use(
           throw refreshError;
         }
       } else {
-        console.log('❌ User not logged in, cannot refresh');
+        console.warn('User not logged in, cannot refresh');
         throw error;
       }
     }

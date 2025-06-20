@@ -32,8 +32,8 @@ interface AuthState  {
 }
 
 
-export const useAuthStore = create(
-  persist<AuthState>(
+export const useAuthStore = create<AuthState>()(
+  persist(
     (set, get) => ({
       user: null,
       accessToken: null,
@@ -48,7 +48,6 @@ export const useAuthStore = create(
       isLoggedIn: () => {
         const state = get();
         const hasToken = !!state.accessToken;
-        console.log("🔍 isLoggedIn check:", hasToken);
         return hasToken;
       },
 
@@ -82,7 +81,6 @@ export const useAuthStore = create(
 
           const { user, accessToken, refreshToken } = responseBody;
 
-          console.log("✅ OTP verified, tokens received");
           set({ user, accessToken, refreshToken });
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
@@ -111,24 +109,18 @@ export const useAuthStore = create(
       login: async (payload: LoginPayload) => {
         set({ loading: true });
         try {
-          console.log("🔄 Logging in...");
           const response = await api.post("/auth/login", payload, {withCredentials:  true});
           const { responseBody } = response.data;
           const accessToken = responseBody.accessToken;
           const refreshToken = responseBody.refreshToken;
-
-          console.log("✅ Login successful, tokens received");
-          console.log("🔍 Access token:", accessToken ? "Present" : "Missing");
-
           set({
             accessToken,
             refreshToken,
             user: responseBody.user,
           });
 
-          console.log("✅ Auth store updated");
         } catch (error) {
-          console.error("❌ Login failed:", error);
+          console.error("Login failed:", error);
           throw error;
         } finally {
           set({ loading: false });
@@ -180,7 +172,6 @@ export const useAuthStore = create(
         const accessToken = get().accessToken;
 
         if (!accessToken) {
-          console.warn(" Access token not found. User not logged in.");
           set({ user: null, loading: false });
           return false;
         }
@@ -189,10 +180,9 @@ export const useAuthStore = create(
           const response = await api.get("/profile");
           const { responseBody } = response.data;
           set({ user: responseBody });
-          console.log("✅ Auth check successful");
           return true;
         } catch (error) {
-          console.error("❌ Error fetching user data:", error);
+          console.error("Error fetching user data:", error);
           set({ user: null, loading: false });
           return false;
         }
@@ -200,14 +190,12 @@ export const useAuthStore = create(
 
       refreshToken: async () => {
         try {
-          console.log("🔄 Refreshing token...");
           const response = await api.post("/auth/refresh");
           const { accessToken } = response.data;
 
-          console.log("✅ Token refreshed successfully");
           set({ accessToken });
         } catch (error) {
-          console.error("❌ Error refreshing token:", error);
+          console.error("Error refreshing token:", error);
           set({ user: null, accessToken: null, refreshTokenValue: null });
           throw error;
         }
@@ -220,7 +208,6 @@ export const useAuthStore = create(
           console.warn("Logout failed, but clearing user data anyway:", error);
         }
 
-        console.log("🔄 Logging out...");
         set({ user: null, accessToken: null, refreshTokenValue: null });
       },
     }),
@@ -234,14 +221,8 @@ export const useAuthStore = create(
       }),
 
       onRehydrateStorage: () => (state) => {
-        console.log("🔄 Store hydrated");
         if (state) {
           state.setHasHydrated(true);
-          console.log("🔍 Hydrated state:", {
-            hasUser: !!state.user,
-            hasAccessToken: !!state.accessToken,
-            hasRefreshToken: !!state.refreshTokenValue,
-          });
         }
       },
     }
