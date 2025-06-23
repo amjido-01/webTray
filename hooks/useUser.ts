@@ -30,6 +30,7 @@ export const useUser = () => {
     },
   });
 
+
   const dashboardQuery = useQuery({
     queryKey: userKeys.dashboard(),
     queryFn: async (): Promise<DashboardSummary> => {
