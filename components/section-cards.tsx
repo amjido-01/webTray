@@ -3,18 +3,26 @@ import { TrendingUp, ShoppingCart, Package, Users } from "lucide-react"
 import { PageHeader } from "./page-header"
 import { StatCard } from "./stat-card"
 import { useUser } from "@/hooks/useUser";
+import { useAuthStore } from "@/store/useAuthStore";
+import { HasBusinessAlert } from "./hasBusinessAlert";
 
 
 export function SectionCards() {
   const { dashboard, isFetchingDashboard, dashboardError } = useUser();
+    const { hasBusiness } = useAuthStore();
 
    if (isFetchingDashboard) {
     return (
       <div className="">
+        
         <PageHeader
           title="Overview"
           subtitle="Manage your products and track stock levels"
         />
+           {!hasBusiness && 
+     <HasBusinessAlert/>
+     }
+
         <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Loading skeleton cards */}
           {Array.from({ length: 4 }).map((_, i) => (
@@ -25,6 +33,7 @@ export function SectionCards() {
             </div>
           ))}
         </div>
+       
       </div>
     );
   }
