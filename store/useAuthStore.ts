@@ -119,7 +119,7 @@ export const useAuthStore = create<AuthState>()(
             accessToken,
             refreshToken,
             user: responseBody.user,
-             hasBusiness: Boolean(responseBody?.user?.businessId),
+            hasBusiness: Boolean(responseBody?.user?.businessId),
           });
         } catch (error) {
           console.error("Login failed:", error);
