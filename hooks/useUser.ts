@@ -1,15 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { User, ApiResponse } from "@/types";
-
-interface DashboardSummary {
-  totalRevenue: number;
-  noOfOrders: number;
-  noOfProducts: number;
-  noOfCustomers: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  orders: any[]; // You can type this more specifically based on your Order type
-}
+import { User, ApiResponse, DashboardSummary } from "@/types";
 
 // Query Keys
 export const userKeys = {
@@ -35,6 +26,7 @@ export const useUser = () => {
     queryKey: userKeys.dashboard(),
     queryFn: async (): Promise<DashboardSummary> => {
       const { data } = await api.get<ApiResponse<DashboardSummary>>("/user/dashboard");
+      console.log(data)
       if (data?.responseSuccessful) {
         return data.responseBody;
       }

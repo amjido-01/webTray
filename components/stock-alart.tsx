@@ -34,7 +34,7 @@ export function StockAlertTable() {
   const [viewAllModal, setViewAllModal] = useState(false);
 
   return (
-    <div className="">
+    <div className="border">
       <div>
         <Card className="border-0 shadow-none">
           <CardHeader className="flex flex-row items-center justify-between">
