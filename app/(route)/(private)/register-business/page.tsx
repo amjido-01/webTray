@@ -581,7 +581,6 @@ export default function WebTrayOnboarding() {
                       <h4 className="font-medium text-[#202E4B] pb-1 text-[14px]">
                         Store Features
                       </h4>
-{/* eslint-disable-next-line react/no-unescaped-entities */}
                       <p className="text-[12px] text-[#202E4B]">
                         Your store will include product management, order
                         tracking, customer accounts, and analytics dashboards to
