@@ -10,6 +10,7 @@ import { HasBusinessAlert } from "./hasBusinessAlert";
 export function SectionCards() {
   const { dashboard, isFetchingDashboard, dashboardError } = useUser();
     const { hasBusiness } = useAuthStore();
+    console.log(hasBusiness, "has bussiness")
 
    if (isFetchingDashboard) {
     return (
@@ -19,9 +20,6 @@ export function SectionCards() {
           title="Overview"
           subtitle="Manage your products and track stock levels"
         />
-           {!hasBusiness && 
-     <HasBusinessAlert/>
-     }
 
         <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Loading skeleton cards */}
@@ -100,6 +98,9 @@ export function SectionCards() {
          title="Overview"
         subtitle="Manage your products and track stock levels"
       />
+          {!hasBusiness && 
+     <HasBusinessAlert/>
+     }
       <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
          {stats.map((stat, i) => (
           <StatCard key={i} {...stat} />

@@ -112,3 +112,34 @@ export interface Order {
   items: string[];
   email: string;
 }
+
+
+export interface CreateRegistrationPayload {
+  businessName: string;
+  description: string;
+  businessType: string;
+  category: {
+    main: string;
+  };
+  address: string;
+  storeName: string;
+  slogan: string;
+  customeDomain: string;
+  currency: string;
+  paymentMethods: {
+    paystack: boolean;
+    bankTransfer: boolean;
+  };
+  deliveryOptions: {
+    inHouse: boolean;
+    thirdParty: string[];
+  };
+}
+
+export interface Register {
+  message: string;
+  status: number;
+  data: {
+    businessId: string;
+  };
+}

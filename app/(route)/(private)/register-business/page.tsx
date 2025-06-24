@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Package,
   ShoppingCart,
-
   Check,
   SettingsIcon,
 } from "lucide-react";
@@ -32,14 +31,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
-
-
-import { useRegistration } from "@/hooks/useBusinessRegister";
+import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 
 export default function WebTrayOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
-  const { addRegister, isRegisteringUser } = useRegistration();
+  const { registerBusiness, isRegisteringBusiness,  } = useUser();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -177,7 +174,7 @@ export default function WebTrayOnboarding() {
         },
       };
 
-      await addRegister(payload);
+      await registerBusiness(payload);
       router.push("/dashboard");
     } catch (error) {
       console.error("Registration failed:", error);
@@ -743,7 +740,7 @@ export default function WebTrayOnboarding() {
             <Button
               variant="ghost"
               onClick={prevStep}
-              disabled={currentStep === 1 || isRegisteringUser}
+              disabled={currentStep === 1 || isRegisteringBusiness}
               className="flex items-center gap-2 border-[0.09rem]"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -751,10 +748,10 @@ export default function WebTrayOnboarding() {
             </Button>
             <Button
               onClick={nextStep}
-              disabled={isRegisteringUser}
+              disabled={isRegisteringBusiness}
               className="flex items-center gap-2"
             >
-              {isRegisteringUser ? (
+              {isRegisteringBusiness ? (
                 <>
                   <svg
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"

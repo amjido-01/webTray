@@ -1,6 +1,6 @@
 import api from "@/lib/axios";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
+import { useMutation } from "@tanstack/react-query";
+import { CreateRegistrationPayload, Register, ApiResponse } from "@/types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -9,39 +9,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 // const setHasBusiness = useAuthStore((state) => state.setHasBusiness)
 
 // types
-interface CreateRegistrationPayload {
- businessName: string;
-  description: string;
-  businessType: string;
-  category: {
-    main: string;
-  },
-  address: string;
-  storeName: string;
-  slogan: string;
-  customeDomain: string;
-  currency: string;
-  paymentMethods:{
-    paystack: boolean;
-    bankTransfer: boolean;
-  }
-  deliveryOptions: {
-    inHouse: boolean;
-   thirdParty: string[];
-  }
-}
-interface Register {
-  message: string;
-  status: number;
-  data: {
-    businessId: string;
-  };
-}
-interface ApiResponse<T> {
-  responseSuccessful: boolean;
-  responseMessage: string;
-  responseBody: T;
-}
+
+
 
 // Query Keys
 export const registrationKeys = {

@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { User, ApiResponse, DashboardSummary } from "@/types";
+import { toast } from "sonner";
+import { User, ApiResponse, DashboardSummary, CreateRegistrationPayload, Register, } from "@/types";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Query Keys
 export const userKeys = {
@@ -10,6 +12,9 @@ export const userKeys = {
 };
 
 export const useUser = () => {
+  const queryClient = useQueryClient();
+  const setHasBusiness = useAuthStore((state) => state.setHasBusiness);
+
   const profileQuery = useQuery({
     queryKey: userKeys.profile(),
     queryFn: async (): Promise<User> => {
@@ -34,6 +39,29 @@ export const useUser = () => {
     },
   });
 
+    const registerBusinessMutation = useMutation({
+    mutationFn: async (payload: CreateRegistrationPayload): Promise<Register> => {
+      const { data } = await api.post<ApiResponse<{ register: Register }>>("/user/complete", payload);
+      if (data?.responseSuccessful) {
+        return data.responseBody.register;
+      }
+      throw new Error(data?.responseMessage || "Failed to register business");
+    },
+    onSuccess: () => {
+      toast.success("Business registered successfully");
+      setHasBusiness(true);
+      // You can also refetch profile or dashboard if needed
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() }); 
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Business registration failed");
+    },
+  });
+
+    const registerBusiness = async (payload: CreateRegistrationPayload) => {
+    return registerBusinessMutation.mutateAsync(payload);
+  };
+
   return {
     profile: profileQuery.data,
     isFetchingProfile: profileQuery.isLoading,
@@ -45,5 +73,12 @@ export const useUser = () => {
     isFetchingDashboard: dashboardQuery.isLoading,
     dashboardError: dashboardQuery.error,
     refetchDashboard: dashboardQuery.refetch,
+
+      // Business Registration
+    registerBusiness,
+    isRegisteringBusiness: registerBusinessMutation.isPending,
+    registerBusinessError: registerBusinessMutation.error,
+    registerBusinessSuccess: registerBusinessMutation.isSuccess,
+    resetRegisterBusiness: registerBusinessMutation.reset,
   };
 };
