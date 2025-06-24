@@ -93,3 +93,22 @@ export interface Business {
     updatedAt: string;
   }>;
 }
+
+export interface DashboardSummary {
+  totalRevenue: number;
+  noOfOrders: number;
+  noOfProducts: number;
+  noOfCustomers: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  orders: any[]; // You can type this more specifically based on your Order type
+}
+
+export interface Order {
+  id: string;
+  customer: string;
+  status: "Processing" | "Completed" | "Pending"; // you can add more statuses as needed
+  price: number;
+  date: string;
+  items: string[];
+  email: string;
+}
