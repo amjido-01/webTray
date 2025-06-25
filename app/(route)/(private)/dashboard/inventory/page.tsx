@@ -3,48 +3,95 @@ import ProductsTable from "@/components/products-table";
 import { InventoryManagement } from "@/components/inventory-management";
 import { TrendingDown, TrendingUp, Package } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
-// import { useCategory } from "@/hooks/useCategory";
-
-const stats = [
-  {
-    title: "Products",
-    icon: <Package className="h-4 w-4 text-muted-foreground" />,
-    value: 64,
-    note: "+4 new this week",
-    minWidth: "min-w-[150px]",
-  },
-  {
-    title: "Low Stock Items",
-    icon: <TrendingDown className="h-4 w-4 text-red-500" />,
-    value: "+2,350",
-    note: "Need Attention",
-    noteColor: "text-red-500",
-  },
-  {
-    title: "Total Value",
-    icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-    value: "N200,000",
-    note: "Inventory Value",
-  },
-  {
-    title: "Category",
-    icon: <Package className="h-4 w-4 text-muted-foreground" />,
-    value: 6,
-    note: "Product Categories",
-  },
-];
-
+import { useCategory } from "@/hooks/useCategory";
+import { PageHeader } from "@/components/page-header";
+// import { formatCurrency } from "@/lib/format-currency";
 export default function Page() {
-  // const {
-  //   categories,
-  //   isFetchingCategories,
-  //   categoriesError,
-  //   // refetchCategories,
-  // } = useCategory();
+  const {
+    categories,
+    isFetchingCategories,
+    categoriesError,
+    inventorySummary,
+    // isFetchingInventorySummary,
+    // inventorySummaryError
+    // refetchCategories,
+  } = useCategory();
+ 
 
-  //  if (isFetchingCategories) return <p>Loading...</p>;
-  // if (categoriesError) return <p>Error loading categories</p>;
-  //  console.log(categories, "hello")
+  if (isFetchingCategories) {
+    return (
+      <div className="">
+        <PageHeader
+          title="Inventory Management"
+          subtitle="Manage your products and track stock levels"
+        />
+
+        <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="p-6 border rounded-lg bg-card animate-pulse"
+            >
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (categoriesError) {
+    return (
+      <div className="">
+        <PageHeader
+          title="Overview"
+          subtitle="Manage your products and track stock levels"
+        />
+        <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
+          <p className="text-red-600">
+            Failed to load dashboard data. Please try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  console.log(categories, "from inventory")
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat().format(num);
+  };
+
+  const stats = [
+    {
+      title: "Products",
+      icon: <Package className="h-4 w-4 text-muted-foreground" />,
+      value:  formatNumber(inventorySummary?.noOfProducts || 0),
+      note: "+4 new this week",
+      minWidth: "min-w-[150px]",
+    },
+    {
+      title: "Low Stock Items",
+      icon: <TrendingDown className="h-4 w-4 text-red-500" />,
+      value: formatNumber(inventorySummary?.noOfLowStocksItems || 0),
+      note: "Need Attention",
+      noteColor: "text-red-500",
+    },
+    {
+      title: "Total Value",
+      icon: <TrendingUp className="h-4 w-4 text-green-500" />,
+      value: "N200,000",
+      note: "Inventory Value",
+    },
+    {
+      title: "Category",
+      icon: <Package className="h-4 w-4 text-muted-foreground" />,
+      value: formatNumber(inventorySummary?.noOfCategories || 0),
+      note: "Product Categories",
+    },
+  ];
+
   return (
     <div className="flex flex-1 flex-col">
       <InventoryManagement />

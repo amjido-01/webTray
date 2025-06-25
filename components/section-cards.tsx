@@ -1,21 +1,18 @@
-"use client"
-import { TrendingUp, ShoppingCart, Package, Users } from "lucide-react"
-import { PageHeader } from "./page-header"
-import { StatCard } from "./stat-card"
+"use client";
+import { TrendingUp, ShoppingCart, Package, Users } from "lucide-react";
+import { PageHeader } from "./page-header";
+import { StatCard } from "./stat-card";
 import { useUser } from "@/hooks/useUser";
 import { useAuthStore } from "@/store/useAuthStore";
 import { HasBusinessAlert } from "./hasBusinessAlert";
-
-
+import { formatCurrency } from "@/lib/format-currency";
 export function SectionCards() {
   const { dashboard, isFetchingDashboard, dashboardError } = useUser();
-    const { hasBusiness } = useAuthStore();
-    console.log(hasBusiness, "has bussiness")
+  const { user } = useAuthStore();
 
-   if (isFetchingDashboard) {
+  if (isFetchingDashboard) {
     return (
       <div className="">
-        
         <PageHeader
           title="Overview"
           subtitle="Manage your products and track stock levels"
@@ -24,19 +21,20 @@ export function SectionCards() {
         <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Loading skeleton cards */}
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-6 border rounded-lg bg-card animate-pulse">
+            <div
+              key={i}
+              className="p-6 border rounded-lg bg-card animate-pulse"
+            >
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
               <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-1/3"></div>
             </div>
           ))}
         </div>
-       
       </div>
     );
   }
 
-   // Handle error state
   if (dashboardError) {
     return (
       <div className="">
@@ -45,27 +43,20 @@ export function SectionCards() {
           subtitle="Manage your products and track stock levels"
         />
         <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
-          <p className="text-red-600">Failed to load dashboard data. Please try again.</p>
+          <p className="text-red-600">
+            Failed to load dashboard data. Please try again.
+          </p>
         </div>
       </div>
     );
   }
 
-   // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-    }).format(amount);
-  };
 
-  // Format number with commas
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
   };
 
-
-   const stats = [
+  const stats = [
     {
       title: "Total Revenue",
       icon: <TrendingUp className="h-4 w-4 text-muted-foreground" />,
@@ -94,18 +85,16 @@ export function SectionCards() {
 
   return (
     <div className="">
-      <PageHeader 
-         title="Overview"
+      <PageHeader
+        title="Overview"
         subtitle="Manage your products and track stock levels"
       />
-          {!hasBusiness && 
-     <HasBusinessAlert/>
-     }
+      {!user?.business && <HasBusinessAlert />}
       <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
-         {stats.map((stat, i) => (
+        {stats.map((stat, i) => (
           <StatCard key={i} {...stat} />
         ))}
       </div>
     </div>
-  )
+  );
 }
