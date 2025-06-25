@@ -8,8 +8,30 @@ export interface User {
   refreshToken: string;
   createdAt: Date;
   updatedAt: Date;
+  business?: Business | null;
+  store?: Store | null
 }
 
+
+export interface Store {
+  id: number;
+  businessId: number;
+  storeName: string;
+  slogan: string;
+  customDomain: string;
+  paymentMethods: {
+    paystack: boolean;
+    bankTransfer: boolean;
+  };
+  deliveryOptions: {
+    inHouse: boolean;
+    thirdParty: string[];
+  };
+  status: string;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface RegisterPayload {
   fullname: string;
@@ -142,4 +164,42 @@ export interface Register {
   data: {
     businessId: string;
   };
+}
+
+export interface ProductImages {
+  main: string;
+  thumbnail: string;
+}
+
+
+export interface CreateProductPayload {
+  storeId: number;
+  categoryId: number;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  images: ProductImages;
+}
+
+export interface Product {
+  id: number;
+  storeId: number;
+  categoryId: number;
+  name: string;
+  description: string;
+  price: string; 
+  quantity: number;
+  images: ProductImages;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventorySummary {
+  noOfProducts: number;
+  noOfLowStocksItems: number;
+  totalValueOfProducts: number;
+  noOfCategories: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  products: any[];
 }

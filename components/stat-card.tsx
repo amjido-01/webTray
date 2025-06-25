@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ReactNode } from "react"
+import { Button } from "./ui/button"
 
 interface StatCardProps {
   title: string
@@ -24,9 +25,12 @@ export function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className={`text-xs mt-1 ${noteColor}`}>
+        <div className="flex justify-between items-center">
+          <p className={`text-xs mt-1 ${noteColor}`}>
           <span>{note}</span>
         </p>
+         {title === "Category" && (<Button size="sm" className="text-white hover:bg-[#5f70b4] bg-[#365BEB] rounded-full">Add New</Button>)}
+        </div>
       </CardContent>
     </Card>
   )

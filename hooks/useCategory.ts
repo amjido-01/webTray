@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/axios";
-import { ApiResponse, Category, CreateCategoryPayload } from "@/types";
+import {
+  ApiResponse,
+  Category,
+  CreateCategoryPayload,
+  InventorySummary,
+} from "@/types";
 
 interface UpdateCategoryPayload extends CreateCategoryPayload {
   id: number;
 }
 
-
 // Query Keys
 export const categoryKeys = {
-  all: ['inventory'] as const,
-  categories: () => [...categoryKeys.all, 'categories'] as const,
+  all: ["inventory"] as const,
+  categories: () => [...categoryKeys.all, "categories"] as const,
   category: (id: number) => [...categoryKeys.categories(), id] as const,
 };
 
@@ -21,7 +25,9 @@ export const useCategory = () => {
   const categoriesQuery = useQuery({
     queryKey: categoryKeys.categories(),
     queryFn: async (): Promise<Category[]> => {
-      const { data } = await api.get<ApiResponse<{ categories: Category[] }>>("/inventory/category");
+      const { data } = await api.get<ApiResponse<{ categories: Category[] }>>(
+        "/inventory/category"
+      );
       if (data?.responseSuccessful) {
         return data.responseBody.categories;
       }
@@ -29,21 +35,25 @@ export const useCategory = () => {
     },
   });
 
-  // Single category query - this should be used as a separate hook
-  const useCategoryQuery = (id: number) => useQuery({
-    queryKey: categoryKeys.category(id),
-    queryFn: async (): Promise<Category> => {
-      const { data } = await api.get<ApiResponse<{ category: Category }>>(`/inventory/category/${id}`);
-      if (data?.responseSuccessful) {
-        return data.responseBody.category;
-      }
-      throw new Error(data?.responseMessage || "Failed to fetch category");
-    },
-    enabled: !!id,
-  });
+  const useCategoryQuery = (id: number) =>
+    useQuery({
+      queryKey: categoryKeys.category(id),
+      queryFn: async (): Promise<Category> => {
+        const { data } = await api.get<ApiResponse<{ category: Category }>>(
+          `/inventory/category/${id}`
+        );
+        if (data?.responseSuccessful) {
+          return data.responseBody.category;
+        }
+        throw new Error(data?.responseMessage || "Failed to fetch category");
+      },
+      enabled: !!id,
+    });
 
-    const getCategory = async (id: number): Promise<Category> => {
-    const { data } = await api.get<ApiResponse<{ category: Category }>>(`/inventory/category/${id}`);
+  const getCategory = async (id: number): Promise<Category> => {
+    const { data } = await api.get<ApiResponse<{ category: Category }>>(
+      `/inventory/category/${id}`
+    );
     if (data?.responseSuccessful) {
       return data.responseBody.category;
     }
@@ -52,7 +62,10 @@ export const useCategory = () => {
 
   const addCategoryMutation = useMutation({
     mutationFn: async (payload: CreateCategoryPayload): Promise<Category> => {
-      const { data } = await api.post<ApiResponse<{ category: Category }>>("/inventory/category", payload);
+      const { data } = await api.post<ApiResponse<{ category: Category }>>(
+        "/inventory/category",
+        payload
+      );
       if (data?.responseSuccessful) {
         return data.responseBody.category;
       }
@@ -61,12 +74,12 @@ export const useCategory = () => {
     onSuccess: (newCategory) => {
       // Invalidate and refetch categories
       queryClient.invalidateQueries({ queryKey: categoryKeys.categories() });
-      
+
       // Optimistically update the categories cache
       queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
         return old ? [...old, newCategory] : [newCategory];
       });
-      
+
       toast.success("Category added successfully");
     },
     onError: (error: Error) => {
@@ -79,8 +92,14 @@ export const useCategory = () => {
   };
 
   const updateCategoryMutation = useMutation({
-    mutationFn: async ({ id, ...payload }: UpdateCategoryPayload): Promise<Category> => {
-      const { data } = await api.put<ApiResponse<{ category: Category }>>(`/inventory/category/${id}`, payload);
+    mutationFn: async ({
+      id,
+      ...payload
+    }: UpdateCategoryPayload): Promise<Category> => {
+      const { data } = await api.put<ApiResponse<{ category: Category }>>(
+        `/inventory/category/${id}`,
+        payload
+      );
       if (data?.responseSuccessful) {
         return data.responseBody.category;
       }
@@ -88,13 +107,20 @@ export const useCategory = () => {
     },
     onSuccess: (updatedCategory) => {
       // Update specific category in cache
-      queryClient.setQueryData<Category>(categoryKeys.category(updatedCategory.id), updatedCategory);
-      
+      queryClient.setQueryData<Category>(
+        categoryKeys.category(updatedCategory.id),
+        updatedCategory
+      );
+
       // Update categories list cache
       queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
-        return old ? old.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat) : [updatedCategory];
+        return old
+          ? old.map((cat) =>
+              cat.id === updatedCategory.id ? updatedCategory : cat
+            )
+          : [updatedCategory];
       });
-      
+
       toast.success("Category updated successfully");
     },
     onError: (error: Error) => {
@@ -102,14 +128,15 @@ export const useCategory = () => {
     },
   });
 
-   const updateCategory = async (payload: UpdateCategoryPayload) => {
+  const updateCategory = async (payload: UpdateCategoryPayload) => {
     return updateCategoryMutation.mutateAsync(payload);
   };
 
-
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: number): Promise<void> => {
-      const { data } = await api.delete<ApiResponse<object>>(`/inventory/category/${id}`);
+      const { data } = await api.delete<ApiResponse<object>>(
+        `/inventory/category/${id}`
+      );
       if (!data?.responseSuccessful) {
         throw new Error(data?.responseMessage || "Failed to delete category");
       }
@@ -117,12 +144,12 @@ export const useCategory = () => {
     onSuccess: (_, deletedId) => {
       // Remove from categories cache
       queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
-        return old ? old.filter(cat => cat.id !== deletedId) : [];
+        return old ? old.filter((cat) => cat.id !== deletedId) : [];
       });
-      
+
       // Remove specific category cache
       queryClient.removeQueries({ queryKey: categoryKeys.category(deletedId) });
-      
+
       toast.success("Category deleted successfully");
     },
     onError: (error: Error) => {
@@ -134,13 +161,28 @@ export const useCategory = () => {
     return deleteCategoryMutation.mutateAsync(id);
   };
 
+  const inventorySummaryQuery = useQuery({
+    queryKey: [...categoryKeys.all, "summary"],
+    queryFn: async (): Promise<InventorySummary> => {
+      const { data } = await api.get<ApiResponse<InventorySummary>>(
+        "/inventory/inventory-summary"
+      );
+
+      if (data?.responseSuccessful) {
+        return data.responseBody;
+      }
+      throw new Error(
+        data?.responseMessage || "Failed to fetch inventory summary"
+      );
+    },
+  });
 
   return {
     categories: categoriesQuery.data,
     isFetchingCategories: categoriesQuery.isLoading,
     categoriesError: categoriesQuery.error,
     refetchCategories: categoriesQuery.refetch,
-    getCategory, 
+    getCategory,
     useCategoryQuery,
 
     addCategory,
@@ -162,5 +204,10 @@ export const useCategory = () => {
     resetAddCategory: addCategoryMutation.reset,
     resetUpdateCategory: updateCategoryMutation.reset,
     resetDeleteCategory: deleteCategoryMutation.reset,
+
+    inventorySummary: inventorySummaryQuery.data,
+    isFetchingInventorySummary: inventorySummaryQuery.isLoading,
+    inventorySummaryError: inventorySummaryQuery.error,
+    refetchInventorySummary: inventorySummaryQuery.refetch,
   };
 };

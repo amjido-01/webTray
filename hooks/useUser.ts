@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "sonner";
-import { User, ApiResponse, DashboardSummary, CreateRegistrationPayload, Register, } from "@/types";
+import { User, ApiResponse, DashboardSummary, CreateRegistrationPayload, Business, Store } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // Query Keys
@@ -13,7 +13,6 @@ export const userKeys = {
 
 export const useUser = () => {
   const queryClient = useQueryClient();
-  const setHasBusiness = useAuthStore((state) => state.setHasBusiness);
 
   const profileQuery = useQuery({
     queryKey: userKeys.profile(),
@@ -39,24 +38,38 @@ export const useUser = () => {
     },
   });
 
-    const registerBusinessMutation = useMutation({
-    mutationFn: async (payload: CreateRegistrationPayload): Promise<Register> => {
-      const { data } = await api.post<ApiResponse<{ register: Register }>>("/user/complete", payload);
-      if (data?.responseSuccessful) {
-        return data.responseBody.register;
-      }
-      throw new Error(data?.responseMessage || "Failed to register business");
-    },
-    onSuccess: () => {
-      toast.success("Business registered successfully");
-      setHasBusiness(true);
-      // You can also refetch profile or dashboard if needed
-      queryClient.invalidateQueries({ queryKey: userKeys.profile() }); 
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Business registration failed");
-    },
-  });
+const registerBusinessMutation = useMutation({
+  mutationFn: async (payload: CreateRegistrationPayload): Promise<{ business: Business; store: Store }> => {
+    const { data } = await api.post<ApiResponse<{ business: Business; store: Store }>>("/user/complete", payload);
+
+    if (data?.responseSuccessful) {
+      return data.responseBody;
+    }
+    throw new Error(data?.responseMessage || "Failed to register business");
+  },
+  onSuccess: (registerResponse) => {
+    toast.success("Business registered successfully");
+    console.log(registerResponse.business)
+
+    const { user } = useAuthStore.getState();
+
+    if (user) {
+      useAuthStore.setState({
+        user: {
+          ...user,
+          business: registerResponse.business,
+          store: registerResponse.store,
+        },
+      });
+    }
+
+    // Optionally refetch any queries
+    queryClient.invalidateQueries({ queryKey: userKeys.profile() }); 
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Business registration failed");
+  },
+});
 
     const registerBusiness = async (payload: CreateRegistrationPayload) => {
     return registerBusinessMutation.mutateAsync(payload);

@@ -1,6 +1,4 @@
 "use client";
-
-
 import React, { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -51,6 +49,7 @@ export default function LoginPage() {
   const onSubmit = async (data: FormData) => {
     try {
       await login(data)
+      // checkAuth()
       setSubmitSuccess(true)
       reset()
       router.push("/dashboard")

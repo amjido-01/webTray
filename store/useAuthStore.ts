@@ -9,17 +9,20 @@ import {
   VerifyOtpPayload,
   LoginPayload,
 } from "@/types";
-// {"state":{"user":{"id":2,"email":"amastudioagency@gmail.com","phone":"08086259124","fullname":"ala","status":null,"password":"$2b$10$PGRGBOaq7JxmHfSRlm0qCOawCX0UnD93gFBeT/HIBPjZisjlXDVGe","refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJhbWFzdHVkaW9hZ2VuY3lAZ21haWwuY29tIiwiaWF0IjoxNzUwNDI0NjIzLCJleHAiOjE3NTEwMjk0MjN9.OLIx5khu9SZrJsmYE7ZBHtbcaDdtqGPpdWYF0qIHCEM","createdAt":"2025-06-18T12:36:00.103Z","updatedAt":"2025-06-20T13:03:44.005Z"},"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJhbWFzdHVkaW9hZ2VuY3lAZ21haWwuY29tIiwiaWF0IjoxNzUwNDI4NzkxLCJleHAiOjE3NTA0MzIzOTF9.8uCAsfagPh7zr-97xqwRm_zG4Q3kekZ35pkbR7JK61I","refreshTokenValue":null,"hasBusiness":true},"version":0}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshTokenValue: string | null;
-  hasBusiness: boolean;
+
   loading: boolean;
   _hasHydrated: boolean;
+
   setHasHydrated: (state: boolean) => void;
-  setHasBusiness: (state: boolean) => void;
+
   isLoggedIn: () => boolean;
+  isBusinessRegistered: () => boolean;
+
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
   verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
@@ -35,25 +38,26 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      hasBusiness: false,
       accessToken: null,
       refreshTokenValue: null,
       loading: false,
       _hasHydrated: false,
 
-      setHasHydrated: (state: boolean) => {
+      setHasHydrated: (state) => {
         set({ _hasHydrated: state });
       },
-       setHasBusiness: (state) => {
-        set({ hasBusiness: state });
-      },
+
       isLoggedIn: () => {
         const state = get();
-        const hasToken = !!state.accessToken;
-        return hasToken;
+        return !!state.accessToken;
       },
 
-      register: async (payload: RegisterPayload) => {
+      isBusinessRegistered: () => {
+        const state = get();
+        return state.user?.business != null;
+      },
+
+      register: async (payload) => {
         try {
           const response = await api.post("/auth/register", payload);
           const { responseSuccessful, responseMessage } = response.data;
@@ -83,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, accessToken, refreshToken } = responseBody;
 
-          set({ user, accessToken, refreshToken, hasBusiness: Boolean(user?.businessId)});
+          set({ user, accessToken, refreshToken });
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
           const customMessage =
@@ -92,10 +96,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      resendOtp: async (email: string) => {
+      resendOtp: async (email) => {
         set({ loading: true });
         try {
-          const response = await api.post("/api/v1/auth/resend", { email });
+          const response = await api.post("/auth/resend", { email });
           const { responseSuccessful, responseMessage } = response.data;
 
           if (!responseSuccessful) {
@@ -108,28 +112,40 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (payload: LoginPayload) => {
-        set({ loading: true });
-        try {
-          const response = await api.post("/auth/login", payload);
-          const { responseBody } = response.data;
-          const accessToken = responseBody.accessToken;
-          const refreshToken = responseBody.refreshToken;
-          set({
-            accessToken,
-            refreshToken,
-            user: responseBody.user,
-            hasBusiness: Boolean(responseBody?.user?.businessId),
-          });
-        } catch (error) {
-          console.error("Login failed:", error);
-          throw error;
-        } finally {
-          set({ loading: false });
-        }
-      },
+     login: async (payload) => {
+  set({ loading: true });
+  try {
+    const response = await api.post("/auth/login", payload);
+    const { responseBody } = response.data;
 
-      forgotPassword: async (email: string) => {
+    // Store the basic user and tokens
+    set({
+      accessToken: responseBody.accessToken,
+      refreshTokenValue: responseBody.refreshToken,
+      user: responseBody.user,
+    });
+
+    // ✅ Now fetch the full user, business, and store
+    const profileResponse = await api.get("/user/profile");
+    const { user, business, store } = profileResponse.data.responseBody;
+
+    set({
+      user: {
+        ...user,
+        business,
+        store,
+      },
+    });
+  } catch (error) {
+    console.error("Login failed:", error);
+    throw error;
+  } finally {
+    set({ loading: false });
+  }
+},
+
+
+      forgotPassword: async (email) => {
         set({ loading: true });
         try {
           const response = await api.post("/auth/forgot", { email });
@@ -149,7 +165,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      resetPassword: async (payload: ResetPasswordPayload) => {
+      resetPassword: async (payload) => {
         set({ loading: true });
         try {
           const response = await api.post("/auth/reset", payload);
@@ -180,11 +196,9 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const response = await api.get("/user/profile");
-          const { user, business } = response.data.responseBody;
-          set({
-            user,
-            hasBusiness: business !== null,
-          });
+          const { user } = response.data.responseBody;
+
+          set({ user }); // user now contains any business
           return true;
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -192,6 +206,7 @@ export const useAuthStore = create<AuthState>()(
           return false;
         }
       },
+
       refreshToken: async () => {
         try {
           const response = await api.post("/auth/refresh");
@@ -211,7 +226,6 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.warn("Logout failed, but clearing user data anyway:", error);
         }
-
         set({ user: null, accessToken: null, refreshTokenValue: null });
       },
     }),
@@ -222,9 +236,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshTokenValue: state.refreshTokenValue,
-        hasBusiness: state.hasBusiness,
       }),
-
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHasHydrated(true);
