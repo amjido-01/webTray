@@ -7,7 +7,7 @@ interface UseResendTimerProps {
 }
 
 export const useResendTimer = ({ 
-  initialSeconds = 60, 
+  initialSeconds = 300, 
   storageKey = "otpExpiresAt" 
 }: UseResendTimerProps = {}) => {
   const [countdown, setCountdown] = useState(0)

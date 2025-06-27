@@ -181,7 +181,14 @@ export interface CreateProductPayload {
   quantity: number;
   images: ProductImages;
 }
-
+export interface UpdateProductPayload {
+  id: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  description?: string;
+  // categoryId?: string; // Add this if your API supports category updates
+}
 export interface Product {
   id: number;
   storeId: number;

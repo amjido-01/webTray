@@ -8,17 +8,15 @@ import { PageHeader } from "@/components/page-header";
 // import { formatCurrency } from "@/lib/format-currency";
 export default function Page() {
   const {
-    categories,
-    isFetchingCategories,
-    categoriesError,
     inventorySummary,
-    // isFetchingInventorySummary,
-    // inventorySummaryError
+    isFetchingInventorySummary,
+    inventorySummaryError
     // refetchCategories,
   } = useCategory();
+console.log(inventorySummary, "jjj")
  
 
-  if (isFetchingCategories) {
+  if (isFetchingInventorySummary) {
     return (
       <div className="">
         <PageHeader
@@ -42,7 +40,7 @@ export default function Page() {
     );
   }
 
-  if (categoriesError) {
+  if (inventorySummaryError) {
     return (
       <div className="">
         <PageHeader
@@ -57,7 +55,6 @@ export default function Page() {
       </div>
     );
   }
-  console.log(categories, "from inventory")
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
@@ -81,7 +78,7 @@ export default function Page() {
     {
       title: "Total Value",
       icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-      value: "N200,000",
+      value: formatNumber(inventorySummary?.totalValueOfProducts || 0),
       note: "Inventory Value",
     },
     {

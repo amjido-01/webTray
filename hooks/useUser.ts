@@ -30,7 +30,6 @@ export const useUser = () => {
     queryKey: userKeys.dashboard(),
     queryFn: async (): Promise<DashboardSummary> => {
       const { data } = await api.get<ApiResponse<DashboardSummary>>("/user/dashboard");
-      console.log(data)
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
@@ -49,7 +48,6 @@ const registerBusinessMutation = useMutation({
   },
   onSuccess: (registerResponse) => {
     toast.success("Business registered successfully");
-    console.log(registerResponse.business)
 
     const { user } = useAuthStore.getState();
 
