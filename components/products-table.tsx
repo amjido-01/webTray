@@ -23,6 +23,7 @@ import { useProduct } from "@/hooks/useProduct";
 import { DataTable } from "@/products/data-table";
 import { createColumns, Product, EditForm, ColumnHandlers } from "@/products/columns";
 import { useCategory } from "@/hooks/useCategory";
+import { capitalizeFirstLetter } from "@/lib/capitalize";
 
 export default function ProductsTable() {
   const {
@@ -34,10 +35,13 @@ export default function ProductsTable() {
     isUpdatingProduct,
     isDeletingProduct,
   } = useProduct();
-  const { categories } = useCategory()
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  const { categories } = useCategory();
+  
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     product: Product | null;
@@ -46,11 +50,6 @@ export default function ProductsTable() {
     product: null,
   });
 
-  const totalPages = 80;
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const handleEditClick = (product: Product) => {
     setEditingProduct(product.id);
@@ -108,6 +107,13 @@ export default function ProductsTable() {
     setDeleteDialog({ open: false, product: null });
   };
 
+  // Create category lookup for sorting and display
+  const categoryLookup = categories?.reduce((acc, category) => {
+    acc[category.id] = category;
+    return acc;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }, {} as Record<number, any>) || {};
+
   // Create the handlers object for the columns
   const columnHandlers: ColumnHandlers = {
     handleEdit: handleEditClick,
@@ -120,12 +126,26 @@ export default function ProductsTable() {
     isUpdatingProduct,
   };
 
-
-   const formattedProducts = products?.map(product => ({
+  // Format products with category data and apply filters
+  const formattedProducts = products?.map(product => ({
     ...product,
-    //  category: categoryLookup[product.categoryId],
+    category: categoryLookup[product.categoryId], // Add full category object
+    categoryName: categoryLookup[product.categoryId]?.name || 'Unknown', // Add category name for sorting
     price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
-  })) || [];
+  }))
+  .filter(product => {
+    // Filter by search term
+    const matchesSearch = !searchTerm || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by selected category
+    const matchesCategory = selectedCategory === "all" || 
+      product.categoryId.toString() === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  }) || [];
 
   // Create columns with all the handlers
   const columns = createColumns(columnHandlers, categories);
@@ -146,24 +166,29 @@ export default function ProductsTable() {
               <Input
                 placeholder="Search Products"
                 className="pl-10 bg-white border border-gray-200 rounded-full h-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select defaultValue="all">
+            <Select 
+              value={selectedCategory} 
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger className="w-full sm:w-56 bg-white border border-gray-200 rounded-full h-10">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="beverages">Beverages</SelectItem>
-                <SelectItem value="food">Food</SelectItem>
-                <SelectItem value="snacks">Snacks</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {capitalizeFirstLetter(category.name)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <DataTable columns={columns} data={formattedProducts} />
-
-       
         </div>
       </div>
 

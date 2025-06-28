@@ -65,13 +65,18 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]): ColumnDef<Product>[] => [
+export const createColumns = (
+  handlers: ColumnHandlers,
+  categories?: Category[]
+): ColumnDef<Product>[] => [
   {
     header: "S/N",
     cell: ({ row }) => {
-      return <div className="font-medium py-5">
-  {(row.index + 1).toString().padStart(2, "0")}
-</div>;
+      return (
+        <div className="font-medium py-5">
+          {(row.index + 1).toString().padStart(2, "0")}
+        </div>
+      );
     },
   },
   {
@@ -80,7 +85,7 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
     cell: ({ row }) => {
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
-      
+
       return (
         <div className="py-5">
           {isEditing ? (
@@ -88,7 +93,10 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
               <Input
                 value={handlers.editForm.name || ""}
                 onChange={(e) =>
-                  handlers.setEditForm({ ...handlers.editForm, name: e.target.value })
+                  handlers.setEditForm({
+                    ...handlers.editForm,
+                    name: e.target.value,
+                  })
                 }
                 className="h-8 mb-2"
               />
@@ -114,7 +122,7 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
       );
     },
   },
-    {
+  {
     accessorKey: "categoryId",
     header: "Category",
     cell: ({ row }) => {
@@ -160,7 +168,7 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
     cell: ({ row }) => {
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
-      
+
       return (
         <div className="text-[#999999] py-5">
           {isEditing ? (
@@ -191,7 +199,7 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
     cell: ({ row }) => {
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
-      
+
       return (
         <div className="py-5">
           {isEditing ? (
@@ -219,11 +227,13 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
     cell: ({ row }) => {
       const product = row.original;
       const status = getStockStatus(product.quantity);
-      
+
       return (
         <div className="py-5">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+              status
+            )}`}
           >
             {status}
           </span>
@@ -236,7 +246,7 @@ export const createColumns = (handlers: ColumnHandlers,  categories?: Category[]
     cell: ({ row }) => {
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
-      
+
       return (
         <div className="textright py-5">
           <div className="flex justifyend gap-2">
