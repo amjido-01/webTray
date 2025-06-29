@@ -5,6 +5,7 @@ import { TrendingDown, TrendingUp, Package } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 import { useCategory } from "@/hooks/useCategory";
 import { PageHeader } from "@/components/page-header";
+import { formatNumber } from "@/lib/format-number";
 // import { formatCurrency } from "@/lib/format-currency";
 export default function Page() {
   const {
@@ -56,9 +57,7 @@ console.log(inventorySummary, "jjj")
     );
   }
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(num);
-  };
+ 
 
   const stats = [
     {

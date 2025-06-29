@@ -3,7 +3,6 @@ import { useState, Suspense } from "react"
 import Image from "next/image"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
-import * as yup from "yup"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/useAuthStore"
 import { Button } from "@/components/ui/button"
@@ -11,16 +10,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Loader2Icon, CheckCircle, AlertTriangle, X } from "lucide-react"
+import { ResetPasswordFormData, resetPasswordSchema } from "@/schemas/reset-password.schema"
 
-const schema = yup.object().shape({
-  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("password")], "Those passwords don't match. Try again.")
-    .required("Please confirm your password"),
-})
 
-type FormData = yup.InferType<typeof schema>
+type FormData = ResetPasswordFormData
 
 type ResetPasswordPayload = {
   token: string
@@ -54,7 +47,7 @@ function ResetPasswordContent() {
     watch,
     reset,
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(resetPasswordSchema),
   })
 
   const watchedFields = watch()

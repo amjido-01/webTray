@@ -6,7 +6,6 @@ import { useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +13,10 @@ import { Label } from "@/components/ui/label";
 import { CustomAlert } from "@/components/CustomAlert";
 import { useAlertManager } from "@/hooks/useAlertManager";
 import { Loader2Icon } from "lucide-react";
-const schema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Invalid email address")
-    .required("Email is required"),
-});
+import { ForgetPasswordFormData, forgetPasswordschema } from "@/schemas/forget-password.schema";
 
-type FormData = yup.InferType<typeof schema>;
+
+type FormData = ForgetPasswordFormData;
 
 export default function Component() {
   const { forgotPassword } = useAuthStore();
@@ -38,7 +33,7 @@ export default function Component() {
     reset,
     watch,
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(forgetPasswordschema),
   });
 
   const watchedFields = watch();

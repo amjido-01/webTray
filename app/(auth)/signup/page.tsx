@@ -6,13 +6,13 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/public/logo.svg";
+import { SignupFormData, signupSchema } from "@/schemas/signup.schema";
 import {
   Alert,
   AlertDescription,
@@ -21,20 +21,7 @@ import {
 import { AlertCircleIcon } from "lucide-react"
 
 
-const schema = yup.object().shape({
-  fullname: yup.string().required("Full Name is required"),
-  phone: yup.string().required("Phone Number is required"),
-  email: yup
-    .string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: yup
-    .string()
-    .min(6, "Password must be at least 8 characters")
-    .required("Password is required"),
-});
-
-type FormData = yup.InferType<typeof schema>;
+type FormData = SignupFormData;
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -50,7 +37,7 @@ export default function SignUpPage() {
     reset,
     watch,
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(signupSchema),
   });
 
   const watchedFields = watch();
