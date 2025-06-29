@@ -28,29 +28,27 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = useState<SortingState>([])
+
+  const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-     onSortingChange: setSorting,
+    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     state: {
       sorting,
     },
   });
-
   const currentPage = table.getState().pagination.pageIndex + 1;
   const totalPages = table.getPageCount();
-  
-  // Generate page numbers to show (limit to show around current page)
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
-      // Show all pages if total pages is small
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
@@ -58,7 +56,7 @@ export function DataTable<TData, TValue>({
       // Show pages around current page
       let start = Math.max(1, currentPage - 2);
       let end = Math.min(totalPages, currentPage + 2);
-      
+
       // Adjust if we're near the beginning or end
       if (currentPage <= 3) {
         end = Math.min(maxVisiblePages, totalPages);
@@ -66,12 +64,12 @@ export function DataTable<TData, TValue>({
       if (currentPage > totalPages - 3) {
         start = Math.max(1, totalPages - maxVisiblePages + 1);
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   };
 
@@ -119,7 +117,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="flex items-center justify-between mt-6">
         <Button
           variant="outline"
@@ -131,15 +129,14 @@ export function DataTable<TData, TValue>({
           Previous
         </Button>
 
-        {/* Circle Page Indicators */}
         <div className="flex items-center gap-1">
           {getPageNumbers().map((pageNum) => (
             <Button
               key={pageNum}
               variant={currentPage === pageNum ? "outline" : "outline"}
               className={`w-8 h-8 p-0 text-sm rounded-full ${
-                currentPage === pageNum 
-                  ? "border-[#365BEB] text-[#365BEB]" 
+                currentPage === pageNum
+                  ? "border-[#365BEB] text-[#365BEB]"
                   : "bg-white border-gray-200 text-gray-700"
               }`}
               onClick={() => table.setPageIndex(pageNum - 1)}
@@ -147,7 +144,7 @@ export function DataTable<TData, TValue>({
               {pageNum}
             </Button>
           ))}
-          
+
           {totalPages > 1 && (
             <>
               <span className="mx-2 text-sm text-gray-500">of</span>

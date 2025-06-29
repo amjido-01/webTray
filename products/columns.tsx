@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColumnDef } from "@tanstack/react-table";
 import { SquarePen, Trash2, Check, X } from "lucide-react";
-import { Category } from "@/types";
+import { Category, EditForm } from "@/types";
 import {
   Select,
   SelectContent,
@@ -22,13 +22,6 @@ export type Product = {
   description: string;
 };
 
-export interface EditForm {
-  name?: string;
-  description?: string;
-  quantity?: number;
-  price?: number;
-  categoryId?: number;
-}
 
 export interface ColumnHandlers {
   handleEdit: (product: Product) => void;

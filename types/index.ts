@@ -182,7 +182,7 @@ export interface CreateProductPayload {
   images: ProductImages;
 }
 export interface UpdateProductPayload {
-  id: string;
+  id: number;
   name?: string;
   price?: number;
   quantity?: number;
@@ -209,4 +209,12 @@ export interface InventorySummary {
   noOfCategories: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   products: any[];
+}
+
+export interface EditForm {
+  name?: string;
+  description?: string;
+  quantity?: number;
+  price?: number;
+  categoryId?: number;
 }

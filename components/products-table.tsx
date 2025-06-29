@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import { useProduct } from "@/hooks/useProduct";
 import { DataTable } from "@/products/data-table";
-import { createColumns, Product, EditForm, ColumnHandlers } from "@/products/columns";
+import { createColumns, Product, ColumnHandlers } from "@/products/columns";
 import { useCategory } from "@/hooks/useCategory";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
+import { EditForm } from "@/types";
 
 export default function ProductsTable() {
   const {
@@ -129,18 +130,16 @@ export default function ProductsTable() {
   // Format products with category data and apply filters
   const formattedProducts = products?.map(product => ({
     ...product,
-    category: categoryLookup[product.categoryId], // Add full category object
-    categoryName: categoryLookup[product.categoryId]?.name || 'Unknown', // Add category name for sorting
+    category: categoryLookup[product.categoryId],
+    categoryName: categoryLookup[product.categoryId]?.name || 'Unknown',
     price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
   }))
   .filter(product => {
-    // Filter by search term
     const matchesSearch = !searchTerm || 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filter by selected category
     const matchesCategory = selectedCategory === "all" || 
       product.categoryId.toString() === selectedCategory;
     
