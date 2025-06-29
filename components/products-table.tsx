@@ -20,8 +20,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProduct } from "@/hooks/useProduct";
-import { DataTable } from "@/products/data-table";
-import { createColumns, Product, ColumnHandlers } from "@/products/columns";
+import { DataTable } from "@/lib/products/data-table";
+import { createColumns, Product, ColumnHandlers } from "@/lib/products/columns";
 import { useCategory } from "@/hooks/useCategory";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { EditForm } from "@/types";
