@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface User {
   id: number;
   email: string;
@@ -217,4 +219,17 @@ export interface EditForm {
   quantity?: number;
   price?: number;
   categoryId?: number;
+}
+
+export interface StatCardProps {
+  title: string;
+  icon: ReactNode;
+  value: string | number;
+  note: string;
+  noteColor?: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description?: string;
 }

@@ -14,7 +14,6 @@ export default function Page() {
     inventorySummaryError
     // refetchCategories,
   } = useCategory();
-console.log(inventorySummary, "jjj")
  
 
   if (isFetchingInventorySummary) {
