@@ -112,38 +112,37 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-     login: async (payload) => {
-  set({ loading: true });
-  try {
-    const response = await api.post("/auth/login", payload);
-    const { responseBody } = response.data;
+      login: async (payload) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/auth/login", payload);
+          const { responseBody } = response.data;
 
-    // Store the basic user and tokens
-    set({
-      accessToken: responseBody.accessToken,
-      refreshTokenValue: responseBody.refreshToken,
-      user: responseBody.user,
-    });
+          // Store the basic user and tokens
+          set({
+            accessToken: responseBody.accessToken,
+            refreshTokenValue: responseBody.refreshToken,
+            user: responseBody.user,
+          });
 
-    // ✅ Now fetch the full user, business, and store
-    const profileResponse = await api.get("/user/profile");
-    const { user, business, store } = profileResponse.data.responseBody;
+          // ✅ Now fetch the full user, business, and store
+          const profileResponse = await api.get("/user/profile");
+          const { user, business, store } = profileResponse.data.responseBody;
 
-    set({
-      user: {
-        ...user,
-        business,
-        store,
+          set({
+            user: {
+              ...user,
+              business,
+              store,
+            },
+          });
+        } catch (error) {
+          console.error("Login failed:", error);
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
       },
-    });
-  } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
-  } finally {
-    set({ loading: false });
-  }
-},
-
 
       forgotPassword: async (email) => {
         set({ loading: true });

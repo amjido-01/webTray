@@ -6,6 +6,8 @@ import { Plus } from "lucide-react"
 import { useState } from "react"
 import { ModalForm } from "./modal-form"
 import type { Order } from "@/types"
+import { useAuthStore } from "@/store/useAuthStore"
+import { toast } from "sonner"
 
 interface DataTableProps {
   data: Order[]
@@ -40,7 +42,16 @@ const formatDateShort = (dateString: string) => {
 }
 
 export function RecentOrdersTable({ data }: DataTableProps) {
+  const { user } = useAuthStore()
   const [isOpen, setIsOpen] = useState(false)
+
+  const handleNewOrderDrawer = () => {
+    if (!user?.business) {
+      toast("Please Register your business to carryout this action")
+      return
+    } 
+    setIsOpen(true)
+  }
 
   return (
     <div className="border">
@@ -51,7 +62,7 @@ export function RecentOrdersTable({ data }: DataTableProps) {
               <CardTitle className="border-">Recent Orders</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Latest orders from your store</p>
             </div>
-            <Button size="sm" onClick={() => setIsOpen(true)} className="rounded-full">
+            <Button size="sm" onClick={handleNewOrderDrawer} className="rounded-full">
               <Plus className="h-4 w-4 mr-2" />
               New Order
             </Button>

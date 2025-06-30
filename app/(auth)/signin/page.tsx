@@ -5,9 +5,9 @@ import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
-import * as yup from "yup"
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation"
+import { signinSchema, SigninFormData } from "@/schemas/signin.schema";
 
 
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/public/logo.svg";
 
-const schema = yup.object().shape({
-  email: yup
-    .string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: yup.string().required("Password is required"),
-});
 
-type FormData = yup.InferType<typeof schema>;
+type FormData = SigninFormData;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,7 +31,7 @@ export default function LoginPage() {
     reset,
     watch,
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(signinSchema),
   });
 
   const watchedFields = watch();

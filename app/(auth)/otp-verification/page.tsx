@@ -83,7 +83,7 @@ function OTPContent() {
 
     try {
       await resendOtp(email);
-      startTimer(60);
+      startTimer(300);
       showAlertMessage("success", "OTP has been resent to your email");
     } catch (error) {
       console.error("Error resending OTP:", error);

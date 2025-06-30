@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface User {
   id: number;
   email: string;
@@ -181,7 +183,14 @@ export interface CreateProductPayload {
   quantity: number;
   images: ProductImages;
 }
-
+export interface UpdateProductPayload {
+  id: number;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  description?: string;
+  // categoryId?: string; // Add this if your API supports category updates
+}
 export interface Product {
   id: number;
   storeId: number;
@@ -202,4 +211,25 @@ export interface InventorySummary {
   noOfCategories: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   products: any[];
+}
+
+export interface EditForm {
+  name?: string;
+  description?: string;
+  quantity?: number;
+  price?: number;
+  categoryId?: number;
+}
+
+export interface StatCardProps {
+  title: string;
+  icon: ReactNode;
+  value: string | number;
+  note: string;
+  noteColor?: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description?: string;
 }

@@ -230,6 +230,12 @@ export default function WebTrayOnboarding() {
 
         {/* Progress Section */}
         <div className="mt-8 w-[70%] mx-auto">
+          <div className="w-full mb-8">
+          <Button onClick={() => router.push("/dashboard")} className="w-full">
+            <ArrowLeft />
+           Back to Dashbaord
+            </Button>
+        </div>
           <div className="mb-2 flex items-center justify-between">
             <h1 className="text-[20px] font-semibold text-[#4D4D4D]">
               Welcome to WebTray
@@ -341,7 +347,7 @@ export default function WebTrayOnboarding() {
                       }
                       required
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select business type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -431,7 +437,7 @@ export default function WebTrayOnboarding() {
 
                 <div className="space-y-4">
                   <Label className="text-base font-medium">
-                    Product Categories*
+                    Business Categories*
                   </Label>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
@@ -557,7 +563,7 @@ export default function WebTrayOnboarding() {
                         setFormData((prev) => ({ ...prev, currency: value }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                       <SelectContent>
