@@ -1,18 +1,13 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeaderSkeleton } from "./header-skeleton";
 
 export default function InventoryPageSkeleton() {
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center animate-pulse">
-        <div className="text-[#4D4D4D]">
-          <Skeleton className="h-6 bg-gray-200 rounded-md w-48 mb-2" />
-          <Skeleton className="h-4 bg-gray-200 rounded-md w-64" />
-        </div>
-        <Skeleton className="h-10 bg-gray-200 rounded-full w-24" />
-      </div>
+      <PageHeaderSkeleton />
 
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

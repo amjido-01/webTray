@@ -4,7 +4,7 @@ import { SectionCards } from "@/components/section-cards";
 import { RecentOrdersTable } from "@/components/recent-orders-table";
 import { StockAlertTable } from "@/components/stock-alart";
 import { useUser } from "@/hooks/useUser";
-
+import DashboardPageSkeleton from "@/components/dashboard-page-skeleton";
 
 
 export default function DashboardPage() {
@@ -12,11 +12,7 @@ export default function DashboardPage() {
   const { dashboard, isFetchingDashboard, dashboardError } = useUser();
 
   if (isFetchingDashboard) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <p>Loading dashboard data…</p>
-      </div>
-    );
+        return <DashboardPageSkeleton />;
   }
 
   if (dashboardError) {
