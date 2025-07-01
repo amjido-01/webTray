@@ -38,8 +38,11 @@ api.interceptors.response.use(
       const authStore = useAuthStore.getState();
       
       if (authStore.isLoggedIn()) {
+        console.log("am calling")
+        console.log(authStore.isLoggedIn)
         try {
           await authStore.refreshToken();
+
           return api(originalRequest);
         } catch (refreshError) {
           await authStore.logout();

@@ -6,35 +6,34 @@ import { StatCard } from "@/components/stat-card";
 import { useCategory } from "@/hooks/useCategory";
 import { PageHeader } from "@/components/page-header";
 import { formatNumber } from "@/lib/format-number";
+import { useProduct } from "@/hooks/useProduct";
+import InventoryPageSkeleton from "@/components/inventory-page-skeleton";
 // import { formatCurrency } from "@/lib/format-currency";
 export default function Page() {
   const {
     inventorySummary,
     isFetchingInventorySummary,
-    inventorySummaryError
-    // refetchCategories,
+    inventorySummaryError,
   } = useCategory();
- 
+  const { isFetchingProducts } = useProduct();
 
-  if (isFetchingInventorySummary) {
+  const isLoading = isFetchingInventorySummary || isFetchingProducts;
+
+  if (isLoading) {
+     return <InventoryPageSkeleton />;
+  }
+
+  if (inventorySummaryError) {
     return (
       <div className="">
         <PageHeader
-          title="Inventory Management"
+          title="Overview"
           subtitle="Manage your products and track stock levels"
         />
-
-        <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="p-6 border rounded-lg bg-card animate-pulse"
-            >
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-            </div>
-          ))}
+        <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
+          <p className="text-red-600">
+            Failed to load dashboard data. Please try again.
+          </p>
         </div>
       </div>
     );
@@ -56,13 +55,11 @@ export default function Page() {
     );
   }
 
- 
-
   const stats = [
     {
       title: "Products",
       icon: <Package className="h-4 w-4 text-muted-foreground" />,
-      value:  formatNumber(inventorySummary?.noOfProducts || 0),
+      value: formatNumber(inventorySummary?.noOfProducts || 0),
       note: "+4 new this week",
       minWidth: "min-w-[150px]",
     },
