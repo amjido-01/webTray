@@ -19,22 +19,6 @@ export default function InventoryStatCard() {
  if (isLoading) {
       return <InventoryPageSkeleton />;
    }
-
-    if (inventorySummaryError) {
-       return (
-         <div className="">
-           <PageHeader
-             title="Overview"
-             subtitle="Manage your products and track stock levels"
-           />
-           <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
-             <p className="text-red-600">
-               Failed to load dashboard data. Please try again.
-             </p>
-           </div>
-         </div>
-       );
-     }
    
      if (inventorySummaryError) {
        return (

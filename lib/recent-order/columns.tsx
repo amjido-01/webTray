@@ -10,7 +10,7 @@ export const createRecentOrdersColumns = (): ColumnDef<Order>[] => [
     cell: ({ row }) => {
       return (
         <div className="font-medium py-3">
-          #{(row.index + 1).toString().padStart(2, "0")}
+          {(row.index + 1).toString().padStart(2, "0")}
         </div>
       );
     },
@@ -23,35 +23,17 @@ export const createRecentOrdersColumns = (): ColumnDef<Order>[] => [
       return (
         <div className="py-3">
           <div className="font-medium">{capitalizeFirstLetter(order.customerName)}</div>
-          <div className="text-sm text-gray-500">{order.customerEmail}</div>
         </div>
       );
     },
   },
   {
-    accessorKey: "createdAt",
-    header: "Date",
+    accessorKey: "type",
+    header: "Type",
     cell: ({ row }) => {
       const order = row.original;
-      const date = new Date(order.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-      return <div className="py-3 text-sm text-gray-600">{date}</div>;
-    },
-  },
-  {
-    accessorKey: "orderItems",
-    header: "Items",
-    cell: ({ row }) => {
-      const order = row.original;
-      const totalItems = order.orderItems.reduce((sum, item) => sum + item.quantity, 0);
-      return (
-        <div className="py-3">
-          <div className="text-sm font-medium">{totalItems} items</div>
-        </div>
-      );
+      const type = order.date
+      return <div className="py-3 text-sm text-gray-600">{type && "Online"}</div>;
     },
   },
   {
@@ -73,7 +55,7 @@ export const createRecentOrdersColumns = (): ColumnDef<Order>[] => [
     header: "Price ₦",
     cell: ({ row }) => {
       const order = row.original;
-      return <div className="py-3 font-medium">₦{Number(order.totalAmount).toFixed(2)}</div>;
+      return <div className="py-3 font-medium">{Number(order.totalAmount).toFixed(2)}</div>;
     },
   },
 ];
