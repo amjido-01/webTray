@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { z } from "zod"
+import * as yup from "yup"
 import { ArrowLeft, ArrowRight, Package, ShoppingCart, Check, SettingsIcon, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,50 +16,89 @@ import { useUser } from "@/hooks/useUser"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-// Zod validation schemas
-const step1Schema = z.object({
-  businessName: z.string().min(2, "Business name must be at least 2 characters"),
-  businessType: z.string().min(1, "Please select a business type"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  category: z.object({
-    main: z.array(z.string()).min(1, "Please select at least one category"),
+// Yup validation schemas
+const step1Schema = yup.object().shape({
+  businessName: yup
+    .string()
+    .min(2, "Business name must be at least 2 characters")
+    .required("Business name is required"),
+  businessType: yup.string().min(1, "Please select a business type").required("Business type is required"),
+  description: yup.string().min(10, "Description must be at least 10 characters").required("Description is required"),
+  category: yup.object().shape({
+    main: yup.array().of(yup.string()).min(1, "Please select at least one category").required(),
   }),
-  address: z.string().min(5, "Please enter a valid address"),
-  contactInfo: z.object({
-    phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
-    email: z.string().email("Please enter a valid email address"),
+  address: yup.string().min(5, "Please enter a valid address").required("Address is required"),
+  contactInfo: yup.object().shape({
+    phone: yup
+      .string()
+      .matches(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+      .required("Phone number is required"),
+    email: yup.string().email("Please enter a valid email address").required("Email is required"),
   }),
 })
 
-const step2Schema = z.object({
-  storeName: z.string().min(2, "Store name must be at least 2 characters"),
-  slogan: z.string().optional(),
-  customeDomain: z.string().optional(),
-  currency: z.string().min(1, "Please select a currency"),
+const step2Schema = yup.object().shape({
+  storeName: yup.string().min(2, "Store name must be at least 2 characters").required("Store name is required"),
+  slogan: yup.string().optional(),
+  customeDomain: yup.string().optional(),
+  currency: yup.string().min(1, "Please select a currency").required("Currency is required"),
 })
 
-const step3Schema = z.object({
-  paymentMethods: z
-    .object({
-      paystack: z.boolean(),
-      bankTransfer: z.boolean(),
-      cashOnDelivery: z.boolean(),
+const step3Schema = yup.object().shape({
+  paymentMethods: yup
+    .object()
+    .shape({
+      paystack: yup.boolean(),
+      bankTransfer: yup.boolean(),
+      cashOnDelivery: yup.boolean(),
     })
-    .refine(
-      (data) => data.paystack || data.bankTransfer || data.cashOnDelivery,
+    .test(
+      "at-least-one-payment",
       "Please select at least one payment method",
+      (value) => value?.paystack || value?.bankTransfer || value?.cashOnDelivery,
     ),
-  deliveryOptions: z
-    .object({
-      inHouse: z.boolean(),
-      thirdParty: z.array(z.string()),
+  deliveryOptions: yup
+    .object()
+    .shape({
+      inHouse: yup.boolean(),
+      thirdParty: yup.array().of(yup.string()),
     })
-    .refine((data) => data.inHouse || data.thirdParty.length > 0, "Please select at least one delivery option"),
+    .test(
+      "at-least-one-delivery",
+      "Please select at least one delivery option",
+      (value) => value?.inHouse || (value?.thirdParty && value.thirdParty.length > 0),
+    ),
 })
 
-const fullFormSchema = step1Schema.merge(step2Schema).merge(step3Schema)
+const fullFormSchema = step1Schema.concat(step2Schema).concat(step3Schema)
 
-type FormData = z.infer<typeof fullFormSchema>
+type FormData = {
+  businessName: string
+  businessType: string
+  description: string
+  category: {
+    main: string[]
+  }
+  address: string
+  contactInfo: {
+    phone: string
+    email: string
+  }
+  storeName: string
+  slogan?: string
+  customeDomain?: string
+  currency: string
+  paymentMethods: {
+    paystack: boolean
+    bankTransfer: boolean
+    cashOnDelivery: boolean
+  }
+  deliveryOptions: {
+    inHouse: boolean
+    thirdParty: string[]
+  }
+}
+
 type ValidationErrors = Partial<Record<keyof FormData | string, string>>
 
 export default function WebTrayOnboarding() {
@@ -100,60 +139,92 @@ export default function WebTrayOnboarding() {
   })
 
   // Validate individual fields on blur/change
-  const validateField = (fieldPath: string, value: any) => {
-    try {
-      if (fieldPath === "businessName") {
-        z.string().min(2, "Business name must be at least 2 characters").parse(value)
-      } else if (fieldPath === "businessType") {
-        z.string().min(1, "Please select a business type").parse(value)
-      } else if (fieldPath === "description") {
-        z.string().min(10, "Description must be at least 10 characters").parse(value)
-      } else if (fieldPath === "address") {
-        z.string().min(5, "Please enter a valid address").parse(value)
-      } else if (fieldPath === "contactInfo.phone") {
-        z.string()
-          .regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
-          .parse(value)
-      } else if (fieldPath === "contactInfo.email") {
-        z.string().email("Please enter a valid email address").parse(value)
-      } else if (fieldPath === "storeName") {
-        z.string().min(2, "Store name must be at least 2 characters").parse(value)
-      } else if (fieldPath === "currency") {
-        z.string().min(1, "Please select a currency").parse(value)
-      } else if (fieldPath === "category.main") {
-        z.array(z.string()).min(1, "Please select at least one category").parse(value)
-      } else if (fieldPath === "paymentMethods") {
-        if (!value.paystack && !value.bankTransfer && !value.cashOnDelivery) {
-          throw new Error("Please select at least one payment method")
-        }
-      } else if (fieldPath === "deliveryOptions") {
-        if (!value.inHouse && value.thirdParty.length === 0) {
-          throw new Error("Please select at least one delivery option")
-        }
+const validateField = async (
+  fieldPath: string,
+  value: string | string[] | { 
+    paystack: boolean; 
+    bankTransfer: boolean; 
+    cashOnDelivery: boolean 
+  } | { 
+    inHouse: boolean; 
+    thirdParty: string[] 
+  }
+) => {
+  try {
+    if (fieldPath === "businessName") {
+      await yup
+        .string()
+        .min(2, "Business name must be at least 2 characters")
+        .required("Business name is required")
+        .validate(value as string)
+    } else if (fieldPath === "businessType") {
+      await yup.string().min(1, "Please select a business type").required("Business type is required").validate(value as string)
+    } else if (fieldPath === "description") {
+      await yup
+        .string()
+        .min(10, "Description must be at least 10 characters")
+        .required("Description is required")
+        .validate(value as string)
+    } else if (fieldPath === "address") {
+      await yup.string().min(5, "Please enter a valid address").required("Address is required").validate(value as string)
+    } else if (fieldPath === "contactInfo.phone") {
+      await yup
+        .string()
+        .matches(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+        .required("Phone number is required")
+        .validate(value as string)
+    } else if (fieldPath === "contactInfo.email") {
+      await yup.string().email("Please enter a valid email address").required("Email is required").validate(value as string)
+    } else if (fieldPath === "storeName") {
+      await yup
+        .string()
+        .min(2, "Store name must be at least 2 characters")
+        .required("Store name is required")
+        .validate(value as string)
+    } else if (fieldPath === "currency") {
+      await yup.string().min(1, "Please select a currency").required("Currency is required").validate(value as string)
+    } else if (fieldPath === "category.main") {
+      await yup.array().of(yup.string()).min(1, "Please select at least one category").validate(value as string[])
+    } else if (fieldPath === "paymentMethods") {
+      const paymentMethods = value as {
+        paystack: boolean;
+        bankTransfer: boolean;
+        cashOnDelivery: boolean;
+      };
+      if (!paymentMethods.paystack && !paymentMethods.bankTransfer && !paymentMethods.cashOnDelivery) {
+        throw new yup.ValidationError("Please select at least one payment method");
       }
-
-      // Clear error if validation passes
-      setFieldErrors((prev) => ({ ...prev, [fieldPath]: undefined }))
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setFieldErrors((prev) => ({ ...prev, [fieldPath]: error.errors[0].message }))
-      } else if (error instanceof Error) {
-        setFieldErrors((prev) => ({ ...prev, [fieldPath]: error.message }))
+    } else if (fieldPath === "deliveryOptions") {
+      const deliveryOptions = value as {
+        inHouse: boolean;
+        thirdParty: string[];
+      };
+      if (!deliveryOptions.inHouse && deliveryOptions.thirdParty.length === 0) {
+        throw new yup.ValidationError("Please select at least one delivery option");
       }
     }
+
+    // Clear error if validation passes
+    setFieldErrors((prev) => ({ ...prev, [fieldPath]: undefined }));
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+      setFieldErrors((prev) => ({ ...prev, [fieldPath]: error.message }));
+    }
   }
+};
 
   // Check if all required fields are filled for final submission
-  const validateAllFields = () => {
+  const validateAllFields = async () => {
     try {
-      fullFormSchema.parse(formData)
+      await fullFormSchema.validate(formData, { abortEarly: false })
       return true
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof yup.ValidationError) {
         const errors: ValidationErrors = {}
-        error.errors.forEach((err) => {
-          const path = err.path.join(".")
-          errors[path] = err.message
+        error.inner.forEach((err) => {
+          if (err.path) {
+            errors[err.path] = err.message
+          }
         })
         setFieldErrors(errors)
 
@@ -184,12 +255,10 @@ export default function WebTrayOnboarding() {
     } else {
       newCategories = formData.category.main.filter((c) => c !== category)
     }
-
     setFormData((prev) => ({
       ...prev,
       category: { main: newCategories },
     }))
-
     // Validate categories
     setTouchedFields((prev) => new Set(prev).add("category.main"))
     validateField("category.main", newCategories)
@@ -200,12 +269,10 @@ export default function WebTrayOnboarding() {
       ...formData.paymentMethods,
       [method]: checked,
     }
-
     setFormData((prev) => ({
       ...prev,
       paymentMethods: newPaymentMethods,
     }))
-
     setTouchedFields((prev) => new Set(prev).add("paymentMethods"))
     validateField("paymentMethods", newPaymentMethods)
   }
@@ -215,12 +282,10 @@ export default function WebTrayOnboarding() {
       ...formData.deliveryOptions,
       [option]: value,
     }
-
     setFormData((prev) => ({
       ...prev,
       deliveryOptions: newDeliveryOptions,
     }))
-
     setTouchedFields((prev) => new Set(prev).add("deliveryOptions"))
     validateField("deliveryOptions", newDeliveryOptions)
   }
@@ -232,17 +297,14 @@ export default function WebTrayOnboarding() {
     } else {
       newThirdParty = formData.deliveryOptions.thirdParty.filter((s) => s !== service)
     }
-
     const newDeliveryOptions = {
       ...formData.deliveryOptions,
       thirdParty: newThirdParty,
     }
-
     setFormData((prev) => ({
       ...prev,
       deliveryOptions: newDeliveryOptions,
     }))
-
     setTouchedFields((prev) => new Set(prev).add("deliveryOptions"))
     validateField("deliveryOptions", newDeliveryOptions)
   }
@@ -254,7 +316,7 @@ export default function WebTrayOnboarding() {
         return {
           ...prev,
           [parent]: {
-            ...(prev[parent as keyof FormData] as any),
+            ...(prev[parent as keyof FormData] as Record<string, string>),
             [child]: value,
           },
         }
@@ -264,7 +326,6 @@ export default function WebTrayOnboarding() {
         [field]: value,
       }
     })
-
     // Mark field as touched and validate
     setTouchedFields((prev) => new Set(prev).add(field))
     validateField(field, value)
@@ -290,7 +351,8 @@ export default function WebTrayOnboarding() {
   }
 
   const handleSubmit = async () => {
-    if (!validateAllFields()) {
+    const isValid = await validateAllFields()
+    if (!isValid) {
       toast.error("Please fill all required fields", {
         description: "Complete all required information before submitting your registration.",
       })
@@ -322,11 +384,9 @@ export default function WebTrayOnboarding() {
       }
 
       await registerBusiness(payload)
-
       toast.success("Registration successful!", {
         description: "Your business has been registered successfully.",
       })
-
       router.push("/dashboard")
     } catch (error) {
       console.error("Registration failed:", error)
@@ -375,9 +435,7 @@ export default function WebTrayOnboarding() {
   const renderFieldError = (fieldName: string) => {
     const error = fieldErrors[fieldName]
     const isTouched = touchedFields.has(fieldName)
-
     if (!error || !isTouched) return null
-
     return (
       <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
         <AlertCircle className="h-3 w-3" />
@@ -397,7 +455,7 @@ export default function WebTrayOnboarding() {
         {/* Header */}
         <div className="flex w-[80%] mx-auto items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/logo.svg" alt="logo" width={100} height={24} />
+            <Image src="/placeholder.svg?height=24&width=100" alt="logo" width={100} height={24} />
           </div>
           <span className="text-sm text-gray-500">Step {currentStep} of 3</span>
         </div>
@@ -453,13 +511,7 @@ export default function WebTrayOnboarding() {
                   currentStep === 3 ? "bg-blue-600" : "border-[0.09rem]"
                 }`}
               >
-                <Image
-                  src="/icons/paint-board.png"
-                  alt="logo"
-                  width={100}
-                  height={24}
-                  className={`h-6 w-6 ${currentStep === 3 ? "text-white" : "text-[#DADADA]"}`}
-                />
+                <SettingsIcon className={`h-6 w-6 ${currentStep === 3 ? "text-white" : "text-[#DADADA]"}`} />
               </div>
             </div>
           </div>
