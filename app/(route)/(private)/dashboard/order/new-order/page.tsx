@@ -26,7 +26,6 @@ interface FormErrors {
   cartItems?: string
 }
 
-// Validation schema
 const orderValidationSchema = yup.object({
   customerName: yup
     .string()
@@ -57,7 +56,6 @@ export default function AddOrderPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [errors, setErrors] = useState<FormErrors>({})
 
-  // Use the custom hooks
   const { addOrder, isAddingOrder, addOrderError } = useOrder()
   const { products, isFetchingProducts } = useProduct()
 
@@ -121,7 +119,6 @@ export default function AddOrderPage() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  // Validate individual fields as user types
   const validateField = async (fieldName: keyof FormErrors, value: string | CartItem[]) => {
     try {
       await (yup.reach(orderValidationSchema, fieldName) as yup.Schema).validate(value)
@@ -133,7 +130,6 @@ export default function AddOrderPage() {
     }
   }
 
-  // Check if customer details are valid before allowing cart operations
   const isCustomerDetailsValid = () => {
     return customerName.trim().length >= 2 && 
            customerPhone.trim().length > 0 && 
@@ -142,9 +138,7 @@ export default function AddOrderPage() {
   }
 
   const addToCart = (product: Product) => {
-    // Validate customer details first
     if (!isCustomerDetailsValid()) {
-      // Show specific error message
       if (!customerName.trim()) {
         setErrors(prev => ({ ...prev, customerName: "Please enter customer name before adding products" }))
       }
@@ -163,7 +157,6 @@ export default function AddOrderPage() {
     })
     setSearchQuery("")
     setShowSuggestions(false)
-    // Clear cart errors when items are added
     if (errors.cartItems) {
       setErrors(prev => ({ ...prev, cartItems: undefined }))
     }
@@ -198,7 +191,6 @@ export default function AddOrderPage() {
 
       await orderValidationSchema.validate(formData, { abortEarly: false })
       
-      // Clear any existing errors
       setErrors({})
 
       // Transform cart items to match API payload
@@ -215,10 +207,8 @@ export default function AddOrderPage() {
 
       console.log("Submitting order:", orderPayload)
 
-      // Call the API
       await addOrder(orderPayload)
 
-      // Reset form on success
       setCustomerName("")
       setCustomerPhone("")
       setCartItems([])
@@ -230,7 +220,6 @@ export default function AddOrderPage() {
       
     } catch (error) {
       if (error instanceof yup.ValidationError) {
-        // Handle validation errors
         const validationErrors: FormErrors = {}
         
         error.inner.forEach((err) => {
@@ -261,13 +250,10 @@ export default function AddOrderPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
         <div className="text-sm text-gray-600 mb-4">Orders / New Order</div>
 
-        {/* Page Title */}
         <h1 className="text-2xl font-semibold text-gray-900 mb-8">Add new orders</h1>
 
-        {/* Show error if any */}
         {addOrderError && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
             <p className="text-red-700">Error: {addOrderError.message}</p>
@@ -275,12 +261,10 @@ export default function AddOrderPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Order Details */}
           <div className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-6">Order Details</h2>
 
             <div className="space-y-6">
-              {/* Customer Name */}
               <div>
                 <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 mb-2 block">
                   Customer Name
@@ -299,7 +283,6 @@ export default function AddOrderPage() {
                 )}
               </div>
 
-              {/* Customer Phone */}
               <div>
                 <Label htmlFor="customerPhone" className="text-sm font-medium text-gray-700 mb-2 block">
                   Customer Phone Number
@@ -318,7 +301,6 @@ export default function AddOrderPage() {
                 )}
               </div>
 
-              {/* Add Product */}
               <div>
                 <Label htmlFor="productSearch" className="text-sm font-medium text-gray-700 mb-2 block">
                   Add Product
@@ -351,7 +333,6 @@ export default function AddOrderPage() {
                     />
                   </div>
 
-                  {/* Product Suggestions Dropdown */}
                   {showSuggestions && filteredProducts.length > 0 && isCustomerDetailsValid() && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                       {filteredProducts.map((product) => (
@@ -369,14 +350,12 @@ export default function AddOrderPage() {
                     </div>
                   )}
 
-                  {/* No products found */}
                   {showSuggestions && filteredProducts.length === 0 && searchQuery.length > 0 && isCustomerDetailsValid() && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
                       <div className="px-4 py-3 text-sm text-gray-500">No products found</div>
                     </div>
                   )}
 
-                  {/* Customer details required message */}
                   {!isCustomerDetailsValid() && (
                     <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                       <div className="flex items-center">
@@ -394,7 +373,6 @@ export default function AddOrderPage() {
                   )}
                 </div>
 
-                {/* Add Custom Product */}
                 <button 
                   className={`mt-3 text-sm font-medium flex items-center gap-1 ${
                     isCustomerDetailsValid() 
@@ -404,7 +382,6 @@ export default function AddOrderPage() {
                   disabled={isAddingOrder || !isCustomerDetailsValid()}
                   onClick={() => {
                     if (!isCustomerDetailsValid()) {
-                      // Trigger validation messages
                       if (!customerName.trim()) {
                         setErrors(prev => ({ ...prev, customerName: "Please enter customer name before adding products" }))
                       }
@@ -421,18 +398,15 @@ export default function AddOrderPage() {
             </div>
           </div>
 
-          {/* Cart Summary */}
           <div className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-6">Cart Summary</h2>
 
             <div className="space-y-4">
-              {/* Header */}
               <div className="flex justify-between items-center text-sm font-medium text-gray-700 pb-2">
                 <span>Products</span>
                 <span>PRICE/NGN</span>
               </div>
 
-              {/* Cart Items */}
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {cartItems.map((item) => (
                   <div key={`${item.id}-${Math.random()}`} className="space-y-2">
@@ -488,7 +462,6 @@ export default function AddOrderPage() {
                 </div>
               )}
 
-              {/* Total */}
               {cartItems.length > 0 && (
                 <>
                   <div className="border-t border-gray-200 pt-4">
@@ -498,7 +471,6 @@ export default function AddOrderPage() {
                     </div>
                   </div>
 
-                  {/* Save Order Button */}
                   <Button
                     onClick={handleSaveOrder}
                     disabled={isAddingOrder}

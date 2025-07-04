@@ -24,11 +24,12 @@ import {
 } from "@/components/ui/dialog";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { Button } from "../ui/button";
+import { TableSkeleton } from "../table-skeleton";
 
 export default function OrdersTable() {
-  const { orders, deleteOrder, ordersError, isDeletingOrder } = useOrder();
-  
-  // State for filters
+  const { orders, deleteOrder, ordersError, isDeletingOrder, isFetchingOrders } = useOrder();
+  console.log(orders)
+  // State for filters  
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -107,8 +108,8 @@ export default function OrdersTable() {
   const status = ["Pending", "Processing", "Shipped", "Completed"];
   const type = ["Online", "Offline"];
 
+  if (isFetchingOrders) return <TableSkeleton />;
   if (ordersError) return <div>Error loading orders</div>;
-  if (!orders || orders.length === 0) return <div>No orders found</div>;
 
   return (
     <>

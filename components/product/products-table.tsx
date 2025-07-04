@@ -19,13 +19,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "../ui/skeleton";
 import { useProduct } from "@/hooks/use-product";
 import { DataTable } from "@/lib/products/data-table";
 import { createColumns, Product, ColumnHandlers } from "@/lib/products/columns";
 import { useCategory } from "@/hooks/use-category";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { EditForm } from "@/types";
+import { TableSkeleton } from "../table-skeleton";
 
 export default function ProductsTable() {
   const {
@@ -150,72 +150,7 @@ export default function ProductsTable() {
   // Create columns with all the handlers
   const columns = createColumns(columnHandlers, categories);
    
-  if (isFetchingProducts) return  <div className="bg-white rounded-lg border border-gray-200">
-      {/* Table Header Section */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <Skeleton className="h-6 w-20" />
-          <Skeleton className="h-10 w-32 rounded-md" />
-        </div>
-
-        {/* Search and Filter Row */}
-        <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5" />
-            <Skeleton className="h-10 w-64" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-24" />
-          </div>
-        </div>
-      </div>
-
-      {/* Table Content */}
-      <div className="overflow-x-auto">
-        {/* Table Headers */}
-        <div className="grid grid-cols-7 gap-4 p-4 border-b border-gray-100 bg-gray-50/50">
-          <Skeleton className="h-4 w-8" />
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-
-        {/* Table Rows */}
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="grid grid-cols-7 gap-4 p-4 border-b border-gray-100 items-center hover:bg-gray-50/50">
-            <Skeleton className="h-4 w-6" />
-            <div className="space-y-1">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <div className="flex gap-2">
-              <Skeleton className="h-8 w-8 rounded" />
-              <Skeleton className="h-8 w-8 rounded" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-4 border-t border-gray-100">
-        <Skeleton className="h-4 w-32" />
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-8 w-20" />
-        </div>
-      </div>
-    </div>;
+  if (isFetchingProducts) return <TableSkeleton />;
   if (productsError) return <div>Error loading products</div>;
   if (!products || products.length === 0) return <div>No products found</div>;
 

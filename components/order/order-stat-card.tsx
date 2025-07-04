@@ -4,6 +4,7 @@ import { useOrder } from "@/hooks/use-order";
 import { TrendingDown, TrendingUp, ShoppingCart } from "lucide-react";
 import { formatNumber } from "@/lib/format-number";
 import InventoryPageSkeleton from "../inventory-page-skeleton";
+import { OrderManagement } from "../order-managemet";
 export default function OrderStatCard() {
   const { orderSummary, isFetchingOrderSummary } = useOrder();
 
@@ -40,10 +41,13 @@ export default function OrderStatCard() {
     },
   ];
   return (
+    <div>
+      <OrderManagement />
     <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, i) => (
         <StatCard key={i} {...stat} />
       ))}
+    </div>
     </div>
   );
 }
