@@ -11,9 +11,8 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   business?: Business | null;
-  store?: Store | null
+  store?: Store | null;
 }
-
 
 export interface Store {
   id: number;
@@ -42,7 +41,6 @@ export interface RegisterPayload {
   password: string;
 }
 
-
 export interface VerifyOtpPayload {
   otp: string;
   email: string;
@@ -65,7 +63,6 @@ export interface ApiResponse<T> {
   responseBody: T;
 }
 
-
 export interface Category {
   id: number;
   name: string;
@@ -78,7 +75,6 @@ export interface CreateCategoryPayload {
   name: string;
   description: string;
 }
-
 
 export interface Business {
   id: number;
@@ -126,17 +122,64 @@ export interface DashboardSummary {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   orders: any[]; // You can type this more specifically based on your Order type
 }
+export type OrderItem = {
+  id: number;
+  orderId: number;
+  productId: number;
+  quantity: number;
+  price: string;
+  product?: {
+    name: string;
+    price: string;
+  };
+};
 
-export interface Order {
-  id: string;
-  customer: string;
-  status: "Processing" | "Completed" | "Pending"; // you can add more statuses as needed
-  price: number;
-  date: string;
-  items: string[];
+export type Customer = {
+  id: number;
+  fullname: string;
+  phone: string;
   email: string;
-}
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
+export type Order = {
+  // Original API fields
+  id: number;
+  storeId: number;
+  customerId: number;
+  status: "pending" | "shipped" | "cancel" | "completed";
+  totalAmount: string;
+  createdAt: string;
+  updatedAt: string;
+  customer: Customer | null;
+  orderItems: OrderItem[];
+  
+  // Formatted fields for UI compatibility
+  orderId?: number;
+  customerName?: string;
+  customerEmail?: string;
+  date?: string;
+  items?: OrderItem[];
+  total?: number;
+};
+
+
+// customerId: 2
+// id: 2
+// orderItems: Array [ {…} ]
+// status: "pending"
+// storeId: 13
+// totalAmount: "100000"
+// updatedAt: "2025-07-03T04:41:01.084Z"
+
+export interface OrderSummary {
+  totalNumberOfLowStockItems: number;
+  totalNumberOfOrders: number;
+  totalNumberOfPendingOrders: number;
+  totalSales: number;
+}
 
 export interface CreateRegistrationPayload {
   businessName: string;
@@ -173,7 +216,6 @@ export interface ProductImages {
   thumbnail: string;
 }
 
-
 export interface CreateProductPayload {
   storeId: number;
   categoryId: number;
@@ -197,7 +239,7 @@ export interface Product {
   categoryId: number;
   name: string;
   description: string;
-  price: string; 
+  price: string;
   quantity: number;
   images: ProductImages;
   createdAt: string;

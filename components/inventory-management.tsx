@@ -2,17 +2,22 @@
 import { useState } from "react";
 import { ModalForm } from "./modal-form";
 import { PageHeader } from "./page-header";
-import { useCategory } from "@/hooks/useCategory";
+import { useCategory } from "@/hooks/use-category";
 import { toast } from "sonner";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
-import { useProduct } from "@/hooks/useProduct";
+import { useProduct } from "@/hooks/use-product";
 import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
+import { PageHeaderSkeleton } from "./header-skeleton";
 
 export function InventoryManagement() {
+     const {
+      isFetchingInventorySummary,
+    } = useCategory();
+  
   const { user } = useAuthStore();
-  const { addProduct, isAddingProduct } = useProduct();
+  const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
   const { categories, addCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
@@ -20,7 +25,8 @@ export function InventoryManagement() {
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
   const userStoreId = user?.business?.store[0]?.id;
-
+    const isLoading = isFetchingInventorySummary || isFetchingProducts
+  
   const handleAddCategory = async (newCategoryName: string) => {
     if (!newCategoryName) return;
     const alreadyExists = categories?.some(
@@ -105,6 +111,10 @@ export function InventoryManagement() {
       } 
       setIsOpen(true)
     }
+
+     if (isLoading) {
+          return  <PageHeaderSkeleton />;
+       }
   return (
     <div>
       <PageHeader

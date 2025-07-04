@@ -2,7 +2,7 @@
 import { TrendingUp, ShoppingCart, Package, Users } from "lucide-react";
 import { PageHeader } from "./page-header";
 import { StatCard } from "./stat-card";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/hooks/use-user";
 import { useAuthStore } from "@/store/useAuthStore";
 import { HasBusinessAlert } from "./hasBusinessAlert";
 import { formatCurrency } from "@/lib/format-currency";

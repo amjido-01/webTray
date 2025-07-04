@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomAlert } from "@/components/CustomAlert";
-import { useAlertManager } from "@/hooks/useAlertManager";
+import { useAlertManager } from "@/hooks/use-alert-manager";
 import { Loader2Icon } from "lucide-react";
 import { ForgetPasswordFormData, forgetPasswordschema } from "@/schemas/forget-password.schema";
 
