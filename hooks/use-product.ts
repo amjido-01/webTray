@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import { ApiResponse, Product, CreateProductPayload, UpdateProductPayload } from "@/types";
-import { categoryKeys } from "./useCategory";
+import { categoryKeys } from "./use-category";
 
 // interface UpdateProductPayload extends CreateProductPayload {
 //   id: number;

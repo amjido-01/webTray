@@ -1,8 +1,9 @@
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { ModalForm } from "./modal-form";
 import { useState } from "react";
-import { useCategory } from "@/hooks/useCategory";
+import { useCategory } from "@/hooks/use-category";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
 import { StatCardProps } from "@/types";

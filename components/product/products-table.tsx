@@ -19,11 +19,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "./ui/skeleton";
-import { useProduct } from "@/hooks/useProduct";
+import { Skeleton } from "../ui/skeleton";
+import { useProduct } from "@/hooks/use-product";
 import { DataTable } from "@/lib/products/data-table";
 import { createColumns, Product, ColumnHandlers } from "@/lib/products/columns";
-import { useCategory } from "@/hooks/useCategory";
+import { useCategory } from "@/hooks/use-category";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { EditForm } from "@/types";
 
@@ -223,6 +223,7 @@ export default function ProductsTable() {
     <>
       <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm">
         <div className="p-6">
+          
           <h1 className="text-xl font-medium text-gray-800 mb-6">Products</h1>
 
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">

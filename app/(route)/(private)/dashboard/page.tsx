@@ -3,7 +3,7 @@
 import { SectionCards } from "@/components/section-cards";
 import { RecentOrdersTable } from "@/components/recent-orders-table";
 import { StockAlertTable } from "@/components/stock-alart";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/hooks/use-user";
 import DashboardPageSkeleton from "@/components/dashboard-page-skeleton";
 
 

@@ -8,7 +8,7 @@ import { ModalForm } from "./modal-form"
 import type { Order } from "@/types"
 import { useAuthStore } from "@/store/useAuthStore"
 import { toast } from "sonner"
-
+import { useRouter } from "next/navigation"
 interface DataTableProps {
   data: Order[]
 }
@@ -28,20 +28,31 @@ const getStatusColor = (status: string) => {
 
 const formatDate = (dateString: string) => {
   // Extract date and time parts
+   if (!dateString || typeof dateString !== "string") {
+    return { datePart: "", timePart: "" };
+  }
+
   const [datePart, timePart] = dateString.split(" | ")
   return { datePart, timePart }
 }
 
-const formatDateShort = (dateString: string) => {
-  // Convert "June 22, 2024" to "Jun 22"
-  const date = new Date(dateString.split(" | ")[0])
+const formatDateShort = (dateString?: string) => {
+  if (!dateString || typeof dateString !== "string") return "";
+
+  const rawDate = dateString.split(" | ")[0];
+  const date = new Date(rawDate);
+
+  if (isNaN(date.getTime())) return "";
+
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-  })
-}
+  });
+};
+
 
 export function RecentOrdersTable({ data }: DataTableProps) {
+  const router = useRouter()
   const { user } = useAuthStore()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -50,7 +61,7 @@ export function RecentOrdersTable({ data }: DataTableProps) {
       toast("Please Register your business to carryout this action")
       return
     } 
-    setIsOpen(true)
+    router.push("/dashboard/order/new-order")
   }
 
   return (
@@ -87,10 +98,10 @@ export function RecentOrdersTable({ data }: DataTableProps) {
                       <td className="py-3 px-2 sm:px-4">
                         <div className="flex flex-col">
                           <div className="text-[14px] font-normal truncate max-w-[120px] sm:max-w-none">
-                            {order.customer}
+                            {order.customerName}
                           </div>
                           <div className="text-[#808080] text-[10px] font-normal truncate max-w-[120px] sm:max-w-none">
-                            {order.email}
+                            {order.customerEmail}
                           </div>
                         </div>
                       </td>
@@ -107,11 +118,11 @@ export function RecentOrdersTable({ data }: DataTableProps) {
                         </div>
                       </td>
                       <td className="py-3 px-2 sm:px-4 text-[#999999] text-[14px] sm:text-[15px] leading-[100%] font-normal">
-                        {order.items.length}
+                        {/* {order?.items.length} */}
                         <span className="hidden sm:inline"> items</span>
                       </td>
                       <td className="py-3 px-2 sm:px-4 font-medium text-[12px] sm:text-[14px]">
-                        {order.price.toLocaleString()}
+                        {/* {order.price.toLocaleString()} */}
                       </td>
                       <td className="py-3 px-2 sm:px-4">
                         <Badge className={`${getStatusColor(order.status)} text-[10px] sm:text-[12px] px-2 py-1`}>
