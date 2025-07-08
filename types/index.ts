@@ -139,6 +139,8 @@ export type Customer = {
   fullname: string;
   phone: string;
   email: string;
+  totalOrders: number;
+  totalSpent: number;
   address: string | null;
   createdAt: string;
   updatedAt: string;
@@ -179,6 +181,15 @@ export interface OrderSummary {
   totalNumberOfOrders: number;
   totalNumberOfPendingOrders: number;
   totalSales: number;
+}
+export interface CustomerSummary {
+ totalCustomer: number;
+  newCustomer: number;
+  retentionRate: number;
+  topSpenders: {
+    name: string;
+    totalSpent: number;
+  }
 }
 
 export interface CreateRegistrationPayload {
@@ -245,6 +256,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
 
 export interface InventorySummary {
   noOfProducts: number;
