@@ -25,7 +25,6 @@ export function CreateOrderModal({ isOpen, onOpenChange, }: CreateOrderModalProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle form submission here
-    console.log("Order data:", formData)
     onOpenChange(false)
     // Reset form
     setFormData({ customerName: "", price: "", status: "Processing" })

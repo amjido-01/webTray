@@ -79,7 +79,6 @@ export default function ProductsTable() {
         description: editForm.description,
       };
 
-      console.log("Updating product with payload:", payload);
       
       await updateProduct(payload);
       

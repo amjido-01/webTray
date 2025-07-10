@@ -205,8 +205,6 @@ export default function AddOrderPage() {
         orderItems
       }
 
-      console.log("Submitting order:", orderPayload)
-
       await addOrder(orderPayload)
 
       setCustomerName("")
@@ -215,8 +213,6 @@ export default function AddOrderPage() {
       setSearchQuery("")
       setShowSuggestions(false)
       setErrors({})
-
-      console.log("Order submitted successfully!")
       
     } catch (error) {
       if (error instanceof yup.ValidationError) {

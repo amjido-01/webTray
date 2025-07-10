@@ -26,8 +26,6 @@ export function StockAlertTable() {
   const {} = useCategory();
   const { products } = useProduct();
 
-  console.log(products?.filter((item) => item.quantity < 10));
-
   // const [viewAllModal, setViewAllModal] = useState(false);
   const lowProducts = products?.filter((item) => item.quantity < 10);
 

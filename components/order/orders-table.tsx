@@ -28,7 +28,6 @@ import { TableSkeleton } from "../table-skeleton";
 
 export default function OrdersTable() {
   const { orders, deleteOrder, ordersError, isDeletingOrder, isFetchingOrders } = useOrder();
-  console.log(orders)
   // State for filters  
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -63,7 +62,6 @@ export default function OrdersTable() {
 
   const columnHandlers: ColumnHandlers = {
     handleEdit: (order: Order) => {
-      console.log("Edit order:", order);
     },
     handleDelete: handleDeleteClick,
   };
