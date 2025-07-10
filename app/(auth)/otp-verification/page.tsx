@@ -8,8 +8,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { CustomAlert } from "@/components/CustomAlert";
 import { OTPInput } from "@/components/OTPInput";
-import { useResendTimer } from "@/hooks/useResendTimer";
-import { useAlertManager } from "@/hooks/useAlertManager";
+import { useResendTimer } from "@/hooks/use-resend-timer";
+import { useAlertManager } from "@/hooks/use-alert-manager";
 
 function OTPContent() {
   const searchParams = useSearchParams();

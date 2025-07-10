@@ -210,7 +210,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.post("/auth/refresh");
           const { accessToken } = response.data;
-
+          console.log(accessToken)
           set({ accessToken });
         } catch (error) {
           console.error("Error refreshing token:", error);
