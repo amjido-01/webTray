@@ -2,14 +2,15 @@
 import { TrendingUp, UserIcon } from "lucide-react";
 import { PageHeader } from "./page-header";
 import { StatCard } from "./stat-card";
-
 import { formatCurrency } from "@/lib/format-currency";
 import Image from "next/image";
 import { useCustomer } from "@/hooks/use-customer";
+import { HasBusinessAlert } from "./hasBusinessAlert";
+import { useAuthStore } from "@/store/useAuthStore";
 export function SectionCards() {
   const { CustomerSummary, customerSummaryError, isFetchingCustomerSummary } =
     useCustomer();
-
+    const { user } = useAuthStore()
 
   if (isFetchingCustomerSummary) {
     return (
@@ -84,8 +85,8 @@ export function SectionCards() {
     },
     {
       title: "Top Spender",
-      value: formatNumber(CustomerSummary?.topSpenders.totalSpent || 0),
-      note: `${CustomerSummary?.topSpenders.name}`,
+      value: formatNumber(CustomerSummary?.topSpenders?.totalSpent || 0),
+      note: `${CustomerSummary?.topSpenders?.name}`,
       icon: <UserIcon className="h-4 w-4 text-muted-foreground" />,
     },
   ];
@@ -96,7 +97,7 @@ export function SectionCards() {
         title="Customer Management"
         subtitle="Track customer activity and manage relationships with ease."
       />
-
+        {!user?.business && <HasBusinessAlert />}
       <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <StatCard key={i} {...stat} />

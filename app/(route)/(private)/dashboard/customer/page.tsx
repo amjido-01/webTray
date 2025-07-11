@@ -1,10 +1,5 @@
-
-"use client"
-
 import { SectionCards } from "@/components/customer-start-card";
 import CustomerTable from "@/components/customer/Customers-table";
-
-
 
 export default function DashboardPage() {
 

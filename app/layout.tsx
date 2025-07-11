@@ -24,6 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={lato.className}>
         <main>
+          
           <ReactQueryProvider>{children}</ReactQueryProvider>
         </main>
         <Toaster />

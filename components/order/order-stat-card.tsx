@@ -5,9 +5,11 @@ import { TrendingDown, TrendingUp, ShoppingCart } from "lucide-react";
 import { formatNumber } from "@/lib/format-number";
 import InventoryPageSkeleton from "../inventory-page-skeleton";
 import { OrderManagement } from "../order-managemet";
+import { useAuthStore } from "@/store/useAuthStore";
+import { HasBusinessAlert } from "../hasBusinessAlert";
 export default function OrderStatCard() {
   const { orderSummary, isFetchingOrderSummary } = useOrder();
-
+  const { user } = useAuthStore();
   if (isFetchingOrderSummary) {
     return <InventoryPageSkeleton />;
   }
@@ -43,6 +45,7 @@ export default function OrderStatCard() {
   return (
     <div>
       <OrderManagement />
+       {!user?.business && <HasBusinessAlert />}
     <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, i) => (
         <StatCard key={i} {...stat} />

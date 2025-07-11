@@ -6,6 +6,8 @@ import { TrendingDown, TrendingUp, Package } from "lucide-react";
 import { formatNumber } from "@/lib/format-number";
 import InventoryPageSkeleton from "../inventory-page-skeleton";
 import { PageHeader } from "../page-header";
+import { HasBusinessAlert } from "../hasBusinessAlert";
+import { useAuthStore } from "@/store/useAuthStore";
 export default function InventoryStatCard() {
    const {
     inventorySummary,
@@ -13,7 +15,7 @@ export default function InventoryStatCard() {
     inventorySummaryError,
   } = useCategory();
   const { isFetchingProducts } = useProduct();
-
+    const { user } = useAuthStore();
   const isLoading = isFetchingInventorySummary || isFetchingProducts
 
  if (isLoading) {
@@ -66,10 +68,14 @@ export default function InventoryStatCard() {
    ];
  
   return (
-    <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div>
+      {!user?.business && <HasBusinessAlert />}
+      <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, i) => (
         <StatCard key={i} {...stat} />
       ))}
     </div>
+    </div>
+    
   );
 }

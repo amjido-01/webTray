@@ -382,11 +382,7 @@ const validateField = async (
           thirdParty: formData.deliveryOptions.thirdParty,
         },
       }
-
       await registerBusiness(payload)
-      toast.success("Registration successful!", {
-        description: "Your business has been registered successfully.",
-      })
       router.push("/dashboard")
     } catch (error) {
       console.error("Registration failed:", error)
