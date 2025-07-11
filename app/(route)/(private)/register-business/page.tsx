@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
-import { useUser } from "@/hooks/useUser"
+import { useUser } from "@/hooks/use-user"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
