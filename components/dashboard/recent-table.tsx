@@ -55,7 +55,7 @@ export default function RecentOrdersTable() {
   const columns = createRecentOrdersColumns();
 
   if (isFetchingOrders) return <TableSkeleton />
-  if (ordersError) return <div>Error loading orders</div>;
+  if (ordersError) return <div>Error loading customers</div>;
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm">

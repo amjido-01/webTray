@@ -67,6 +67,7 @@ export const useOrder = () => {
   // List Orders Query
   const ordersQuery = useQuery({
     queryKey: orderKeys.orders(),
+
     queryFn: async (): Promise<Order[]> => {
       const { data } = await api.get<ApiResponse<{ orders: Order[] }>>(
         "/inventory/order"
