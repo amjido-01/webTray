@@ -1,18 +1,13 @@
 // columns.ts
 "use client"
-import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table"
-import { SquarePen, Trash2 } from "lucide-react";
 import { Order } from "@/types";
 import { capitalizeFirstLetter } from "../capitalize";
 import { getOrderStatus, getStatusColor } from "./get-status";
 
-export type ColumnHandlers = {
-  handleEdit: (order: Order) => void;
-  handleDelete: (order: Order) => void;
-};
 
-export const createColumns = (handlers: ColumnHandlers): ColumnDef<Order>[] => [
+
+export const createColumns = (): ColumnDef<Order>[] => [
   {
     header: "Order ID",
     cell: ({ row }) => {
@@ -83,34 +78,6 @@ export const createColumns = (handlers: ColumnHandlers): ColumnDef<Order>[] => [
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
             {status}
           </span>
-        </div>
-      );
-    },
-  },
-  {
-    header: "Actions",
-    cell: ({ row }) => {
-      const order = row.original;
-      return (
-        <div className="text-right py-5">
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-gray-500 hover:text-blue-600"
-              onClick={() => handlers.handleEdit(order)}
-            >
-              <SquarePen className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-gray-500 hover:text-red-600"
-              onClick={() => handlers.handleDelete(order)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       );
     },

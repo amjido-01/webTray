@@ -4,8 +4,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { useOrder } from "@/hooks/use-order";
 import { DataTable } from "@/lib/orders/data-table";
-import { Order } from "@/types";
-import { createColumns, ColumnHandlers } from "@/lib/orders/columns";
+import { createColumns } from "@/lib/orders/columns";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -14,59 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
-import { Button } from "../ui/button";
 import { TableSkeleton } from "../table-skeleton";
 
 export default function OrdersTable() {
-  const { orders, deleteOrder, ordersError, isDeletingOrder, isFetchingOrders } = useOrder();
-  console.log(orders)
+  const { orders, ordersError, isFetchingOrders } = useOrder();
   // State for filters  
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
-  
-  const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    order: Order | null;
-  }>({
-    open: false,
-    order: null,
-  });
-
-  const handleDeleteClick = (order: Order) => {
-    setDeleteDialog({ open: true, order });
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (deleteDialog.order) {
-      try {
-        await deleteOrder(deleteDialog.order.id);
-        setDeleteDialog({ open: false, order: null });
-      } catch (error) {
-        console.error("Failed to delete order:", error);
-      }
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialog({ open: false, order: null });
-  };
-
-  const columnHandlers: ColumnHandlers = {
-    handleEdit: (order: Order) => {
-      console.log("Edit order:", order);
-    },
-    handleDelete: handleDeleteClick,
-  };
 
   const formattedOrders = orders?.map((order) => {
     return {
@@ -104,7 +59,7 @@ export default function OrdersTable() {
     // && matchesType;
   }) || [];
 
-  const columns = createColumns(columnHandlers);
+  const columns = createColumns();
   const status = ["Pending", "Processing", "Shipped", "Completed"];
   const type = ["Online", "Offline"];
 
@@ -162,38 +117,6 @@ export default function OrdersTable() {
           <DataTable columns={columns} data={formattedOrders} />
         </div>
       </div>
-      
-      <Dialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => !open && handleDeleteCancel()}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Order</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete order from{" "}
-              {deleteDialog.order?.customer?.fullname}? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleDeleteCancel}
-              disabled={isDeletingOrder}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-              disabled={isDeletingOrder}
-            >
-              {isDeletingOrder ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

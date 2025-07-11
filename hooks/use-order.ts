@@ -85,7 +85,6 @@ export const useOrder = () => {
       const { data } = await api.get<ApiResponse<OrderSummary>>(
         "/inventory/order/summary"
       );
-      console.log(data)
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
