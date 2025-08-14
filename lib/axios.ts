@@ -7,7 +7,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// REQUEST INTERCEPTOR - This was missing!
+
 api.interceptors.request.use(
   (config) => {
     const { accessToken } = useAuthStore.getState();
