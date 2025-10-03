@@ -423,9 +423,6 @@ const validateField = async (
 
   const currencies = [
     { id: "NGN", label: "Nigerian Naira (₦)" },
-    { id: "USD", label: "US Dollar ($)" },
-    { id: "EUR", label: "Euro (€)" },
-    { id: "GBP", label: "British Pound (£)" },
   ]
 
   const renderFieldError = (fieldName: string) => {

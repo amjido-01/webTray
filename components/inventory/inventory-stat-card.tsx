@@ -8,6 +8,7 @@ import InventoryPageSkeleton from "../inventory-page-skeleton";
 import { PageHeader } from "../page-header";
 import { HasBusinessAlert } from "../hasBusinessAlert";
 import { useAuthStore } from "@/store/useAuthStore";
+import { formatCurrency } from "@/lib/format-currency";
 export default function InventoryStatCard() {
    const {
     inventorySummary,
@@ -56,7 +57,7 @@ export default function InventoryStatCard() {
      {
        title: "Total Value",
        icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-       value: formatNumber(inventorySummary?.totalValueOfProducts || 0),
+       value: formatCurrency(inventorySummary?.totalValueOfProducts || 0),
        note: "Inventory Value",
      },
      {

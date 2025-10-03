@@ -7,6 +7,7 @@ import InventoryPageSkeleton from "../inventory-page-skeleton";
 import { OrderManagement } from "../order-managemet";
 import { useAuthStore } from "@/store/useAuthStore";
 import { HasBusinessAlert } from "../hasBusinessAlert";
+import { formatCurrency } from "@/lib/format-currency";
 export default function OrderStatCard() {
   const { orderSummary, isFetchingOrderSummary } = useOrder();
   const { user } = useAuthStore();
@@ -31,7 +32,7 @@ export default function OrderStatCard() {
     {
       title: "Total Value",
       icon: <TrendingUp className="h-4 w-4 text-green-500" />,
-      value: formatNumber(orderSummary?.totalSales || 0),
+      value: formatCurrency(orderSummary?.totalSales || 0),
       note: "Total order value",
     },
     {

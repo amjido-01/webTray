@@ -8,7 +8,7 @@ import {
   IconLayoutDashboard,
   IconPackage
 } from "@tabler/icons-react"
-
+import { useAuthStore } from "@/store/useAuthStore"
 // import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 // import { NavSecondary } from "@/components/nav-secondary"
@@ -26,11 +26,6 @@ import logo from "@/public/logo.svg";
 import Image from "next/image"
 
 const data = {
-  user: {
-    name: "Ala Jido",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -66,6 +61,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuthStore()
   return (
     <Sidebar className="" collapsible="offcanvas" {...props}>
       <SidebarHeader className="my-[30px]">
@@ -86,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+       {user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   )

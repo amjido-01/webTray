@@ -11,27 +11,40 @@ import { capitalizeFirstLetter } from "@/lib/capitalize";
 export default function WelcomePage() {
   const { user } = useAuthStore()
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
+  // const duration = 10 * 1000; // 5 seconds
+  // const animationEnd = Date.now() + duration;
 
-  useEffect(() => {
-    // Trigger confetti when component mounts
-    const canvas = confettiCanvasRef.current;
-    if (canvas) {
-      const myConfetti = confetti.create(canvas, {
-        resize: true,
-        useWorker: true,
-      });
+useEffect(() => {
+  const canvas = confettiCanvasRef.current;
+  if (!canvas) return;
 
-      // Fire confetti
-      myConfetti({
-        particleCount: 200,
-        spread: 160,
-        origin: { y: 0 },
-        colors: ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99"],
-        ticks: 200,
-        disableForReducedMotion: true,
-      });
+  const myConfetti = confetti.create(canvas, {
+    resize: true,
+    useWorker: true,
+  });
+
+  const duration = 3 * 1000; // 10 seconds
+  const animationEnd = Date.now() + duration;
+
+  const frame = () => {
+    myConfetti({
+      particleCount: 60,
+      spread: 55,
+      startVelocity: 30,
+      origin: { y: Math.random() - 0.2, x: Math.random() },
+      ticks: 200,
+      colors: ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99"],
+      disableForReducedMotion: true,
+    });
+
+    if (Date.now() < animationEnd) {
+      requestAnimationFrame(frame);
     }
-  }, []);
+  };
+
+  frame();
+}, []);
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
