@@ -1,0 +1,83 @@
+import { TrendingUp, ShoppingCart, Package, Users } from "lucide-react";
+import Image from "next/image";
+export function WhyChoose() {
+  const features = [
+    {
+      icon: TrendingUp,
+      title: "Revenue",
+      description: "Track Your Earnings Instantly",
+      color: "bg-emerald-100 text-emerald-600",
+    },
+    {
+      icon: ShoppingCart,
+      title: "Orders",
+      description: "Stay Ahead of Every Order",
+      color: "bg-purple-100 text-purple-600",
+    },
+    {
+      icon: Package,
+      title: "Products",
+      description: "Manage Products with Ease",
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      icon: Users,
+      title: "Customers",
+      description:
+        "Access customer details, order history, and insights to build stronger relationships.",
+      color: "bg-amber-100 text-amber-600",
+    },
+  ];
+
+  return (
+    <section className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+      <div className="">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+            Why Choose WebTray
+          </h2>
+          <p className="text-muted-foreground text-pretty max-w-3xl mx-auto">
+            Stay on top of everything that matters — track performance, manage
+            activity, and make decisions in real time.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 w-[80%] mx-auto gap-8 lg:gap-0 items-center">
+          {/* Mobile Mockup */}
+          <div>
+            <Image
+              src="/iphone.png"
+              alt="Mobile mockup"
+              width={400}
+              height={800}
+              className="mx-auto w-[153px] h-[313px] md:w-[274px] md:h-[560px]"
+            />
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid gap-4">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl p-3 md:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-lg ${feature.color}`}>
+                    <feature.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}

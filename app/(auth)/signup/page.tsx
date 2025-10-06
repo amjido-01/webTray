@@ -13,13 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/public/logo.svg";
 import { SignupFormData, signupSchema } from "@/schemas/signup.schema";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
-import { AlertCircleIcon } from "lucide-react"
-
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircleIcon } from "lucide-react";
 
 type FormData = SignupFormData;
 
@@ -53,20 +48,20 @@ export default function SignUpPage() {
       const email = await signup(data);
       setSubmitSuccess(true);
       reset();
-       localStorage.setItem("fromRegistration", "true")
+      localStorage.setItem("fromRegistration", "true");
       router.push(
         `/otp-verification?email=${encodeURIComponent(
           email
         )}&verification_sent=1`
       );
     } catch (error: unknown) {
-    let errorMessage = "Something went wrong";
-    if (error instanceof Error) {
-      errorMessage = error.message;
+      let errorMessage = "Something went wrong";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
+      console.error("Submission error:", errorMessage);
     }
-    setError(errorMessage)
-    console.error("Submission error:", errorMessage);
-  }
   };
 
   return (
@@ -87,18 +82,17 @@ export default function SignUpPage() {
                 start accepting orders — without juggling five different tools.
               </p>
             </div>
-            
+
             <div>
-             <div className="mb-[18px]">
-               {error && 
-                <Alert variant="destructive">
-        <AlertCircleIcon />
-        <AlertTitle>{error}</AlertTitle>
-        <AlertDescription>
-        </AlertDescription>
-      </Alert>
-              }
-             </div>
+              <div className="mb-[18px]">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircleIcon />
+                    <AlertTitle>{error}</AlertTitle>
+                    <AlertDescription></AlertDescription>
+                  </Alert>
+                )}
+              </div>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
@@ -209,7 +203,7 @@ export default function SignUpPage() {
                 size="lg"
                 type="submit"
                 disabled={isSubmitting || !isFormFilled}
-                className="w-full  md:text-[16px] md:w-1/2 py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
+                className="w-full text-[14px] md:text-[14px] md:w-[70%] py-3 my-[54px] text-white font-medium rounded-full bg-gray-900 hover:bg-black"
               >
                 {isSubmitting
                   ? "Creating Account..."

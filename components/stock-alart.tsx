@@ -29,6 +29,10 @@ export function StockAlertTable() {
   // const [viewAllModal, setViewAllModal] = useState(false);
   const lowProducts = products?.filter((item) => item.quantity < 10);
 
+  if (!lowProducts || lowProducts.length === 0) {
+    return null; // Don't render the component if there are no low stock products
+  }
+
   return (
     <Card>
       <CardHeader>
