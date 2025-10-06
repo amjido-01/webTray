@@ -12,7 +12,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="">
-            <Image className=" object-cover " src="/logo.svg" width={140} height={40} alt="log image" />
+            <Image className="object-cover " src="/webtraylogo.png" width={140} height={40} alt="log image" />
           </div>
 
           <nav className="hidden text-[#4D4D4D] md:flex space-x-8">
