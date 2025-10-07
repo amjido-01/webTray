@@ -1,11 +1,14 @@
+"use client"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/header";
 import hero_img from "@/public/hero_img.png";
 import Image from "next/image";
 import confeti_right from "@/public/confeti_right.svg"
 import confeti_left from "@/public/confeti_left.svg"
+import { useRouter } from "next/navigation";
 
 export default function Hero() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -20,10 +23,10 @@ export default function Hero() {
             online store, and grow your business with ease.
           </p>
           <div className="flex md:mt-[40px] flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-[#111827] hover:bg-[#30343e] cursor-pointer text-[16px] font-normal rounded-full text-white px-[16px] py-[14px]">
+            <Button size="lg"  onClick={() => router.push("/signup")} className="bg-[#111827] hover:bg-[#30343e] cursor-pointer text-[16px] font-normal rounded-full text-white px-[16px] py-[14px]">
               Sign Up for Free
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full text-[16px] font-normal text-[#111827] px-[16px] py-[14px] cursor-pointer">
+            <Button size="lg" variant="outline" onClick={() => router.push('/contact')} className="rounded-full text-[16px] font-normal text-[#111827] px-[16px] py-[14px] cursor-pointer">
               Contact for Enquiries
             </Button>
           </div>

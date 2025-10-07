@@ -6,8 +6,10 @@ import {
 } from "@/components/ui/card";
 export function Features() {
   return (
-    <div className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+    <div className="max-w-7xl mx-auto md:mt-[164px] pt16 pb8">
       {/* Header */}
+      <div className="px-4 sm:px-6 lg:px-8">
+
       <div className="text-center mb-16 max-w-3xl mx-auto">
         <h2 className="text-4xl md:text-5xl font-bold mb-4 text-balance">
           Everything You Need to Succeed
@@ -19,23 +21,23 @@ export function Features() {
       </div>
 
       {/* Features Grid */}
-      <div className="">
+      <div className="w-full">
         {/* Inventory Management */}
 
         <div className="grid mb-[26px] md:grid-cols-2 gap-6">
           <div>
-            <Card className="w-[353px] h-[388px] md:w-[572px] md:h-[462px] shadow-none border-0">
-              <CardContent className="relative md:mb-[22px] mb-[40px]">
+            <Card className="w-[353px] border-none p0 h-[388px] md:w-[572px] md:h-[462px] shadow-none borde">
+              <CardContent className="p-0 md:mb-[22px] mb-[40px]">
                 <Image
                   src="/inventory_manage.png"
                   alt="Inventory management"
-                  className="object-cover w-full md:w-[523.75px] md:h-[296px] border-blue-300"
+                  className="object-cover w-full md:w-[523.75px] md:h-[296px]"
                   width={440}
                   height={195}
                 />
                 
               </CardContent>
-              <CardFooter className=" flex-none">
+              <CardFooter className="p-0 flex-none">
                 <div>
                   <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-gray-900">
                     Inventory Management
@@ -126,6 +128,8 @@ export function Features() {
         </div>
 
       </div>
+      </div>
+
     </div>
   );
 }

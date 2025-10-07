@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export function AllInOne() {
   return (
-    <section className="w-full py-16 px-4 md:py-24">
-      <div className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+    <section className="w-full py16 px-4 md:py24 mt-[164px]">
+      <div className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt16 pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 lg:gap-20 items-center">
           {/* Left Content */}
           <div className="space-y-6">

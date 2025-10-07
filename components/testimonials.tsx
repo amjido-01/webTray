@@ -39,8 +39,8 @@ export function Testimonials() {
   ]
 
   return (
-    <section className="py-16 md:py-24 max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8">
-      <div className="container mx-auto">
+    <section className="py16 md:py24 mx-auto md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 pb8">
+      <div className="mx-auto max-w-7xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">Testimonials</h2>
           <p className="text-muted-foreground text-pretty">What our user testers are saying about us</p>
