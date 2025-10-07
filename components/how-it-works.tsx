@@ -24,7 +24,7 @@ export function HowItWorksSection() {
 
   return (
     <section className="">
-      <div className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8l">
+      <div className="max-w-7xl mx-auto md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 border2 pb8l">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-[40px] leading-[100%] text-[#1A1A1A] font-bold md:mb-[24px] mb-[16px  ] text-balance">How It Works</h2>
           <p className="text-[#4D4D4D] text-[16px] leading-[24px] font-normal">Get Started in 3 Simple Steps</p>

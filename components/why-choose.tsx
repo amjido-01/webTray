@@ -30,7 +30,7 @@ export function WhyChoose() {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto md:mt-[70px] px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+    <section className="max-w-7xl mx-auto md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 pb8">
       <div className="">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">

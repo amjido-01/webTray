@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button"
 
 export function CTASection() {
   return (
-    <section className="py-16 px-4 md:py-24">
-      <div className="container mx-auto max-w-7xl">
+    <section className="py16 mt-[164px] px-4 md:py24">
+      <div className="mx-auto max-w-7xl">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-purple-700 p-12 md:p-16 text-center shadow-2xl">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
           <div className="relative z-10">
