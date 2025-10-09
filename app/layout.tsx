@@ -13,7 +13,7 @@ const lato = Lato({
 export const metadata: Metadata = {
   title: "Webtray | Smart Inventory Management Software",
   description:
-    "Webtray.ng is an all-in-one inventory management software in Nigeria that helps restaurants, retailers, and vendors manage stock, track sales, monitor performance, and grow their businesses. Simplify operations, save time, and scale effortlessly with Webtray.",
+    "Webtray.ng is an all-in-one inventory management software that helps restaurants, retailers, and vendors manage stock, track sales, monitor performance, and grow their businesses. Simplify operations, save time, and scale effortlessly with Webtray.",
 };
 
 
