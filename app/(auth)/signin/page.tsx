@@ -1,28 +1,28 @@
 "use client";
-import React, { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Eye, EyeOff } from "lucide-react"
-import { useForm } from "react-hook-form"
-import { yupResolver } from "@hookform/resolvers/yup"
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Eye, EyeOff, AlertCircleIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 import { signinSchema, SigninFormData } from "@/schemas/signin.schema";
-
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/public/logo.svg";
-
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type FormData = SigninFormData;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore()
-  const [showPassword, setShowPassword] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const { login } = useAuthStore();
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const {
     register,
@@ -41,13 +41,17 @@ export default function LoginPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await login(data)
-      // checkAuth()
-      setSubmitSuccess(true)
-      reset()
-      router.push("/dashboard")
+      await login(data);
+      setSubmitSuccess(true);
+      reset();
+      router.push("/dashboard");
     } catch (error) {
-      console.error("Login error:", error);
+      let errorMessage = "Something went wrong";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
+      console.error("Submission error:", errorMessage);
     }
   };
 
@@ -69,6 +73,17 @@ export default function LoginPage() {
                 grow your sales — all in one place.
               </p>
             </div>
+
+            {/* 🔥 Error Alert Section (same as in signup) */}
+            {error && (
+              <div className="mb-[18px]">
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertTitle>{error}</AlertTitle>
+                  <AlertDescription></AlertDescription>
+                </Alert>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
