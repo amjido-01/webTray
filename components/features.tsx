@@ -10,24 +10,24 @@ import { Badge } from "./ui/badge";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 export function Features() {
   return (
-    <div className="max-w-7xl mx-auto md:mt-[164px] pt16 pb8">
+    <div className="max-w-7xl mx-auto mt-[112px] md:mt-[164px] pt16 pb8">
       {/* Header */}
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-balance">
+        <div className="text-center mb-[40px] md:mb-[48px] max-w-3xl mx-auto">
+          <h2 className="text-[24px] text-[#1A1A1A] leading-[100%] md:text-5xl font-bold mb-4 md:mb-[24px] text-balance">
             Everything You Need to Succeed
           </h2>
-          <p className="text-lg text-muted-foreground text-pretty">
+          <p className="text-[16px] font-normal leading-[24px] text-[#4D4D4D] text-pretty">
             From inventory management to online sales, WebTray provides all the
             tools your business needs in one powerful platform.
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="w-full">
+        <div className="w-full p-2">
           {/* Inventory Management */}
 
-          <div className="grid mb-[24px] md:grid-cols-2 gap-6">
+          <div className="grid mb-[32px] md:mb-[26px] md:grid-cols-2 gap-6">
             <div className="">
               <Card className="border-none p0 h-[388px] md:w-[572px] md:h-[462px] shadow-none borde">
                 <CardContent className="p-0 md:mb-[22px] mb-[40px]">
@@ -41,10 +41,10 @@ export function Features() {
                 </CardContent>
                 <CardFooter className="p-0 flex-none">
                   <div>
-                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-gray-900">
+                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-[#1A1A1A]">
                       Inventory Management
                     </h4>
-                    <p className="text-[16px] text-start font-normal leading-6 text-[#4D4D4D] mb-[24px]">
+                    <p className="text-[16px] text-start mb-[24px] md:text-start text-[#4D4D4D] font-normal leading-[24px] text-pretty">
                       Track stock levels, manage suppliers, and automate
                       reordering with our intelligent inventory system.
                     </p>
@@ -64,12 +64,12 @@ export function Features() {
                     height={195}
                   />
                 </CardContent>
-                <CardFooter className=" flex-none">
+                <CardFooter className="p-0 flex-none">
                   <div>
-                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-gray-900">
+                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-[#1A1A1A]">
                       Customer Management
                     </h4>
-                    <p className="text-[16px] text-start font-normal leading-6 text-[#4D4D4D] mb-[24px]">
+                    <p className="text-[16px] text-start mb-[24px] md:text-start text-[#4D4D4D] font-normal leading-[24px] text-pretty">
                       Build customer relationships with booking systems, order
                       history, and loyalty programs.
                     </p>
@@ -138,10 +138,10 @@ export function Features() {
                 
               </div>
               <div className="mt-[24px]">
-                  <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-gray-900">
-                    Analytics & Reports
+                  <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-[#1A1A1A]">
+                    E-commerce Platform
                   </h4>
-                  <p className="text-[16px] text-start font-normal leading-6 text-[#4D4D4D] mb-[24px]">
+                  <p className="text-[16px] text-start mb-[24px] md:text-start text-[#4D4D4D] font-normal leading-[24px] text-pretty">
                     Get insights into sales performance, customer behavior, and
                     business growth metrics.
                   </p>
@@ -183,10 +183,10 @@ export function Features() {
                 </CardContent>
                 <CardFooter className=" flex-none">
                   <div>
-                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-gray-900">
+                    <h4 className=" text-[20px] text-start font-medium leading-[100%] tracking-[0%] mb-[24px] text-[#1A1A1A]">
                       Analytics & Reports
                     </h4>
-                    <p className="text-[16px] text-start font-normal leading-6 text-[#4D4D4D] mb-[24px]">
+                    <p className="text-[16px] text-start mb-[24px] md:text-start text-[#4D4D4D] font-normal leading-[24px] text-pretty">
                       Get insights into sales performance, customer behavior,
                       and business growth metrics.
                     </p>
