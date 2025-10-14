@@ -7,9 +7,11 @@ import { WhoIsItFor } from "@/components/who-is-it-for";
 import { Testimonials } from "@/components/testimonials";
 import { CTASection } from "@/components/cta-section";
 import { Footer } from "@/components/footer";
+import Header from "@/components/header";
 export default function Home() {
   return (
     <div className="">
+      <Header />
       <Hero />
       <Features />
       <AllInOne />

@@ -12,7 +12,7 @@ export function Features() {
   return (
     <div className="w-full bg-[#FBFBFB]">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 mt-28 md:mt-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 boder pt-16 pb-8 mt24 md:mt-40">
         <div className="text-center mb-[40px] md:mb-[48px] max-w-3xl mx-auto">
           <h2 className="text-[24px] text-[#1A1A1A] leading-[100%] md:text-[40px] font-bold mb-4 md:mb-[24px] text-balance">
             Everything You Need to Succeed
@@ -28,7 +28,7 @@ export function Features() {
           {/* Top Row - Inventory & Customer Management */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
             {/* Inventory Management Card */}
-            <Card className="overflow-hidden shadow-none p-4">
+            <Card className="overflow-hidden shadow-none border-0 p-4">
               <CardContent className="p-0  md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
