@@ -46,7 +46,7 @@ export function WhyChoose() {
           {/* Mobile Mockup */}
           <div>
             <Image
-              src="/iphone.png"
+              src="/iphone.webp"
               alt="Mobile mockup"
               width={400}
               height={800}
