@@ -51,7 +51,6 @@ export function WhyChoose() {
               width={400}
               height={800}
               className="mx-auto w-[153px] h-[313px] md:w-[274px] md:h-[560px]"
-               priority
             />
           </div>
 
