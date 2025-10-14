@@ -1,10 +1,9 @@
 import Link from "next/link"
-import { Linkedin, Instagram, Facebook } from "lucide-react"
 import Image from "next/image"
 
 export function Footer() {
   return (
-    <footer className="bg-white border-t mt-[126px] border-gray-200">
+    <footer className="bg-white mt-[126px]">
       <div className="container mx-auto max-w-7xl px-4 py-12">
         {/* Top Section */}
         <div className="grid md:grid-cols-4 gap-8 mb-12">
@@ -47,30 +46,28 @@ export function Footer() {
             <h3 className="font-bold mb-4">Follow Us</h3>
             <div className="flex gap-3">
               <Link
-                href="https://linkedin.com"
-                className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                href="https://www.linkedin.com/company/109418234"
+                className="w-12 h-12 rounded-full flex items-center justify-center "
               >
-                <Linkedin className="w-5 h-5" />
+                <Image className="w-6 h-6" src="/linkedin.svg" alt="LinkedIn" width={20} height={20} />
               </Link>
               <Link
-                href="https://instagram.com"
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white hover:opacity-90 transition-opacity"
+                href="https://www.linkedin.com/company/109418234"
+                className="w-12 h-12 flex items-center justify-center "
               >
-                <Instagram className="w-5 h-5" />
+                <Image className="w-6 h-6" src="/insta.svg" alt="Instagram" width={20} height={20} />
               </Link>
               <Link
-                href="https://facebook.com"
-                className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                href="https://web.facebook.com/profile.php?id=61581919582071"
+                className="w-12 h-12 rounded-full flex items-center justify-center"
               >
-                <Facebook className="w-5 h-5" />
+                <Image className="w-6 h-6" src="/fb.svg" alt="Facebook" width={20} height={20} /> 
               </Link>
               <Link
-                href="https://x.com"
-                className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
+                href="https://x.com/webtray_ng"
+                className="w-12 h-12 rounded-full flex items-center justify-center"
               >
-                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
+                <Image className="w-6 h-6" src="/x.svg" alt="X" width={20} height={20} />
               </Link>
             </div>
           </div>
@@ -78,7 +75,7 @@ export function Footer() {
 
         {/* Large WEBTRAY Text */}
         <div className="text-center mb-8">
-          <h2 className="text-[74.39px] text-[#1A1A1A] leading-[100%] md:text-[216.42px] lg:text-9xl font-black tracking-tight">WEBTRAY</h2>
+          <h2 className="text-[65px] text-[#1A1A1A] leading-[100%] md:text-[216.42px] lg:text-9xl font-black tracking-tight">WEBTRAY</h2>
         </div>
 
         {/* Bottom Section */}
