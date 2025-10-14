@@ -28,7 +28,7 @@ export function Features() {
           {/* Top Row - Inventory & Customer Management */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
             {/* Inventory Management Card */}
-            <Card className="overflow-hidden shadow-none border-0 p-0">
+            <Card className="overflow-hidden shadow-none p-4">
               <CardContent className="p-0  md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
@@ -52,7 +52,7 @@ export function Features() {
             </Card>
 
             {/* Customer Management Card */}
-            <Card className="overflow-hidden border-0 shadow-none p-0">
+            <Card className="overflow-hidden border-0 shadow-none p-4">
               <CardContent className="p-0 md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
@@ -80,13 +80,13 @@ export function Features() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
             {/* E-commerce Platform Card */}
             <div className="w-full space-y-6">
-              <Card className="w-full md:w-1/2 overflow-hidden shadow-none border-0 p-0">
+              <Card className="w-full md:w-1/2 overflow-hidden shadow-none border-0 p-4">
                 <CardHeader className="p-0">
                   <div className="relative w-full md:mb-[50px] mb-[40px] aspect-[16/9] min-h-0">
                     <Image
                       src="/cups.jpg"
                       alt="E-commerce product example"
-                      className="object-cover w-full mdw-[523.75px]"
+                      className="object-cover rounded-t-[6px] w-full mdw-[523.75px]"
                       width={440}
                       height={195}
                     />
@@ -144,7 +144,7 @@ export function Features() {
             </div>
 
             {/* Analytics & Reports Card */}
-            <Card className="overflow-hidden border-0 shadow-none p-0">
+            <Card className="overflow-hidden border-0 shadow-none p-4">
               <CardContent className="p-0 md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
