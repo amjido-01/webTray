@@ -30,19 +30,19 @@ export function WhyChoose() {
   ];
 
   return (
-    <section className="max-w-7xl mx-auto md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 pb8">
+    <section className="max-w-7xl mx-auto mt-[112px] md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 pb8">
       <div className="">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+          <h2 className="text-center text-[#1A1A1A] text-[24px] font-bold text-balance leading-[100%] md:text-[40px] mb-[24px]">
             Why Choose WebTray
           </h2>
-          <p className="text-muted-foreground text-pretty max-w-3xl mx-auto">
+          <p className="max-w-3xl mx-auto text-[16px] font-normal leading-[24px] text-[#4D4D4D] text-pretty">
             Stay on top of everything that matters — track performance, manage
             activity, and make decisions in real time.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 w-[80%] mx-auto gap-8 lg:gap-0 items-center">
+        <div className="grid lg:grid-cols-2 md:w-[80%] mx-auto gap-8 lg:gap-0 items-center">
           {/* Mobile Mockup */}
           <div>
             <Image
@@ -55,7 +55,7 @@ export function WhyChoose() {
           </div>
 
           {/* Feature Cards */}
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 ">
             {features.map((feature, index) => (
               <div
                 key={index}

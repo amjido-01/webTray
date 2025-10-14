@@ -32,10 +32,10 @@ export function WhoIsItFor() {
     <section className="py-16 px-4 md:py-24 bg-gradient-to-b mt-[164px] from-[#F0F3FE] to-[#F4EAFD]">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+          <h2 className="text-3xl md:text-[40px] font-bold mb-4 text-balance text-[24px] text-[#1A1A1A] leading-[100%]">
             Who is WebTray For
           </h2>
-          <p className="text-muted-foreground text-pretty">
+          <p className="text-pretty text-[16px] font-normal leading-[24px] text-[#4D4D4D] ">
             Built for All Kinds of Hustle
           </p>
         </div>
