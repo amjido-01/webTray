@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import hero_img from "@/public/hero_img.png"
+import hero from "@/public/hero.png"
 import confeti_right from "@/public/confeti_right.svg"
 import confeti_left from "@/public/confeti_left.svg"
 
@@ -29,7 +29,7 @@ export default function Hero() {
       </div>
 
       <div className="mt-[88px]">
-        <Image src={hero_img} alt="hero image" />
+        <Image src={hero} alt="hero image" />
       </div>
     </section>
   )
