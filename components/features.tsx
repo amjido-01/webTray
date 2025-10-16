@@ -10,7 +10,7 @@ import { Badge } from "./ui/badge";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 export function Features() {
   return (
-    <div className="w-full bg-[#FBFBFB]">
+    <div className="w-full">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 boder pt-16 pb-8 mt24 md:mt-40">
         <div className="text-center mb-[40px] md:mb-[48px] max-w-3xl mx-auto">
@@ -28,7 +28,7 @@ export function Features() {
           {/* Top Row - Inventory & Customer Management */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
             {/* Inventory Management Card */}
-            <Card className="overflow-hidden shadow-none border-0 p-4">
+            <Card className="overflow-hidden bg-[#FBFBFB] shadow-none border-0 p-4">
               <CardContent className="p-0  md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
@@ -52,7 +52,7 @@ export function Features() {
             </Card>
 
             {/* Customer Management Card */}
-            <Card className="overflow-hidden border-0 shadow-none p-4">
+            <Card className="overflow-hidden bg-[#FBFBFB] border-0 shadow-none p-4">
               <CardContent className="p-0 md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
@@ -79,7 +79,7 @@ export function Features() {
           {/* Bottom Row - E-commerce & Analytics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
             {/* E-commerce Platform Card */}
-            <div className="w-full space-y-6">
+            <div className="w-full space-y-6 bg-[#FBFBFB]">
               <Card className="w-full md:w-1/2 overflow-hidden shadow-none border-0 p-4">
                 <CardHeader className="p-0">
                   <div className="relative w-full md:mb-[50px] mb-[40px] aspect-[16/9] min-h-0">
@@ -144,7 +144,7 @@ export function Features() {
             </div>
 
             {/* Analytics & Reports Card */}
-            <Card className="overflow-hidden border-0 shadow-none p-4">
+            <Card className="overflow-hidden bg-[#FBFBFB] border-0 shadow-none p-4">
               <CardContent className="p-0 md:mb-[22px] mb-[40px]">
                 <div className="relative w-full aspect-[16/9]">
                   <Image
