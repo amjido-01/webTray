@@ -72,8 +72,29 @@ export interface Category {
 }
 
 export interface CreateCategoryPayload {
+  storeId: number;
   name: string;
   description: string;
+}
+
+export interface Store {
+   id: number;
+    businessId: number;
+    storeName: string;
+    slogan: string;
+    customDomain: string;
+    paymentMethods: {
+      paystack: boolean;
+      bankTransfer: boolean;
+    };
+    deliveryOptions: {
+      inHouse: boolean;
+      thirdParty: string[];
+    };
+    status: string;
+    currency: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface Business {
@@ -93,26 +114,9 @@ export interface Business {
   status: string;
   createdAt: string;
   updatedAt: string;
-  store: Array<{
-    id: number;
-    businessId: number;
-    storeName: string;
-    slogan: string;
-    customDomain: string;
-    paymentMethods: {
-      paystack: boolean;
-      bankTransfer: boolean;
-    };
-    deliveryOptions: {
-      inHouse: boolean;
-      thirdParty: string[];
-    };
-    status: string;
-    currency: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
+  store: Store[]
 }
+
 
 export interface DashboardSummary {
   totalRevenue: number;

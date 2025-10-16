@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 
 export default function SearchComponent() {
   return (
-    <div className="w-[363px]">
+    <div className="w-[363px] border-2">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

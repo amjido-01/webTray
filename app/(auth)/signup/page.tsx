@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/public/logo.svg";
 import { SignupFormData, signupSchema } from "@/schemas/signup.schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
@@ -70,7 +69,14 @@ export default function SignUpPage() {
         <div className="bg-white p-6 md:p-10 flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="mb-[40px]">
-              <Image src={logo} alt="logo" />
+              <Link href="/">
+                <Image
+                  src="/webtraylogo.png"
+                  width={100}
+                  height={100}
+                  alt="logo"
+                />
+              </Link>
             </div>
 
             <div className="mb-[18px]">

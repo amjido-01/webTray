@@ -22,8 +22,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import logo from "@/public/logo.svg";
 import Image from "next/image"
+import Link from "next/link"
 
 const data = {
   navMain: [
@@ -71,9 +71,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <Image src={logo} alt="logo" />
-              </a>
+               <Link href="#" className="flex items-center z-[60]">
+              <Image src="/webtraylogo.png" width={140} height={40} alt="logo" />
+            </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -23,27 +23,29 @@ useEffect(() => {
     useWorker: true,
   });
 
-  const duration = 3 * 1000; // 10 seconds
+  const duration = 3 * 1000; // 3 seconds
   const animationEnd = Date.now() + duration;
 
   const frame = () => {
     myConfetti({
-      particleCount: 60,
-      spread: 55,
-      startVelocity: 30,
+      particleCount: 50,        // Reduced from 60 → 25
+      spread: 50,               // Slightly narrower
+      startVelocity: 35,        // Slightly slower
       origin: { y: Math.random() - 0.2, x: Math.random() },
-      ticks: 200,
+      ticks: 150,
       colors: ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99"],
       disableForReducedMotion: true,
     });
 
+    // Fire less frequently by adding a delay
     if (Date.now() < animationEnd) {
-      requestAnimationFrame(frame);
+      setTimeout(() => requestAnimationFrame(frame), 150); // 150ms delay
     }
   };
 
   frame();
 }, []);
+
 
 
   return (

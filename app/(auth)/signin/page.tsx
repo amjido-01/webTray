@@ -8,11 +8,9 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { signinSchema, SigninFormData } from "@/schemas/signin.schema";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/public/logo.svg";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type FormData = SigninFormData;
@@ -61,7 +59,14 @@ export default function LoginPage() {
         <div className="bg-white p-6 md:p-10 flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="mb-[40px]">
-              <Image src={logo} alt="logo" />
+              <Link href="/">
+                <Image
+                  src="/webtraylogo.png"
+                  width={100}
+                  height={100}
+                  alt="logo"
+                />
+              </Link>
             </div>
 
             <div className="mb-[18px]">

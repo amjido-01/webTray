@@ -10,13 +10,12 @@ import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "./header-skeleton";
-
 export function InventoryManagement() {
      const {
       isFetchingInventorySummary,
     } = useCategory();
   
-  const { user } = useAuthStore();
+  const { user, activeStore } = useAuthStore();
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
   const { categories, addCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +23,7 @@ export function InventoryManagement() {
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
-  const userStoreId = user?.business?.store[0]?.id;
+  const userStoreId = activeStore?.id;
     const isLoading = isFetchingInventorySummary || isFetchingProducts
   
   const handleAddCategory = async (newCategoryName: string) => {
@@ -38,7 +37,7 @@ export function InventoryManagement() {
       return;
     }
     try {
-      await addCategory({ name: newCategoryName, description: "" });
+      await addCategory({ name: newCategoryName, description: "", storeId: userStoreId! });
       toast.success("Category successfully added");
     } catch (error) {
       console.error(error);

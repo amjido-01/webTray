@@ -7,6 +7,7 @@ import {
   CreateCategoryPayload,
   InventorySummary,
 } from "@/types";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface UpdateCategoryPayload extends CreateCategoryPayload {
   id: number;
@@ -20,20 +21,31 @@ export const categoryKeys = {
 };
 
 export const useCategory = () => {
+  const { activeStore } = useAuthStore();
   const queryClient = useQueryClient();
 
+  const storeId = activeStore?.id;
+
   const categoriesQuery = useQuery({
-    queryKey: categoryKeys.categories(),
+    queryKey: [...categoryKeys.categories(), storeId],
     queryFn: async (): Promise<Category[]> => {
       const { data } = await api.get<ApiResponse<{ categories: Category[] }>>(
-        "/inventory/category"
+        "/inventory/category",
+        {
+          params: {
+            storeId: storeId,
+          },
+        }
       );
       if (data?.responseSuccessful) {
         return data.responseBody.categories;
       }
       throw new Error(data?.responseMessage || "Failed to fetch categories");
     },
+    enabled: !!storeId,
   });
+
+  // ...existing code...
 
   const useCategoryQuery = (id: number) =>
     useQuery({
@@ -162,10 +174,15 @@ export const useCategory = () => {
   };
 
   const inventorySummaryQuery = useQuery({
-    queryKey: [...categoryKeys.all, "summary"],
+    queryKey: [...categoryKeys.all, "summary", storeId],
     queryFn: async (): Promise<InventorySummary> => {
       const { data } = await api.get<ApiResponse<InventorySummary>>(
-        "/inventory/inventory-summary"
+        "/inventory/inventory-summary",
+        {
+          params: {
+            storeId: storeId,
+          },
+        }
       );
 
       if (data?.responseSuccessful) {
@@ -175,6 +192,7 @@ export const useCategory = () => {
         data?.responseMessage || "Failed to fetch inventory summary"
       );
     },
+    enabled: !!storeId,
   });
 
   return {

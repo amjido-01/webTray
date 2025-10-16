@@ -8,7 +8,7 @@ import {
   UpdateProductPayload,
 } from "@/types";
 import { categoryKeys } from "./use-category";
-
+import { useAuthStore } from "@/store/useAuthStore";
 // interface UpdateProductPayload extends CreateProductPayload {
 //   id: number;
 // }
@@ -29,19 +29,28 @@ export const productKeys = {
 };
 
 export const useProduct = () => {
+  const { activeStore } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const productsQuery = useQuery({
-    queryKey: productKeys.products(),
+  const storeId = activeStore?.id;
+
+ const productsQuery = useQuery({
+    queryKey: [...productKeys.products(), storeId],
     queryFn: async (): Promise<Product[]> => {
       const { data } = await api.get<ApiResponse<{ products: Product[] }>>(
-        "/inventory/product"
+        "/inventory/product",
+        {
+          params: {
+            storeId: storeId
+          }
+        }
       );
       if (data?.responseSuccessful) {
         return data.responseBody.products;
       }
       throw new Error(data?.responseMessage || "Failed to fetch products");
     },
+    enabled: !!storeId,
   });
 
   const useProductQuery = (id: number) =>

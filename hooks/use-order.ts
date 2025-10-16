@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import { ApiResponse, Order, OrderSummary } from "@/types";
-
+import { useAuthStore } from "@/store/useAuthStore";
 export interface OrderItem {
   productId: number;
   quantity: number;
@@ -62,51 +62,70 @@ export const orderKeys = {
 };
 
 export const useOrder = () => {
+  const { activeStore } = useAuthStore();
   const queryClient = useQueryClient();
 
-  // List Orders Query
-  const ordersQuery = useQuery({
-    queryKey: orderKeys.orders(),
+  const storeId = activeStore?.id;
 
+  // List Orders Query
+ const ordersQuery = useQuery({
+    queryKey: [...orderKeys.orders(), storeId],
     queryFn: async (): Promise<Order[]> => {
       const { data } = await api.get<ApiResponse<{ orders: Order[] }>>(
-        "/inventory/order"
+        "/inventory/order",
+        {
+          params: {
+            storeId: storeId
+          }
+        }
       );
       if (data?.responseSuccessful) {
         return data.responseBody.orders;
       }
       throw new Error(data?.responseMessage || "Failed to fetch orders");
     },
+    enabled: !!storeId,
   });
 
   // Order Summary Query
-  const orderSummaryQuery = useQuery({
-    queryKey: orderKeys.summary(),
+ const orderSummaryQuery = useQuery({
+    queryKey: [...orderKeys.summary(), storeId],
     queryFn: async (): Promise<OrderSummary> => {
       const { data } = await api.get<ApiResponse<OrderSummary>>(
-        "/inventory/order/summary"
+        "/inventory/order/summary",
+        {
+          params: {
+            storeId: storeId
+          }
+        }
       );
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
       throw new Error(data?.responseMessage || "Failed to fetch order summary");
     },
+    enabled: !!storeId,
   });
 
   // Single Order Hook
   const useOrderQuery = (id: number) =>
     useQuery({
-      queryKey: orderKeys.order(id),
+      queryKey: [...orderKeys.order(id), storeId],
       queryFn: async (): Promise<Order> => {
         const { data } = await api.get<ApiResponse<{ order: Order }>>(
-          `/inventory/order/${id}`
+          `/inventory/order/${id}`,
+          {
+            params: {
+              storeId: storeId
+            }
+          }
         );
         if (data?.responseSuccessful) {
           return data.responseBody.order;
         }
         throw new Error(data?.responseMessage || "Failed to fetch order");
       },
-      enabled: !!id,
+      enabled: !!(id && storeId),
     });
 
   // Get Order Function

@@ -5,6 +5,7 @@ import { User, Settings, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"
 import SearchComponent from "@/components/search-component"
+import { StoreSwitcher } from "./StoreSwitcher";
 
 export function SiteHeader() {
    const pathname = usePathname()
@@ -16,6 +17,8 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
+        <StoreSwitcher />
+
         {pathname === "/dashboard" && <SearchComponent />}
         <div className="ml-auto flex items-center gap-8">
           <Link href="/notification" aria-label="Notification">

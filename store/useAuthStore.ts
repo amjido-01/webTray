@@ -8,6 +8,7 @@ import {
   ResetPasswordPayload,
   VerifyOtpPayload,
   LoginPayload,
+  Store
 } from "@/types";
 
 interface AuthState {
@@ -17,6 +18,10 @@ interface AuthState {
 
   loading: boolean;
   _hasHydrated: boolean;
+
+  stores: Store[];
+  activeStore: Store | null;
+  switchStore: (storeId: number) => void;
 
   setHasHydrated: (state: boolean) => void;
 
@@ -42,6 +47,9 @@ export const useAuthStore = create<AuthState>()(
       refreshTokenValue: null,
       loading: false,
       _hasHydrated: false,
+
+      stores: [],
+      activeStore: null,
 
       setHasHydrated: (state) => {
         set({ _hasHydrated: state });
@@ -127,21 +135,47 @@ export const useAuthStore = create<AuthState>()(
 
           // ✅ Now fetch the full user, business, and store
           const profileResponse = await api.get("/user/profile");
-          const { user, business, store } = profileResponse.data.responseBody;
+          const { user, business } = profileResponse.data.responseBody;
+
+          const storeRsponse = await api.get("/user/stores");
+          const stores = storeRsponse.data.responseBody
+
+          const lastStoreId = localStorage.getItem("lastActiveStoreId");
+          const activeStore = lastStoreId 
+            ? stores.find((store: Store) => store.id === parseInt(lastStoreId))
+            : stores[0];
 
           set({
             user: {
               ...user,
               business,
-              store,
             },
+            stores,
+            activeStore,
           });
+
+           if (activeStore) {
+            localStorage.setItem("lastActiveStoreId", activeStore.id.toString());
+          }
         } catch (error) {
           console.error("Login failed:", error);
           throw error;
         } finally {
           set({ loading: false });
         }
+      },
+
+      
+      switchStore: (storeId) => {
+        const state = get();
+        const newStore = state.stores.find(store => store.id === storeId);
+        
+        if (!newStore) {
+          throw new Error("Store not found");
+        }
+
+        set({ activeStore: newStore });
+        localStorage.setItem("lastActiveStoreId", storeId.toString());
       },
 
       forgotPassword: async (email) => {
@@ -210,7 +244,6 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.post("/auth/refresh");
           const { accessToken } = response.data;
-          console.log(accessToken)
           set({ accessToken });
         } catch (error) {
           console.error("Error refreshing token:", error);
@@ -225,7 +258,8 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.warn("Logout failed, but clearing user data anyway:", error);
         }
-        set({ user: null, accessToken: null, refreshTokenValue: null });
+        localStorage.removeItem("lastActiveStoreId");
+        set({ user: null, accessToken: null, refreshTokenValue: null, stores: [], activeStore: null });
       },
     }),
     {
@@ -235,6 +269,8 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         accessToken: state.accessToken,
         refreshTokenValue: state.refreshTokenValue,
+        stores: state.stores,
+        activeStore: state.activeStore,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

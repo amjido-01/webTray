@@ -16,7 +16,7 @@ export function StatCard({
   note,
   noteColor = "text-muted-foreground",
 }: StatCardProps) {
-  const { user } = useAuthStore();
+  const { activeStore, user } = useAuthStore();
   const { addCategory, isAddingCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [shouldClearForm, setShouldClearForm] = useState(false);
@@ -25,7 +25,10 @@ export function StatCard({
   >({});
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [formData, setFormData] = useState<Record<string, unknown>>({});
-
+  const storeId = activeStore?.id;
+  if (!storeId) {
+    return null; // or some fallback UI
+  }
   const validateForm = async (data: Record<string, unknown>) => {
     try {
       await categorySchema.validate(data, { abortEarly: false });
@@ -56,6 +59,7 @@ export function StatCard({
 
       const validatedData = await categorySchema.validate(data);
       const categoryPayload = {
+        storeId: storeId,
         name: validatedData.name,
         description: validatedData.description || "",
       };
