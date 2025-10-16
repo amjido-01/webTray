@@ -21,11 +21,9 @@ export const userKeys = {
 export const useUser = () => {
   const { activeStore } = useAuthStore();
   const queryClient = useQueryClient();
-  console.log("Auth Store User:", activeStore);
 
   // get store id
   const storeId = activeStore?.id;
-  console.log("Store ID:", storeId);
 
   const profileQuery = useQuery({
     queryKey: userKeys.profile(),

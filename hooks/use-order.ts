@@ -140,33 +140,40 @@ export const useOrder = () => {
   };
 
   // Add Order Mutation
-  const addOrderMutation = useMutation({
-    mutationFn: async (payload: CreateOrderPayload): Promise<ApiOrder> => {
-      const { data } = await api.post<ApiResponse<ApiOrder>>(
-        "/inventory/order",
-        payload
-      );
-      if (data?.responseSuccessful) {
-        return data.responseBody;
+ // ...existing code...
+
+const addOrderMutation = useMutation({
+  mutationFn: async (payload: CreateOrderPayload): Promise<ApiOrder> => {
+    const { data } = await api.post<ApiResponse<ApiOrder>>(
+      "/inventory/order",
+      payload,
+      {
+        params: {
+          storeId: storeId
+        }
       }
-      throw new Error(data?.responseMessage || "Failed to add order");
-    },
-    onSuccess: (newOrder) => {
-      // Invalidate and refetch orders and summary
-      queryClient.invalidateQueries({ queryKey: orderKeys.orders() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.summary() });
+    );
+    if (data?.responseSuccessful) {
+      return data.responseBody;
+    }
+    throw new Error(data?.responseMessage || "Failed to add order");
+  },
+  onSuccess: (newOrder) => {
+    // Invalidate and refetch orders and summary
+    queryClient.invalidateQueries({ queryKey: [...orderKeys.orders(), storeId] });
+    queryClient.invalidateQueries({ queryKey: [...orderKeys.summary(), storeId] });
 
-      // Optimistically update the orders cache
-      queryClient.setQueryData<ApiOrder[]>(orderKeys.orders(), (old) => {
-        return old ? [newOrder, ...old] : [newOrder];
-      });
+    // Optimistically update the orders cache
+    queryClient.setQueryData<ApiOrder[]>([...orderKeys.orders(), storeId], (old) => {
+      return old ? [newOrder, ...old] : [newOrder];
+    });
 
-      toast.success("Order added successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to add order");
-    },
-  });
+    toast.success("Order added successfully");
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Failed to add order");
+  },
+});
 
   // Update Order Mutation
   const updateOrderMutation = useMutation({

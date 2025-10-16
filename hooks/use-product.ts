@@ -112,43 +112,50 @@ export const useProduct = () => {
     return addProductMutation.mutateAsync(payload);
   };
 
-  const updateProductMutation = useMutation({
-    mutationFn: async ({
-      id,
-      ...payload
-    }: UpdateProductPayload): Promise<Product> => {
-      // Change from PUT to PATCH to match your API
-      const { data } = await api.patch<ApiResponse<{ product: Product }>>(
-        `/inventory/product/${id}`,
-        payload
-      );
-      if (data?.responseSuccessful) {
-        return data.responseBody.product;
+const updateProductMutation = useMutation({
+  mutationFn: async ({
+    id,
+    ...payload
+  }: UpdateProductPayload): Promise<Product> => {
+    const { data } = await api.patch<ApiResponse<{ product: Product }>>(
+      `/inventory/product/${id}`,
+      payload,
+      {
+        params: {
+          storeId: storeId
+        }
       }
-      throw new Error(data?.responseMessage || "Failed to update product");
-    },
-    onSuccess: (updatedProduct) => {
-      // Update specific product in cache
-      queryClient.setQueryData<Product>(
-        productKeys.product(updatedProduct.id),
-        updatedProduct
-      );
+    );
+    if (data?.responseSuccessful) {
+      return data.responseBody.product;
+    }
+    throw new Error(data?.responseMessage || "Failed to update product");
+  },
+  onSuccess: (updatedProduct) => {
+    // Update specific product in cache
+    queryClient.setQueryData<Product>(
+      [...productKeys.product(updatedProduct.id), storeId],
+      updatedProduct
+    );
 
-      // Update products list cache
-      queryClient.setQueryData<Product[]>(productKeys.products(), (old) => {
+    // Update products list cache
+    queryClient.setQueryData<Product[]>(
+      [...productKeys.products(), storeId], 
+      (old) => {
         return old
           ? old.map((prod) =>
               prod.id === updatedProduct.id ? updatedProduct : prod
             )
           : [updatedProduct];
-      });
+      }
+    );
 
-      toast.success("Product updated successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update product");
-    },
-  });
+    toast.success("Product updated successfully");
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Failed to update product");
+  },
+});
 
   const updateProduct = async (payload: UpdateProductPayload) => {
     return updateProductMutation.mutateAsync(payload);
