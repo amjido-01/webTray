@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ColumnDef } from "@tanstack/react-table";
-import { SquarePen, Trash2, Check, X } from "lucide-react";
+import { SquarePen, Trash2, Check, X, Loader2 } from "lucide-react";
 import { Category, EditForm } from "@/types";
 import {
   Select,
@@ -229,7 +229,11 @@ export const createColumns = (
                   onClick={() => handlers.handleEditSave(product.id)}
                   disabled={handlers.isUpdatingProduct}
                 >
+                  {handlers.isUpdatingProduct ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
                   <Check className="h-4 w-4" />
+                )}
                 </Button>
                 <Button
                   variant="ghost"

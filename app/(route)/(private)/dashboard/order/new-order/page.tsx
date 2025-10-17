@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Minus, Trash2, Loader2 } from "lucide-react"
+import { Search, Plus, Minus, Trash2, Loader2, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useOrder } from "@/hooks/use-order"
 import { useProduct } from "@/hooks/use-product"
 import * as yup from "yup"
+import Link from "next/link"
 
 interface Product {
   id: string
@@ -244,9 +245,20 @@ export default function AddOrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 md:p-6 border2">
       <div className="max-w-7xl mx-auto">
-        <div className="text-sm text-gray-600 mb-4">Orders / New Order</div>
+        <div className="mb-4 flex items-center justify-between p-2 md:p-4 bg-white rounded-lg">
+  <div className="flex items-center gap-2 ">
+    <Link 
+      href="/dashboard/order" 
+      className="text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      Orders
+    </Link>
+    <ChevronRight className="h-4 w-4 text-gray-400" />
+  </div>
+    <span className="text-gray-900">New Order</span>
+</div>
 
         <h1 className="text-2xl font-semibold text-gray-900 mb-8">Add new orders</h1>
 
@@ -257,7 +269,7 @@ export default function AddOrderPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="p-6">
+          <div className="md:p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-6">Order Details</h2>
 
             <div className="space-y-6">
@@ -394,7 +406,7 @@ export default function AddOrderPage() {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="md:p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-6">Cart Summary</h2>
 
             <div className="space-y-4">

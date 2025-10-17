@@ -20,7 +20,6 @@ export const useCustomer = () => {
       const { data } = await api.get<ApiResponse<CustomerSummary>>(
         "/customer/customer-summary"
       );
-      console.log(data);
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
@@ -35,6 +34,7 @@ export const useCustomer = () => {
       const { data } = await api.get<ApiResponse<{ customers: Customer[] }>>(
         "/customer"
       );
+      console.log(data.responseBody);
       if (data?.responseSuccessful) {
         return data.responseBody.customers;
       }

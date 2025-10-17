@@ -1,5 +1,5 @@
 
-"use client"
+// "use client"
 import { SectionCards } from "@/components/section-cards";
 import { StockAlertTable } from "@/components/stock-alart";
 import RecentOrdersTable from "@/components/dashboard/recent-table";

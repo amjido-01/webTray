@@ -16,6 +16,7 @@ import { DataTable } from "@/lib/customer/data-table";
 
 export default function CustomerTable() {
   const { Customers, customersError, isFetchingCustomers } = useCustomer();
+  console.log(Customers);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
