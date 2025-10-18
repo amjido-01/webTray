@@ -1,30 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Search, Plus, Minus, Trash2, Loader2, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useOrder } from "@/hooks/use-order"
-import { useProduct } from "@/hooks/use-product"
-import * as yup from "yup"
-import Link from "next/link"
+import { useState } from "react";
+import {
+  Search,
+  Plus,
+  Minus,
+  Trash2,
+  Loader2,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useOrder } from "@/hooks/use-order";
+import { useProduct } from "@/hooks/use-product";
+import * as yup from "yup";
+import Link from "next/link";
 
 interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
+  id: string;
+  name: string;
+  description: string;
+  price: number;
 }
 
 interface CartItem extends Product {
-  quantity: number
+  quantity: number;
 }
 
 interface FormErrors {
-  customerName?: string
-  customerPhone?: string
-  cartItems?: string
+  customerName?: string;
+  customerPhone?: string;
+  cartItems?: string;
 }
 
 const orderValidationSchema = yup.object({
@@ -33,8 +40,11 @@ const orderValidationSchema = yup.object({
     .required("Customer name is required")
     .min(2, "Customer name must be at least 2 characters")
     .max(50, "Customer name must not exceed 50 characters")
-    .matches(/^[a-zA-Z\s]+$/, "Customer name can only contain letters and spaces"),
-  
+    .matches(
+      /^[a-zA-Z\s]+$/,
+      "Customer name can only contain letters and spaces"
+    ),
+
   customerPhone: yup
     .string()
     .required("Phone number is required")
@@ -42,23 +52,23 @@ const orderValidationSchema = yup.object({
       /^(\+234|0)[789][01]\d{8}$/,
       "Please enter a valid Nigerian phone number (e.g., +2348012345678 or 08012345678)"
     ),
-  
+
   cartItems: yup
     .array()
     .min(1, "Please add at least one product to the cart")
-    .required("Cart cannot be empty")
-})
+    .required("Cart cannot be empty"),
+});
 
 export default function AddOrderPage() {
-  const [customerName, setCustomerName] = useState("")
-  const [customerPhone, setCustomerPhone] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [errors, setErrors] = useState<FormErrors>({})
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const { addOrder, isAddingOrder, addOrderError } = useOrder()
-  const { products, isFetchingProducts } = useProduct()
+  const { addOrder, isAddingOrder, addOrderError } = useOrder();
+  const { products, isFetchingProducts } = useProduct();
 
   const mockProducts: Product[] = [
     {
@@ -103,83 +113,110 @@ export default function AddOrderPage() {
       description: "A magical blend of coffee and caramel.",
       price: 2400.0,
     },
-  ]
+  ];
 
-  const availableProducts = products 
-    ? products.map(p => ({
+  const availableProducts = products
+    ? products.map((p) => ({
         id: p.id.toString(),
         name: p.name,
         description: p.description || "",
-        price: typeof p.price === 'string' ? parseFloat(p.price) : p.price
+        price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
       }))
     : mockProducts;
 
   const filteredProducts = availableProducts.filter(
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      product.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const validateField = async (fieldName: keyof FormErrors, value: string | CartItem[]) => {
+  const validateField = async (
+    fieldName: keyof FormErrors,
+    value: string | CartItem[]
+  ) => {
     try {
-      await (yup.reach(orderValidationSchema, fieldName) as yup.Schema).validate(value)
-      setErrors(prev => ({ ...prev, [fieldName]: undefined }))
+      await (
+        yup.reach(orderValidationSchema, fieldName) as yup.Schema
+      ).validate(value);
+      setErrors((prev) => ({ ...prev, [fieldName]: undefined }));
     } catch (error) {
       if (error instanceof yup.ValidationError) {
-        setErrors(prev => ({ ...prev, [fieldName]: error.message }))
+        setErrors((prev) => ({ ...prev, [fieldName]: error.message }));
       }
     }
-  }
+  };
 
   const isCustomerDetailsValid = () => {
-    return customerName.trim().length >= 2 && 
-           customerPhone.trim().length > 0 && 
-           !errors.customerName && 
-           !errors.customerPhone
-  }
+    return (
+      customerName.trim().length >= 2 &&
+      customerPhone.trim().length > 0 &&
+      !errors.customerName &&
+      !errors.customerPhone
+    );
+  };
 
   const addToCart = (product: Product) => {
     if (!isCustomerDetailsValid()) {
       if (!customerName.trim()) {
-        setErrors(prev => ({ ...prev, customerName: "Please enter customer name before adding products" }))
+        setErrors((prev) => ({
+          ...prev,
+          customerName: "Please enter customer name before adding products",
+        }));
       }
       if (!customerPhone.trim()) {
-        setErrors(prev => ({ ...prev, customerPhone: "Please enter customer phone before adding products" }))
+        setErrors((prev) => ({
+          ...prev,
+          customerPhone: "Please enter customer phone before adding products",
+        }));
       }
-      return
+      return;
     }
 
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === product.id)
+      const existingItem = prev.find((item) => item.id === product.id);
       if (existingItem) {
-        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
+        return prev.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
       }
-      return [...prev, { ...product, quantity: 1 }]
-    })
-    setSearchQuery("")
-    setShowSuggestions(false)
+      return [...prev, { ...product, quantity: 1 }];
+    });
+    setSearchQuery("");
+    setShowSuggestions(false);
     if (errors.cartItems) {
-      setErrors(prev => ({ ...prev, cartItems: undefined }))
+      setErrors((prev) => ({ ...prev, cartItems: undefined }));
     }
-  }
+  };
 
   const updateQuantity = (id: string, change: number) => {
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity: Math.max(1, item.quantity + change) } : item)),
-    )
-  }
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, quantity: Math.max(1, item.quantity + change) }
+          : item
+      )
+    );
+  };
 
   const removeFromCart = (id: string) => {
-    const newCartItems = cartItems.filter((item) => item.id !== id)
-    setCartItems(newCartItems)
-    
+    const newCartItems = cartItems.filter((item) => item.id !== id);
+    setCartItems(newCartItems);
+
     // Validate cart after removal
     if (newCartItems.length === 0) {
-      setErrors(prev => ({ ...prev, cartItems: "Please add at least one product to the cart" }))
+      setErrors((prev) => ({
+        ...prev,
+        cartItems: "Please add at least one product to the cart",
+      }));
     }
-  }
+  };
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const total = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   const handleSaveOrder = async () => {
     try {
@@ -187,80 +224,83 @@ export default function AddOrderPage() {
       const formData = {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
-        cartItems: cartItems
-      }
+        cartItems: cartItems,
+      };
 
-      await orderValidationSchema.validate(formData, { abortEarly: false })
-      
-      setErrors({})
+      await orderValidationSchema.validate(formData, { abortEarly: false });
+
+      setErrors({});
 
       // Transform cart items to match API payload
-      const orderItems = cartItems.map(item => ({
+      const orderItems = cartItems.map((item) => ({
         productId: parseInt(item.id),
-        quantity: item.quantity
-      }))
+        quantity: item.quantity,
+      }));
 
       const orderPayload = {
         customerName: formData.customerName,
         phone: formData.customerPhone,
-        orderItems
-      }
+        orderItems,
+      };
 
-      await addOrder(orderPayload)
+      await addOrder(orderPayload);
 
-      setCustomerName("")
-      setCustomerPhone("")
-      setCartItems([])
-      setSearchQuery("")
-      setShowSuggestions(false)
-      setErrors({})
-      
+      setCustomerName("");
+      setCustomerPhone("");
+      setCartItems([]);
+      setSearchQuery("");
+      setShowSuggestions(false);
+      setErrors({});
     } catch (error) {
       if (error instanceof yup.ValidationError) {
-        const validationErrors: FormErrors = {}
-        
+        const validationErrors: FormErrors = {};
+
         error.inner.forEach((err) => {
           if (err.path) {
-            validationErrors[err.path as keyof FormErrors] = err.message
+            validationErrors[err.path as keyof FormErrors] = err.message;
           }
-        })
-        
-        setErrors(validationErrors)
+        });
+
+        setErrors(validationErrors);
       } else {
-        console.error("Failed to save order:", error)
+        console.error("Failed to save order:", error);
       }
     }
-  }
+  };
 
   const handleCustomerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setCustomerName(value)
-    validateField('customerName', value.trim())
-  }
+    const value = e.target.value;
+    setCustomerName(value);
+    validateField("customerName", value.trim());
+  };
 
-  const handleCustomerPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setCustomerPhone(value)
-    validateField('customerPhone', value.trim())
-  }
+  const handleCustomerPhoneChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setCustomerPhone(value);
+    validateField("customerPhone", value.trim());
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 md:p-6 border2">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-center justify-between p-2 md:p-4 bg-white rounded-lg">
-  <div className="flex items-center gap-2 ">
-    <Link 
-      href="/dashboard/order" 
-      className="text-gray-600 hover:text-gray-900 transition-colors"
-    >
-      Orders
-    </Link>
-    <ChevronRight className="h-4 w-4 text-gray-400" />
-  </div>
-    <span className="text-gray-900">New Order</span>
-</div>
+          <div className="flex items-center gap-2 ">
+            <Link
+              href="/dashboard/order"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Orders
+            </Link>
+            <ChevronRight className="h-4 w-4 text-gray-400" />
+          </div>
+          <span className="text-gray-900">New Order</span>
+        </div>
 
-        <h1 className="text-2xl font-semibold text-gray-900 mb-8">Add new orders</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+          Add new orders
+        </h1>
 
         {addOrderError && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -270,11 +310,16 @@ export default function AddOrderPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="md:p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">Order Details</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-6">
+              Order Details
+            </h2>
 
             <div className="space-y-6">
               <div>
-                <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 mb-2 block">
+                <Label
+                  htmlFor="customerName"
+                  className="text-sm font-medium text-gray-700 mb-2 block"
+                >
                   Customer Name
                 </Label>
                 <Input
@@ -283,16 +328,25 @@ export default function AddOrderPage() {
                   placeholder="Enter customer name"
                   value={customerName}
                   onChange={handleCustomerNameChange}
-                  className={`w-full ${errors.customerName ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  className={`w-full ${
+                    errors.customerName
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }`}
                   disabled={isAddingOrder}
                 />
                 {errors.customerName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.customerName}
+                  </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="customerPhone" className="text-sm font-medium text-gray-700 mb-2 block">
+                <Label
+                  htmlFor="customerPhone"
+                  className="text-sm font-medium text-gray-700 mb-2 block"
+                >
                   Customer Phone Number
                 </Label>
                 <Input
@@ -301,16 +355,25 @@ export default function AddOrderPage() {
                   placeholder="Enter customer phone number (e.g., +2348012345678)"
                   value={customerPhone}
                   onChange={handleCustomerPhoneChange}
-                  className={`w-full ${errors.customerPhone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                  className={`w-full ${
+                    errors.customerPhone
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }`}
                   disabled={isAddingOrder}
                 />
                 {errors.customerPhone && (
-                  <p className="text-red-500 text-sm mt-1">{errors.customerPhone}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.customerPhone}
+                  </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="productSearch" className="text-sm font-medium text-gray-700 mb-2 block">
+                <Label
+                  htmlFor="productSearch"
+                  className="text-sm font-medium text-gray-700 mb-2 block"
+                >
                   Add Product
                 </Label>
                 <div className="relative">
@@ -320,49 +383,66 @@ export default function AddOrderPage() {
                       id="productSearch"
                       type="text"
                       placeholder={
-                        !isCustomerDetailsValid() 
+                        !isCustomerDetailsValid()
                           ? "Please enter customer details first"
-                          : isFetchingProducts 
-                          ? "Loading products..." 
+                          : isFetchingProducts
+                          ? "Loading products..."
                           : "Search product"
                       }
                       value={searchQuery}
                       onChange={(e) => {
-                        if (!isCustomerDetailsValid()) return
-                        setSearchQuery(e.target.value)
-                        setShowSuggestions(e.target.value.length > 0)
+                        if (!isCustomerDetailsValid()) return;
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(e.target.value.length > 0);
                       }}
                       onFocus={() => {
-                        if (!isCustomerDetailsValid()) return
-                        setShowSuggestions(searchQuery.length > 0)
+                        if (!isCustomerDetailsValid()) return;
+                        setShowSuggestions(searchQuery.length > 0);
                       }}
                       className="pl-10 w-full"
-                      disabled={isAddingOrder || isFetchingProducts || !isCustomerDetailsValid()}
+                      disabled={
+                        isAddingOrder ||
+                        isFetchingProducts ||
+                        !isCustomerDetailsValid()
+                      }
                     />
                   </div>
 
-                  {showSuggestions && filteredProducts.length > 0 && isCustomerDetailsValid() && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                      {filteredProducts.map((product) => (
-                        <button
-                          key={product.id}
-                          onClick={() => addToCart(product)}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                          disabled={isAddingOrder}
-                        >
-                          <div className="font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-600">{product.description}</div>
-                          <div className="text-sm text-gray-800 font-medium">₦{product.price.toFixed(2)}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {showSuggestions &&
+                    filteredProducts.length > 0 &&
+                    isCustomerDetailsValid() && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {filteredProducts.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => addToCart(product)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                            disabled={isAddingOrder}
+                          >
+                            <div className="font-medium text-gray-900">
+                              {product.name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {product.description}
+                            </div>
+                            <div className="text-sm text-gray-800 font-medium">
+                              ₦{product.price.toFixed(2)}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
-                  {showSuggestions && filteredProducts.length === 0 && searchQuery.length > 0 && isCustomerDetailsValid() && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
-                      <div className="px-4 py-3 text-sm text-gray-500">No products found</div>
-                    </div>
-                  )}
+                  {showSuggestions &&
+                    filteredProducts.length === 0 &&
+                    searchQuery.length > 0 &&
+                    isCustomerDetailsValid() && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          No products found
+                        </div>
+                      </div>
+                    )}
 
                   {!isCustomerDetailsValid() && (
                     <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
@@ -370,10 +450,18 @@ export default function AddOrderPage() {
                         <div className="text-amber-600 text-sm">
                           <strong>Complete customer details first:</strong>
                           <ul className="mt-1 ml-4 list-disc text-xs">
-                            {!customerName.trim() && <li>Enter customer name</li>}
-                            {!customerPhone.trim() && <li>Enter customer phone number</li>}
-                            {errors.customerName && <li>Fix customer name error</li>}
-                            {errors.customerPhone && <li>Fix phone number error</li>}
+                            {!customerName.trim() && (
+                              <li>Enter customer name</li>
+                            )}
+                            {!customerPhone.trim() && (
+                              <li>Enter customer phone number</li>
+                            )}
+                            {errors.customerName && (
+                              <li>Fix customer name error</li>
+                            )}
+                            {errors.customerPhone && (
+                              <li>Fix phone number error</li>
+                            )}
                           </ul>
                         </div>
                       </div>
@@ -381,20 +469,28 @@ export default function AddOrderPage() {
                   )}
                 </div>
 
-                <button 
+                <button
                   className={`mt-3 text-sm font-medium flex items-center gap-1 ${
-                    isCustomerDetailsValid() 
-                      ? 'text-blue-600 hover:text-blue-700' 
-                      : 'text-gray-400 cursor-not-allowed'
+                    isCustomerDetailsValid()
+                      ? "text-blue-600 hover:text-blue-700"
+                      : "text-gray-400 cursor-not-allowed"
                   } disabled:opacity-50`}
                   disabled={isAddingOrder || !isCustomerDetailsValid()}
                   onClick={() => {
                     if (!isCustomerDetailsValid()) {
                       if (!customerName.trim()) {
-                        setErrors(prev => ({ ...prev, customerName: "Please enter customer name before adding products" }))
+                        setErrors((prev) => ({
+                          ...prev,
+                          customerName:
+                            "Please enter customer name before adding products",
+                        }));
                       }
                       if (!customerPhone.trim()) {
-                        setErrors(prev => ({ ...prev, customerPhone: "Please enter customer phone before adding products" }))
+                        setErrors((prev) => ({
+                          ...prev,
+                          customerPhone:
+                            "Please enter customer phone before adding products",
+                        }));
                       }
                     }
                   }}
@@ -407,7 +503,9 @@ export default function AddOrderPage() {
           </div>
 
           <div className="md:p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">Cart Summary</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-6">
+              Cart Summary
+            </h2>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm font-medium text-gray-700 pb-2">
@@ -417,14 +515,23 @@ export default function AddOrderPage() {
 
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 {cartItems.map((item) => (
-                  <div key={`${item.id}-${Math.random()}`} className="space-y-2">
+                  <div
+                    key={`${item.id}-${Math.random()}`}
+                    className="space-y-2"
+                  >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{item.name}</h3>
-                        <p className="text-sm text-gray-600">{item.description}</p>
+                        <h3 className="font-medium text-gray-900">
+                          {item.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {item.description}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-gray-900">₦{item.price.toFixed(2)}</div>
+                        <div className="font-medium text-gray-900">
+                          ₦{item.price.toFixed(2)}
+                        </div>
                       </div>
                     </div>
 
@@ -439,7 +546,9 @@ export default function AddOrderPage() {
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="w-8 text-center text-sm">{item.quantity}</span>
+                          <span className="w-8 text-center text-sm">
+                            {item.quantity}
+                          </span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
                             className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
@@ -449,8 +558,8 @@ export default function AddOrderPage() {
                           </button>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => removeFromCart(item.id)} 
+                      <button
+                        onClick={() => removeFromCart(item.id)}
                         className="text-red-500 hover:text-red-700 disabled:opacity-50"
                         disabled={isAddingOrder}
                       >
@@ -465,7 +574,9 @@ export default function AddOrderPage() {
                 <div className="text-center py-8">
                   <div className="text-gray-500">No products added yet</div>
                   {errors.cartItems && (
-                    <p className="text-red-500 text-sm mt-1">{errors.cartItems}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.cartItems}
+                    </p>
                   )}
                 </div>
               )}
@@ -500,5 +611,5 @@ export default function AddOrderPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

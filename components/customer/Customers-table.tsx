@@ -16,7 +16,6 @@ import { DataTable } from "@/lib/customer/data-table";
 
 export default function CustomerTable() {
   const { Customers, customersError, isFetchingCustomers } = useCustomer();
-  console.log(Customers);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -43,7 +42,7 @@ export default function CustomerTable() {
     <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-medium text-gray-800">Recent Orders</h1>
+          <h1 className="text-xl font-medium text-gray-800">Customers</h1>
 
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-56 bg-white border border-gray-200 rounded-full h-10">

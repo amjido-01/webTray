@@ -3,8 +3,8 @@
 import * as React from "react"
 import {
   Check,
-  ChevronsUpDown,
   Store,
+  ChevronDown,
 } from "lucide-react"
 // import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -46,7 +46,7 @@ export function StoreSwitcher() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild className="rounded-full">
         <Button
           variant="outline"
           role="combobox"
@@ -56,7 +56,7 @@ export function StoreSwitcher() {
         >
           <Store className="mr-2 h-4 w-4" />
           {activeStore?.storeName}
-          <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+          <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
