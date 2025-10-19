@@ -8,7 +8,7 @@ import {
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { ArrowRight, ShoppingCart } from "lucide-react";
-export function Features() {
+export function FeaturesSections() {
   return (
     <div className="w-full">
       {/* Header */}
