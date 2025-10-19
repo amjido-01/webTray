@@ -117,6 +117,7 @@ export const useStoreFront = () => {
         { productId, visibility },
         { params: { storeId } }
       );
+      console.log(data)
 
       if (data?.responseSuccessful) {
         return data.responseBody.product;

@@ -51,6 +51,7 @@ const customersQuery = useQuery({
         }
       }
     );
+    console.log(data, "kkk")
     if (data?.responseSuccessful) {
       return data.responseBody.customers;
     }
