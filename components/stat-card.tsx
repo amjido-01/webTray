@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { ModalForm } from "./modal-form";
@@ -47,10 +47,10 @@ export function StatCard({
     }
   };
 
-    const handleSubmit = async (data: Record<string, unknown>) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     try {
       setValidationErrors({});
-      
+
       const errors = await validateForm(data);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
@@ -63,19 +63,17 @@ export function StatCard({
         name: validatedData.name,
         description: validatedData.description || "",
       };
-      
+
       await addCategory(categoryPayload);
-      
+
       setIsOpen(false);
       setShouldClearForm(true);
       setFormData({});
-      
     } catch (error) {
       console.error("Failed to create category:", error);
       toast.error("Failed to create category. Please try again.");
     }
   };
-
 
   const handleAddCategory = () => {};
 
@@ -119,7 +117,7 @@ export function StatCard({
                 size="sm"
                 className="text-white hover:bg-[#5f70b4] bg-[#365BEB] rounded-full"
                 onClick={handleAddCategoryDrawer}
-                 disabled={isAddingCategory}
+                disabled={isAddingCategory}
               >
                 {isAddingCategory ? "Adding..." : "Add New"}
               </Button>

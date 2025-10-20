@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import api from "@/lib/axios";
 import { ApiResponse, Order, OrderSummary } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
+
 export interface OrderItem {
   productId: number;
   quantity: number;
@@ -53,12 +54,15 @@ export interface OrdersResponse {
   orders: ApiOrder[];
 }
 
-// Query Keys
+// ✅ Updated orderKeys to always include storeId
 export const orderKeys = {
   all: ["orders"] as const,
-  orders: () => [...orderKeys.all, "list"] as const,
-  order: (id: number) => [...orderKeys.all, "detail", id] as const,
-  summary: () => [...orderKeys.all, "summary"] as const,
+  orders: (storeId: number | string | undefined) => 
+    [...orderKeys.all, "list", storeId] as const,
+  order: (id: number, storeId: number | string | undefined) => 
+    [...orderKeys.all, "detail", id, storeId] as const,
+  summary: (storeId: number | string | undefined) => 
+    [...orderKeys.all, "summary", storeId] as const,
 };
 
 export const useOrder = () => {
@@ -67,9 +71,17 @@ export const useOrder = () => {
 
   const storeId = activeStore?.id;
 
+  // ✅ Updated invalidation function to match product hook pattern
+  const invalidateStoreQueries = (storeId: number | string) => {
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+    });
+  };
+
   // List Orders Query
- const ordersQuery = useQuery({
-    queryKey: [...orderKeys.orders(), storeId],
+  const ordersQuery = useQuery({
+    queryKey: orderKeys.orders(storeId),
     queryFn: async (): Promise<Order[]> => {
       const { data } = await api.get<ApiResponse<{ orders: Order[] }>>(
         "/inventory/order",
@@ -88,8 +100,8 @@ export const useOrder = () => {
   });
 
   // Order Summary Query
- const orderSummaryQuery = useQuery({
-    queryKey: [...orderKeys.summary(), storeId],
+  const orderSummaryQuery = useQuery({
+    queryKey: orderKeys.summary(storeId),
     queryFn: async (): Promise<OrderSummary> => {
       const { data } = await api.get<ApiResponse<OrderSummary>>(
         "/inventory/order/summary",
@@ -110,7 +122,7 @@ export const useOrder = () => {
   // Single Order Hook
   const useOrderQuery = (id: number) =>
     useQuery({
-      queryKey: [...orderKeys.order(id), storeId],
+      queryKey: orderKeys.order(id, storeId),
       queryFn: async (): Promise<Order> => {
         const { data } = await api.get<ApiResponse<{ order: Order }>>(
           `/inventory/order/${id}`,
@@ -140,40 +152,34 @@ export const useOrder = () => {
   };
 
   // Add Order Mutation
- // ...existing code...
-
-const addOrderMutation = useMutation({
-  mutationFn: async (payload: CreateOrderPayload): Promise<ApiOrder> => {
-    const { data } = await api.post<ApiResponse<ApiOrder>>(
-      "/inventory/order",
-      payload,
-      {
-        params: {
-          storeId: storeId
+  const addOrderMutation = useMutation({
+    mutationFn: async (payload: CreateOrderPayload): Promise<ApiOrder> => {
+      const { data } = await api.post<ApiResponse<ApiOrder>>(
+        "/inventory/order",
+        payload,
+        {
+          params: {
+            storeId: storeId
+          }
         }
+      );
+      if (data?.responseSuccessful) {
+        return data.responseBody;
       }
-    );
-    if (data?.responseSuccessful) {
-      return data.responseBody;
-    }
-    throw new Error(data?.responseMessage || "Failed to add order");
-  },
-  onSuccess: (newOrder) => {
-    // Invalidate and refetch orders and summary
-    queryClient.invalidateQueries({ queryKey: [...orderKeys.orders(), storeId] });
-    queryClient.invalidateQueries({ queryKey: [...orderKeys.summary(), storeId] });
-
-    // Optimistically update the orders cache
-    queryClient.setQueryData<ApiOrder[]>([...orderKeys.orders(), storeId], (old) => {
-      return old ? [newOrder, ...old] : [newOrder];
-    });
-
-    toast.success("Order added successfully");
-  },
-  onError: (error: Error) => {
-    toast.error(error.message || "Failed to add order");
-  },
-});
+      throw new Error(data?.responseMessage || "Failed to add order");
+    },
+    onSuccess: (newOrder) => {
+      // ✅ Use the same pattern as product hook
+      const targetStoreId = newOrder.storeId ?? storeId;
+      if (targetStoreId !== undefined) {
+        invalidateStoreQueries(targetStoreId);
+      }
+      toast.success("Order added successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to add order");
+    },
+  });
 
   // Update Order Mutation
   const updateOrderMutation = useMutation({
@@ -188,20 +194,27 @@ const addOrderMutation = useMutation({
       throw new Error(data?.responseMessage || "Failed to update order");
     },
     onSuccess: (updatedOrder) => {
-      // Invalidate and refetch orders and summary
-      queryClient.invalidateQueries({ queryKey: orderKeys.orders() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.summary() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.order(updatedOrder.id) });
+      // ✅ Invalidate all queries for this store
+      if (storeId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+        });
+      }
 
-      // Optimistically update the orders cache
-      queryClient.setQueryData<ApiOrder[]>(orderKeys.orders(), (old) => {
-        return old ? old.map(order => 
-          order.id === updatedOrder.id ? updatedOrder : order
-        ) : [updatedOrder];
+      // ✅ Optimistically update the orders list cache
+      queryClient.setQueryData<Order[]>(orderKeys.orders(storeId), (old) => {
+        if (!old) return old;
+        return old.map(order => 
+          order.id === updatedOrder.id ? updatedOrder as unknown as Order : order
+        );
       });
 
-      // Update single order cache
-      queryClient.setQueryData<ApiOrder>(orderKeys.order(updatedOrder.id), updatedOrder);
+      // ✅ Optimistically update single order cache
+      queryClient.setQueryData<Order>(
+        orderKeys.order(updatedOrder.id, storeId), 
+        updatedOrder as unknown as Order
+      );
 
       toast.success("Order updated successfully");
     },
@@ -221,17 +234,21 @@ const addOrderMutation = useMutation({
       }
     },
     onSuccess: (_, deletedOrderId) => {
-      // Invalidate and refetch orders and summary
-      queryClient.invalidateQueries({ queryKey: orderKeys.orders() });
-      queryClient.invalidateQueries({ queryKey: orderKeys.summary() });
+      // ✅ Invalidate all queries for this store
+      if (storeId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+        });
+      }
 
-      // Remove from orders cache
-      queryClient.setQueryData<ApiOrder[]>(orderKeys.orders(), (old) => {
+      // ✅ Optimistically remove from orders list cache
+      queryClient.setQueryData<Order[]>(orderKeys.orders(storeId), (old) => {
         return old ? old.filter(order => order.id !== deletedOrderId) : [];
       });
 
-      // Remove single order cache
-      queryClient.removeQueries({ queryKey: orderKeys.order(deletedOrderId) });
+      // ✅ Remove single order cache
+      queryClient.removeQueries({ queryKey: orderKeys.order(deletedOrderId, storeId) });
 
       toast.success("Order deleted successfully");
     },
@@ -287,7 +304,7 @@ const addOrderMutation = useMutation({
 
     // Reset functions
     resetAddOrder: addOrderMutation.reset,
-    resetUpdateOrder: updateOrderMutation.reset,
+    resetUpdateOrder: addOrderMutation.reset,
     resetDeleteOrder: deleteOrderMutation.reset,
   };
 };

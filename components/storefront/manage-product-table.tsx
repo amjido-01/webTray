@@ -225,6 +225,8 @@ export default function ManageProductTable() {
     storeProductsError,
     changeProductVisibility,
     isUpdatingProductVisibility,
+    changeProductFeatured,
+    isUpdatingProductFeatured
   } = useStoreFront();
 
   const { categories } = useCategory();
@@ -318,18 +320,23 @@ export default function ManageProductTable() {
   // Handler for feature toggle (TODO: Add API endpoint)
   const handleToggleFeature = useCallback(
     async (productId: number, currentFeature: boolean) => {
-      // TODO: Implement feature toggle API call
-      console.log(
-        "Toggle feature for product:",
-        productId,
-        "from",
-        currentFeature,
-        "to",
-        !currentFeature
-      );
+       if (!storeId || isUpdatingProductFeatured) return;
+      setUpdatingProductId(productId);
+      try {
+        await changeProductFeatured({
+          productId,
+          featured: !currentFeature,
+          storeId,
+        });
+      } catch (error) {
+        // Error already handled by the hook with toast
+        console.error("Failed to toggle visibility:", error);
+      } finally {
+        setUpdatingProductId(null);
+      }
       // You'll need to add a similar mutation in useStoreFront hook
     },
-    []
+    [storeId, changeProductFeatured, isUpdatingProductFeatured]
   );
 
   const handleEdit = useCallback((productId: number) => {

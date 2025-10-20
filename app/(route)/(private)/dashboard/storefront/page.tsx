@@ -14,15 +14,21 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useStoreFront } from "@/hooks/use-store-front";
 export default function Page() {
-  const { user } = useAuthStore();
-  const userStore = user?.business?.store;
+  const { storeInfo, 
+    // isFetchingStoreInfo,
+    //  storeInfoError
+     } = useStoreFront()
+  const { activeStore } = useAuthStore();
+
+  console.log(storeInfo)
 
   return (
     <div>
       <StoreFrontHeader />
       <div className="mt-[20px]">
-        {!userStore ? (
+        {!storeInfo ? (
           <Card className=" shadow-none rounded-none">
             <CardHeader className="text-center leading-[24px]">
               <CardTitle className="text-[#4D4D4D] font-bold text-[20px]">
@@ -41,7 +47,7 @@ export default function Page() {
             <CardHeader className="leading-[24px]">
               <CardTitle className="text-[#4D4D4D] flex justify-between">
                 <p className="font-bold text-[20px]">
-                  {userStore[0]?.storeName}
+                  {storeInfo?.store?.storeName}
                 </p>
 
                 <div className="flex items-center gap-[8px]">
@@ -63,8 +69,8 @@ export default function Page() {
                   className="text-[#365BEB] hover:no-underline cursor-pointer font-normal text-[16px]"
                 >
                   <Globe className="text-black" />
-                  {userStore[0]?.customDomain ||
-                    `${userStore[0]?.storeName
+                  {storeInfo?.store?.customDomain ||
+                    `${activeStore?.storeName
                       ?.replace(/\s+/g, "")
                       .toLowerCase()}@webtry.com`}
                 </Button>
@@ -88,7 +94,7 @@ export default function Page() {
             <CardContent className="flex-1 space-y-4">
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Store Name</h3>
-                <p className="text-gray-600">{"John's Coffee Shop"}</p>
+                <p className="text-gray-600">{storeInfo?.store?.storeName}</p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Description</h3>
@@ -98,7 +104,9 @@ export default function Page() {
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Domain</h3>
-                <p className="text-gray-600">johncoffee@webtray.com</p>
+                <p className="text-gray-600"> {`${activeStore?.storeName
+                      ?.replace(/\s+/g, "")
+                      .toLowerCase()}@webtry.com`}</p>
               </div>
               <div className="pt-4">
                 <Button
@@ -138,7 +146,7 @@ export default function Page() {
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="text-center py-8">
-                  <div className="text-4xl font-bold text-gray-900 mb-2">0</div>
+                  <div className="text-4xl font-bold text-gray-900 mb-2">{storeInfo?.productCount}</div>
                   <p className="text-gray-500">Products listed</p>
                 </div>
               </CardContent>
@@ -165,7 +173,9 @@ export default function Page() {
                   <div className="flex items-center space-x-2">
                     <Globe className="w-4 h-4 text-gray-500" />
                     <span className="text-blue-600 hover:text-blue-800 cursor-pointer">
-                      johncoffee@webtray.com
+                      {`${activeStore?.storeName
+                      ?.replace(/\s+/g, "")
+                      .toLowerCase()}@webtry.com`}
                     </span>
                   </div>
                   <p className="text-sm text-gray-500">Default Domain</p>

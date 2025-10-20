@@ -10,7 +10,7 @@ import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "../header-skeleton";
-export function ManageStoreFrontHeader() {
+export function ManageStoreHeader() {
      const {
       isFetchingInventorySummary,
     } = useCategory();

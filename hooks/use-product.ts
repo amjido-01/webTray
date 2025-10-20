@@ -7,11 +7,7 @@ import {
   CreateProductPayload,
   UpdateProductPayload,
 } from "@/types";
-import { categoryKeys } from "./use-category";
 import { useAuthStore } from "@/store/useAuthStore";
-// interface UpdateProductPayload extends CreateProductPayload {
-//   id: number;
-// }
 
 export interface ProductResponse {
   product: Product;
@@ -21,11 +17,13 @@ export interface ProductsResponse {
   products: Product[];
 }
 
-// Query Keys
+// ✅ Updated productKeys so they always include storeId
 export const productKeys = {
   all: ["inventory"] as const,
-  products: () => [...productKeys.all, "products"] as const,
-  product: (id: number) => [...productKeys.products(), id] as const,
+  products: (storeId: number | string | undefined) =>
+    [...productKeys.all, "products", storeId] as const,
+  product: (id: number, storeId: number | string | undefined) =>
+    [...productKeys.all, "product", id, storeId] as const,
 };
 
 export const useProduct = () => {
@@ -34,16 +32,19 @@ export const useProduct = () => {
 
   const storeId = activeStore?.id;
 
- const productsQuery = useQuery({
-    queryKey: [...productKeys.products(), storeId],
+  const invalidateStoreQueries = (storeId: number | string) => {
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+    });
+  };
+
+  const productsQuery = useQuery({
+    queryKey: productKeys.products(storeId),
     queryFn: async (): Promise<Product[]> => {
       const { data } = await api.get<ApiResponse<{ products: Product[] }>>(
         "/inventory/product",
-        {
-          params: {
-            storeId: storeId
-          }
-        }
+        { params: { storeId } }
       );
       if (data?.responseSuccessful) {
         return data.responseBody.products;
@@ -55,7 +56,7 @@ export const useProduct = () => {
 
   const useProductQuery = (id: number) =>
     useQuery({
-      queryKey: productKeys.product(id),
+      queryKey: productKeys.product(id, storeId),
       queryFn: async (): Promise<Product> => {
         const { data } = await api.get<ApiResponse<{ product: Product }>>(
           `/inventory/product/${id}`
@@ -65,7 +66,7 @@ export const useProduct = () => {
         }
         throw new Error(data?.responseMessage || "Failed to fetch product");
       },
-      enabled: !!id,
+      enabled: !!id && !!storeId,
     });
 
   const getProduct = async (id: number): Promise<Product> => {
@@ -90,17 +91,10 @@ export const useProduct = () => {
       throw new Error(data?.responseMessage || "Failed to add product");
     },
     onSuccess: (newProduct) => {
-      // Invalidate and refetch products
-      queryClient.invalidateQueries({ queryKey: productKeys.products() });
-      queryClient.invalidateQueries({
-        queryKey: [...categoryKeys.all, "summary"],
-      });
-
-      // Optimistically update the products cache
-      queryClient.setQueryData<Product[]>(productKeys.products(), (old) => {
-        return old ? [...old, newProduct] : [newProduct];
-      });
-
+      const targetStoreId = newProduct.storeId ?? storeId;
+      if (targetStoreId !== undefined) {
+        invalidateStoreQueries(targetStoreId);
+      }
       toast.success("Product added successfully");
     },
     onError: (error: Error) => {
@@ -108,11 +102,7 @@ export const useProduct = () => {
     },
   });
 
-  const addProduct = async (payload: CreateProductPayload) => {
-    return addProductMutation.mutateAsync(payload);
-  };
-
-const updateProductMutation = useMutation({
+ const updateProductMutation = useMutation({
   mutationFn: async ({
     id,
     ...payload
@@ -120,11 +110,7 @@ const updateProductMutation = useMutation({
     const { data } = await api.patch<ApiResponse<{ product: Product }>>(
       `/inventory/product/${id}`,
       payload,
-      {
-        params: {
-          storeId: storeId
-        }
-      }
+      { params: { storeId } }
     );
     if (data?.responseSuccessful) {
       return data.responseBody.product;
@@ -132,22 +118,26 @@ const updateProductMutation = useMutation({
     throw new Error(data?.responseMessage || "Failed to update product");
   },
   onSuccess: (updatedProduct) => {
-    // Update specific product in cache
-    queryClient.setQueryData<Product>(
-      [...productKeys.product(updatedProduct.id), storeId],
-      updatedProduct
-    );
+    // ✅ Invalidate all queries for this store
+    if (storeId) {
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+      });
+    }
 
-    // Update products list cache
-    queryClient.setQueryData<Product[]>(
-      [...productKeys.products(), storeId], 
-      (old) => {
-        return old
-          ? old.map((prod) =>
-              prod.id === updatedProduct.id ? updatedProduct : prod
-            )
-          : [updatedProduct];
-      }
+    // ✅ Optimistically update the products list cache
+    queryClient.setQueryData<Product[]>(productKeys.products(storeId), (old) => {
+      if (!old) return old;
+      return old.map(product => 
+        product.id === updatedProduct.id ? updatedProduct : product
+      );
+    });
+
+    // ✅ Optimistically update single product cache
+    queryClient.setQueryData<Product>(
+      productKeys.product(updatedProduct.id, storeId), 
+      updatedProduct
     );
 
     toast.success("Product updated successfully");
@@ -157,40 +147,38 @@ const updateProductMutation = useMutation({
   },
 });
 
-  const updateProduct = async (payload: UpdateProductPayload) => {
-    return updateProductMutation.mutateAsync(payload);
-  };
-  const deleteProductMutation = useMutation({
-    mutationFn: async (id: number): Promise<void> => {
-      const { data } = await api.delete<ApiResponse<object>>(
-        `/inventory/product/${id}`
-      );
-      if (!data?.responseSuccessful) {
-        throw new Error(data?.responseMessage || "Failed to delete product");
-      }
-    },
-    onSuccess: (_, deletedId) => {
-      // Remove from products cache
-      queryClient.setQueryData<Product[]>(productKeys.products(), (old) => {
-        return old ? old.filter((prod) => prod.id !== deletedId) : [];
-      });
-
-      // Remove specific product cache
-      queryClient.removeQueries({ queryKey: productKeys.product(deletedId) });
+const deleteProductMutation = useMutation({
+  mutationFn: async (id: number): Promise<void> => {
+    const { data } = await api.delete<ApiResponse<object>>(
+      `/inventory/product/${id}`
+    );
+    if (!data?.responseSuccessful) {
+      throw new Error(data?.responseMessage || "Failed to delete product");
+    }
+  },
+  onSuccess: (_, deletedProductId) => {
+    // ✅ Invalidate all queries for this store
+    if (storeId) {
       queryClient.invalidateQueries({
-        queryKey: [...categoryKeys.all, "summary"],
+        predicate: (query) =>
+          Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
       });
-      queryClient.invalidateQueries({ queryKey: productKeys.products() });
-      toast.success("Product deleted successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete product");
-    },
-  });
+    }
 
-  const deleteProduct = async (id: number) => {
-    return deleteProductMutation.mutateAsync(id);
-  };
+    // ✅ Optimistically remove from products list cache
+    queryClient.setQueryData<Product[]>(productKeys.products(storeId), (old) => {
+      return old ? old.filter(product => product.id !== deletedProductId) : [];
+    });
+
+    // ✅ Remove single product cache
+    queryClient.removeQueries({ queryKey: productKeys.product(deletedProductId, storeId) });
+
+    toast.success("Product deleted successfully");
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Failed to delete product");
+  },
+});
 
   return {
     products: productsQuery.data,
@@ -199,23 +187,18 @@ const updateProductMutation = useMutation({
     refetchProducts: productsQuery.refetch,
     getProduct,
     useProductQuery,
-
-    addProduct,
-    updateProduct,
-    deleteProduct,
-
+    addProduct: addProductMutation.mutateAsync,
+    updateProduct: updateProductMutation.mutateAsync,
+    deleteProduct: deleteProductMutation.mutateAsync,
     isAddingProduct: addProductMutation.isPending,
     isUpdatingProduct: updateProductMutation.isPending,
     isDeletingProduct: deleteProductMutation.isPending,
-
     addProductError: addProductMutation.error,
     updateProductError: updateProductMutation.error,
     deleteProductError: deleteProductMutation.error,
-
     addProductSuccess: addProductMutation.isSuccess,
     updateProductSuccess: updateProductMutation.isSuccess,
     deleteProductSuccess: deleteProductMutation.isSuccess,
-
     resetAddProduct: addProductMutation.reset,
     resetUpdateProduct: updateProductMutation.reset,
     resetDeleteProduct: deleteProductMutation.reset,

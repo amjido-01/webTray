@@ -37,6 +37,11 @@ interface ChangeProductVisibilityPayload {
   visibility: boolean;
   storeId: number | string;
 }
+interface ChangeProductFeaturedPayload {
+  productId: number;
+  featured: boolean;
+  storeId: number | string;
+}
 
 // Query Keys
 export const storeFrontKeys = {
@@ -113,7 +118,7 @@ export const useStoreFront = () => {
       storeId,
     }: ChangeProductVisibilityPayload) => {
       const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
-        `/storefront/products`,
+        `/storefront/products/visibility`,
         { productId, visibility },
         { params: { storeId } }
       );
@@ -141,9 +146,47 @@ export const useStoreFront = () => {
       toast.error(error.message || "Error updating product visibility");
     },
   });
+  const changeProductFeaturedMutation = useMutation({
+    mutationFn: async ({
+      productId,
+      featured,
+      storeId,
+    }: ChangeProductFeaturedPayload) => {
+      const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
+        `/storefront/products/featured`,
+        { productId, featured },
+        { params: { storeId } }
+      );
+      console.log(data)
+
+      if (data?.responseSuccessful) {
+        return data.responseBody.product;
+      }
+
+      throw new Error(
+        data?.responseMessage || "Failed to update product featured"
+      );
+    },
+
+    onSuccess: (updatedProduct) => {
+      toast.success("Product featured updated successfully");
+
+      // ✅ Refresh products list in cache
+      queryClient.invalidateQueries({
+        queryKey: storeFrontKeys.products(updatedProduct.storeId),
+      });
+    },
+
+    onError: (error: Error) => {
+      toast.error(error.message || "Error updating product visibility");
+    },
+  });
 
   const changeProductVisibility = async (payload: ChangeProductVisibilityPayload) => {
     return changeProductVisibilityMutation.mutateAsync(payload);
+  };
+  const changeProductFeatured = async (payload: ChangeProductFeaturedPayload) => {
+    return changeProductFeaturedMutation.mutateAsync(payload);
   };
 
   return {
@@ -165,5 +208,9 @@ export const useStoreFront = () => {
     // ✅ Visibility Mutations
     changeProductVisibility,
     isUpdatingProductVisibility: changeProductVisibilityMutation.isPending,
+
+    // ✅ Featured Mutations
+    changeProductFeatured,
+    isUpdatingProductFeatured: changeProductVisibilityMutation.isPending,
   };
 };
