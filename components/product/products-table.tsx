@@ -37,7 +37,6 @@ export default function ProductsTable() {
     isUpdatingProduct,
     isDeletingProduct,
   } = useProduct();
-  
   const { categories } = useCategory();
   
   const [editingProduct, setEditingProduct] = useState<number | null>(null);

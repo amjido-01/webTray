@@ -1,7 +1,7 @@
 import api from "@/lib/axios";
 import { ApiResponse, Customer, CustomerSummary } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-
+import { useAuthStore } from "@/store/useAuthStore";
 export interface CustomersResponse {
   customers: Customer[];
 }
@@ -14,33 +14,52 @@ export const customerKeys = {
 };
 
 export const useCustomer = () => {
-  const customerSummaryQuery = useQuery({
-    queryKey: customerKeys.summary(),
-    queryFn: async (): Promise<CustomerSummary> => {
-      const { data } = await api.get<ApiResponse<CustomerSummary>>(
-        "/customer/customer-summary"
-      );
-      if (data?.responseSuccessful) {
-        return data.responseBody;
+  const { activeStore } = useAuthStore();
+  const storeId = activeStore?.id;
+
+
+const customerSummaryQuery = useQuery({
+  queryKey: [...customerKeys.summary(), storeId],
+  queryFn: async (): Promise<CustomerSummary> => {
+    const { data } = await api.get<ApiResponse<CustomerSummary>>(
+      "/customer/customer-summary",
+      {
+        params: {
+          storeId: storeId
+        }
       }
-      throw new Error(
-        data?.responseMessage || "Failed to fetch customer summary"
-      );
-    },
-  });
-  const customersQuery = useQuery({
-    queryKey: customerKeys.customers(),
-    queryFn: async (): Promise<Customer[]> => {
-      const { data } = await api.get<ApiResponse<{ customers: Customer[] }>>(
-        "/customer"
-      );
-      console.log(data.responseBody);
-      if (data?.responseSuccessful) {
-        return data.responseBody.customers;
+    );
+    if (data?.responseSuccessful) {
+      return data.responseBody;
+    }
+    throw new Error(
+      data?.responseMessage || "Failed to fetch customer summary"
+    );
+  },
+  enabled: !!storeId,
+});
+
+
+const customersQuery = useQuery({
+  queryKey: [...customerKeys.customers(), storeId],
+  queryFn: async (): Promise<Customer[]> => {
+    const { data } = await api.get<ApiResponse<{ customers: Customer[] }>>(
+      "/customer",
+      {
+        params: {
+          storeId: storeId
+        }
       }
-      throw new Error(data?.responseMessage || "Failed to fetch customers");
-    },
-  });
+    );
+    console.log(data, "kkk")
+    if (data?.responseSuccessful) {
+      return data.responseBody.customers;
+    }
+    throw new Error(data?.responseMessage || "Failed to fetch customers");
+  },
+  enabled: !!storeId,
+});
+
 
   return {
     //data

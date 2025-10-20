@@ -143,11 +143,12 @@ export type Customer = {
   fullname: string;
   phone: string;
   email: string;
-  totalOrders: number;
-  totalSpent: number;
   address: string | null;
   createdAt: string;
   updatedAt: string;
+  totalOrders: number;
+  totalSpent: number;
+  status?: 'active' | 'inactive';  // Optional since it's not in API response
 };
 
 export type Order = {
@@ -290,4 +291,30 @@ export interface StatCardProps {
 export interface CategoryFormData {
   name: string;
   description?: string;
+}
+
+// Types
+export interface StoreFrontSummary {
+  numberOfProducts: number;
+  numberOfCategories: number;
+  numberOfCustomers: number;
+}
+
+
+export interface StoreProduct {
+  id: number;
+  storeId: number;
+  categoryId: number;
+  name: string;
+  description: string;
+  price: string;
+  quantity: number;
+  images: {
+    main: string;
+    thumbnail: string;
+  };
+  visible: boolean;
+  feature: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

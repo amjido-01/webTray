@@ -1,36 +1,27 @@
 "use client";
+
 import { ColumnDef } from "@tanstack/react-table";
 import { Customer } from "@/types";
+import { getCustomerStatus, getCustomerStatusColor } from "./get-status";
 
 export const CustomerColumns = (): ColumnDef<Customer>[] => [
-  {
-    header: "Order",
-    cell: ({ row }) => {
-      return (
-        <div className="font-medium py-3">
-          {(row.index + 1).toString().padStart(2, "0")}
-        </div>
-      );
-    },
-  },
   {
     header: "S/N",
     cell: ({ row }) => {
       return (
-        <div className="font-medium py-5">
+        <div className="font-medium py-3 text-[#999999]">
           {(row.index + 1).toString().padStart(2, "0")}
         </div>
       );
     },
   },
   {
-    accessorKey: "customer",
-    header: "customer",
+    accessorKey: "fullname",
+    header: "Customer Name",
     cell: ({ row }) => {
       const customer = row.original;
-
       return (
-        <div className="py-3 text-sm text-gray-600">{customer.fullname}</div>
+        <div className="py-3 text-sm">{customer.fullname}</div>
       );
     },
   },
@@ -39,18 +30,44 @@ export const CustomerColumns = (): ColumnDef<Customer>[] => [
     header: "Email",
     cell: ({ row }) => {
       const customer = row.original;
-
-      return <div className="py-3 text-sm text-gray-600">{customer.email}</div>;
+      return <div className="py-3 text-sm ">{customer.email}</div>;
     },
   },
   {
     accessorKey: "totalOrders",
-    header: "Total Orders",
+    header: "Total Order",
+    cell: ({ row }) => {
+      const customer = row.original;
+      return <div className="py-3 font-medium text-[#999999]">{customer.totalOrders}</div>;
+    },
+  },
+  {
+    accessorKey: "totalSpent",
+    header: "Total Spent(₦)",
     cell: ({ row }) => {
       const customer = row.original;
       return (
         <div className="py-3 font-medium">
-          {Number(customer.totalOrders).toFixed(2)}
+          {Number(customer.totalSpent).toLocaleString()}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const customer = row.original;
+      const status = getCustomerStatus(customer.status ?? "inactive");
+      return (
+        <div className="py-5">
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-medium ${getCustomerStatusColor(
+              status
+            )}`}
+          >
+            {status}
+          </span>
         </div>
       );
     },

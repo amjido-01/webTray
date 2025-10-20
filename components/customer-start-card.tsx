@@ -2,7 +2,6 @@
 import { TrendingUp, UserIcon } from "lucide-react";
 import { PageHeader } from "./page-header";
 import { StatCard } from "./stat-card";
-import { formatCurrency } from "@/lib/format-currency";
 import Image from "next/image";
 import { useCustomer } from "@/hooks/use-customer";
 import { HasBusinessAlert } from "./hasBusinessAlert";
@@ -68,7 +67,7 @@ export function SectionCards() {
           height={20}
         />
       ),
-      value: formatCurrency(CustomerSummary?.totalCustomer || 0),
+      value: formatNumber(CustomerSummary?.totalCustomer || 0),
       note: "+32.6% from last month", // You can calculate this if you have previous period data
     },
     {

@@ -9,68 +9,55 @@ import {
 } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 
-interface UpdateCategoryPayload extends CreateCategoryPayload {
-  id: number;
-}
-
-// Query Keys
+// ✅ Updated Query Keys to Always Include storeId
 export const categoryKeys = {
   all: ["inventory"] as const,
-  categories: () => [...categoryKeys.all, "categories"] as const,
-  category: (id: number) => [...categoryKeys.categories(), id] as const,
+  categories: (storeId: number | string | undefined) =>
+    [...categoryKeys.all, "categories", storeId] as const,
+  category: (id: number, storeId: number | string | undefined) =>
+    [...categoryKeys.all, "category", id, storeId] as const,
+  summary: (storeId: number | string | undefined) =>
+    [...categoryKeys.all, "summary", storeId] as const,
 };
 
 export const useCategory = () => {
   const { activeStore } = useAuthStore();
   const queryClient = useQueryClient();
-
   const storeId = activeStore?.id;
 
+  const invalidateStoreCategories = () => {
+    if (!storeId) return;
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+    });
+  };
+
   const categoriesQuery = useQuery({
-    queryKey: [...categoryKeys.categories(), storeId],
+    queryKey: categoryKeys.categories(storeId),
     queryFn: async (): Promise<Category[]> => {
       const { data } = await api.get<ApiResponse<{ categories: Category[] }>>(
         "/inventory/category",
-        {
-          params: {
-            storeId: storeId,
-          },
-        }
+        { params: { storeId } }
       );
-      if (data?.responseSuccessful) {
-        return data.responseBody.categories;
-      }
+      if (data?.responseSuccessful) return data.responseBody.categories;
       throw new Error(data?.responseMessage || "Failed to fetch categories");
     },
     enabled: !!storeId,
   });
 
-  // ...existing code...
-
   const useCategoryQuery = (id: number) =>
     useQuery({
-      queryKey: categoryKeys.category(id),
+      queryKey: categoryKeys.category(id, storeId),
       queryFn: async (): Promise<Category> => {
         const { data } = await api.get<ApiResponse<{ category: Category }>>(
           `/inventory/category/${id}`
         );
-        if (data?.responseSuccessful) {
-          return data.responseBody.category;
-        }
+        if (data?.responseSuccessful) return data.responseBody.category;
         throw new Error(data?.responseMessage || "Failed to fetch category");
       },
-      enabled: !!id,
+      enabled: !!id && !!storeId,
     });
-
-  const getCategory = async (id: number): Promise<Category> => {
-    const { data } = await api.get<ApiResponse<{ category: Category }>>(
-      `/inventory/category/${id}`
-    );
-    if (data?.responseSuccessful) {
-      return data.responseBody.category;
-    }
-    throw new Error(data?.responseMessage || "Failed to fetch category");
-  };
 
   const addCategoryMutation = useMutation({
     mutationFn: async (payload: CreateCategoryPayload): Promise<Category> => {
@@ -78,119 +65,84 @@ export const useCategory = () => {
         "/inventory/category",
         payload
       );
-      if (data?.responseSuccessful) {
-        return data.responseBody.category;
-      }
+      if (data?.responseSuccessful) return data.responseBody.category;
       throw new Error(data?.responseMessage || "Failed to add category");
     },
-    onSuccess: (newCategory) => {
-      // Invalidate and refetch categories
-      queryClient.invalidateQueries({ queryKey: categoryKeys.categories() });
-
-      // Optimistically update the categories cache
-      queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
-        return old ? [...old, newCategory] : [newCategory];
-      });
-
+    onSuccess: () => {
+      invalidateStoreCategories();
       toast.success("Category added successfully");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to add category");
-    },
+    onError: (error: Error) => toast.error(error.message || "Failed to add category"),
   });
 
-  const addCategory = async (payload: CreateCategoryPayload) => {
-    return addCategoryMutation.mutateAsync(payload);
-  };
+ const updateCategoryMutation = useMutation({
+  mutationFn: async ({
+    id,
+    ...payload
+  }: { id: number } & CreateCategoryPayload): Promise<Category> => {
+    const { data } = await api.put<ApiResponse<{ category: Category }>>(
+      `/inventory/category/${id}`,
+      payload
+    );
+    if (data?.responseSuccessful) return data.responseBody.category;
+    throw new Error(data?.responseMessage || "Failed to update category");
+  },
+  onSuccess: (updatedCategory) => {
+    // ✅ Invalidate all queries for this store
+    invalidateStoreCategories();
 
-  const updateCategoryMutation = useMutation({
-    mutationFn: async ({
-      id,
-      ...payload
-    }: UpdateCategoryPayload): Promise<Category> => {
-      const { data } = await api.put<ApiResponse<{ category: Category }>>(
-        `/inventory/category/${id}`,
-        payload
+    // ✅ Optimistically update the categories list cache
+    queryClient.setQueryData<Category[]>(categoryKeys.categories(storeId), (old) => {
+      if (!old) return old;
+      return old.map(category => 
+        category.id === updatedCategory.id ? updatedCategory : category
       );
-      if (data?.responseSuccessful) {
-        return data.responseBody.category;
-      }
-      throw new Error(data?.responseMessage || "Failed to update category");
-    },
-    onSuccess: (updatedCategory) => {
-      // Update specific category in cache
-      queryClient.setQueryData<Category>(
-        categoryKeys.category(updatedCategory.id),
-        updatedCategory
-      );
+    });
 
-      // Update categories list cache
-      queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
-        return old
-          ? old.map((cat) =>
-              cat.id === updatedCategory.id ? updatedCategory : cat
-            )
-          : [updatedCategory];
-      });
+    // ✅ Optimistically update single category cache
+    queryClient.setQueryData<Category>(
+      categoryKeys.category(updatedCategory.id, storeId), 
+      updatedCategory
+    );
 
-      toast.success("Category updated successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to update category");
-    },
-  });
+    toast.success("Category updated successfully");
+  },
+  onError: (error: Error) => toast.error(error.message || "Failed to update category"),
+});
 
-  const updateCategory = async (payload: UpdateCategoryPayload) => {
-    return updateCategoryMutation.mutateAsync(payload);
-  };
+const deleteCategoryMutation = useMutation({
+  mutationFn: async (id: number): Promise<void> => {
+    const { data } = await api.delete<ApiResponse<object>>(
+      `/inventory/category/${id}`
+    );
+    if (!data?.responseSuccessful) throw new Error(data?.responseMessage || "Failed to delete category");
+  },
+  onSuccess: (_, deletedCategoryId) => {
+    // ✅ Invalidate all queries for this store
+    invalidateStoreCategories();
 
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: number): Promise<void> => {
-      const { data } = await api.delete<ApiResponse<object>>(
-        `/inventory/category/${id}`
-      );
-      if (!data?.responseSuccessful) {
-        throw new Error(data?.responseMessage || "Failed to delete category");
-      }
-    },
-    onSuccess: (_, deletedId) => {
-      // Remove from categories cache
-      queryClient.setQueryData<Category[]>(categoryKeys.categories(), (old) => {
-        return old ? old.filter((cat) => cat.id !== deletedId) : [];
-      });
+    // ✅ Optimistically remove from categories list cache
+    queryClient.setQueryData<Category[]>(categoryKeys.categories(storeId), (old) => {
+      return old ? old.filter(category => category.id !== deletedCategoryId) : [];
+    });
 
-      // Remove specific category cache
-      queryClient.removeQueries({ queryKey: categoryKeys.category(deletedId) });
+    // ✅ Remove single category cache
+    queryClient.removeQueries({ queryKey: categoryKeys.category(deletedCategoryId, storeId) });
 
-      toast.success("Category deleted successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete category");
-    },
-  });
-
-  const deleteCategory = async (id: number) => {
-    return deleteCategoryMutation.mutateAsync(id);
-  };
+    toast.success("Category deleted successfully");
+  },
+  onError: (error: Error) => toast.error(error.message || "Failed to delete category"),
+});
 
   const inventorySummaryQuery = useQuery({
-    queryKey: [...categoryKeys.all, "summary", storeId],
+    queryKey: categoryKeys.summary(storeId),
     queryFn: async (): Promise<InventorySummary> => {
       const { data } = await api.get<ApiResponse<InventorySummary>>(
         "/inventory/inventory-summary",
-        {
-          params: {
-            storeId: storeId,
-          },
-        }
+        { params: { storeId } }
       );
-
-      if (data?.responseSuccessful) {
-        return data.responseBody;
-      }
-      throw new Error(
-        data?.responseMessage || "Failed to fetch inventory summary"
-      );
+      if (data?.responseSuccessful) return data.responseBody;
+      throw new Error(data?.responseMessage || "Failed to fetch inventory summary");
     },
     enabled: !!storeId,
   });
@@ -200,32 +152,18 @@ export const useCategory = () => {
     isFetchingCategories: categoriesQuery.isLoading,
     categoriesError: categoriesQuery.error,
     refetchCategories: categoriesQuery.refetch,
-    getCategory,
     useCategoryQuery,
 
-    addCategory,
-    updateCategory,
-    deleteCategory,
+    addCategory: addCategoryMutation.mutateAsync,
+    updateCategory: updateCategoryMutation.mutateAsync,
+    deleteCategory: deleteCategoryMutation.mutateAsync,
 
     isAddingCategory: addCategoryMutation.isPending,
     isUpdatingCategory: updateCategoryMutation.isPending,
     isDeletingCategory: deleteCategoryMutation.isPending,
 
-    addCategoryError: addCategoryMutation.error,
-    updateCategoryError: updateCategoryMutation.error,
-    deleteCategoryError: deleteCategoryMutation.error,
-
-    addCategorySuccess: addCategoryMutation.isSuccess,
-    updateCategorySuccess: updateCategoryMutation.isSuccess,
-    deleteCategorySuccess: deleteCategoryMutation.isSuccess,
-
-    resetAddCategory: addCategoryMutation.reset,
-    resetUpdateCategory: updateCategoryMutation.reset,
-    resetDeleteCategory: deleteCategoryMutation.reset,
-
     inventorySummary: inventorySummaryQuery.data,
     isFetchingInventorySummary: inventorySummaryQuery.isLoading,
     inventorySummaryError: inventorySummaryQuery.error,
-    refetchInventorySummary: inventorySummaryQuery.refetch,
   };
 };
