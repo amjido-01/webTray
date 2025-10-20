@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
+import Link from "next/link"
 
 interface HeaderProps {
   activeTab: string;
@@ -63,16 +64,18 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 size="lg" 
                 variant="link" 
                 className="font-medium text-[16px] hover:text-[#1A1A1A]"
-                onClick={() => handleTabClick('signin')}
-              >
+               
+              ><Link href="/signin">
                 Sign In
+              </Link>
               </Button>
               <Button 
                 size="lg" 
                 className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
-                onClick={() => handleTabClick('signup')}
-              >
+               
+              ><Link href="/signup">
                 Get Started for Free
+              </Link>
               </Button>
             </div>
             
