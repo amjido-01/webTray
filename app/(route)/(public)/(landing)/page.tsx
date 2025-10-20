@@ -49,28 +49,7 @@ export default function Home() {
            <ContactUs/>
           </div>
         );
-      case 'signin':
-        return (
-          <div className="pt-24 pb-16">
-            <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-              <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-                Sign In
-              </h1>
-          
-            </div>
-          </div>
-        );
-      case 'signup':
-        return (
-          <div className="pt-24 pb-16">
-            <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-              <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-                Sign Up
-              </h1>
-         
-            </div>
-          </div>
-        );
+  
       default:
         return (
           <>
