@@ -17,7 +17,7 @@ export function StatCard({
   noteColor = "text-muted-foreground",
 }: StatCardProps) {
   const { activeStore, user } = useAuthStore();
-  const { addCategory, isAddingCategory } = useCategory();
+  const { addCategory, isAddingCategory, categories } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [shouldClearForm, setShouldClearForm] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
@@ -75,7 +75,35 @@ export function StatCard({
     }
   };
 
-  const handleAddCategory = () => {};
+  const handleAddCategory = async (newCategoryName: string): Promise<boolean> => {
+  if (!newCategoryName) return false;
+
+  const alreadyExists = categories?.some(
+    (category) =>
+      category.name.toLowerCase() === newCategoryName.toLowerCase()
+  );
+
+  if (alreadyExists) {
+    toast.success("Category already exists");
+    return false;
+  }
+
+  try {
+    await addCategory({
+      name: newCategoryName,
+      description: "",
+      storeId: storeId!,
+    });
+
+    toast.success("Category successfully added");
+    return true; // ✅ success
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to add category");
+    return false; // ❌ failed
+  }
+};
+
 
   const handleAddCategoryDrawer = () => {
     if (!user?.business) {

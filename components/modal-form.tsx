@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, Check, X } from "lucide-react";
+import { Plus, Check, X, Loader2 } from "lucide-react";
 
 interface Field {
   id: string;
@@ -28,9 +28,10 @@ interface ModalFormProps {
   title: string;
   submitLabel: string;
   fields: Field[];
-  onAddCategory?: (category: string) => void;
+ onAddCategory?: (category: string) => Promise<boolean>; 
   onSubmit: (data: Record<string, string>) => void;
   shouldClearForm?: boolean;
+  isAddingCategory?: boolean;
   onFormCleared?: () => void;
   validationErrors?: Record<string, string>;
 }
@@ -44,15 +45,16 @@ export function ModalForm({
   onAddCategory,
   onSubmit,
   validationErrors = {},
-   shouldClearForm = false,
+  shouldClearForm = false,
+  isAddingCategory = false,
   onFormCleared,
 }: ModalFormProps) {
   const initialState = Object.fromEntries(fields.map((f) => [f.id, ""]));
   const [formData, setFormData] = useState(initialState);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
-  
-    useEffect(() => {
+
+  useEffect(() => {
     if (shouldClearForm) {
       setFormData(initialState);
       setShowAddCategory(false);
@@ -60,7 +62,7 @@ export function ModalForm({
       onFormCleared?.();
     }
   }, [shouldClearForm, onFormCleared, initialState]);
-  
+
   const handleChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
@@ -70,12 +72,14 @@ export function ModalForm({
     onSubmit(formData);
   };
 
-  const handleAddNewCategory = () => {
+  const handleAddNewCategory = async () => {
     if (newCategory.trim() && onAddCategory) {
-      onAddCategory(newCategory.trim());
-      setFormData((prev) => ({ ...prev, category: newCategory.trim() }));
-      setNewCategory("");
-      setShowAddCategory(false);
+      const success = await onAddCategory(newCategory.trim()); // ✅ wait for response
+      if (success) {
+        setFormData((prev) => ({ ...prev, category: newCategory.trim() }));
+        setNewCategory("");
+        setShowAddCategory(false); // ✅ close only when success
+      }
     }
   };
 
@@ -112,7 +116,7 @@ export function ModalForm({
                     value={formData[field.id]}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     className={`w-full border rounded px-4 py-2 ${
-                      validationErrors[field.id] ? 'border-red-500' : ''
+                      validationErrors[field.id] ? "border-red-500" : ""
                     }`}
                     required={field.required}
                   >
@@ -158,10 +162,15 @@ export function ModalForm({
                             type="button"
                             size="sm"
                             onClick={handleAddNewCategory}
-                            disabled={!newCategory.trim()}
+                            disabled={!newCategory.trim() || isAddingCategory}
                           >
-                            <Check className="w-4 h-4" />
+                            {isAddingCategory ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
                           </Button>
+
                           <Button
                             type="button"
                             variant="outline"
@@ -185,7 +194,7 @@ export function ModalForm({
                     value={formData[field.id]}
                     onChange={(e) => handleChange(field.id, e.target.value)}
                     className={`pl-16 ${
-                      validationErrors[field.id] ? 'border-red-500' : ''
+                      validationErrors[field.id] ? "border-red-500" : ""
                     }`}
                     placeholder={field.placeholder}
                     required={field.required}
@@ -199,7 +208,7 @@ export function ModalForm({
                   placeholder={field.placeholder}
                   required={field.required}
                   className={`w-full border rounded px-4 py-2 ${
-                    validationErrors[field.id] ? 'border-red-500' : ''
+                    validationErrors[field.id] ? "border-red-500" : ""
                   }`}
                   rows={2}
                 />
@@ -211,7 +220,7 @@ export function ModalForm({
                   onChange={(e) => handleChange(field.id, e.target.value)}
                   placeholder={field.placeholder}
                   required={field.required}
-                  className={validationErrors[field.id] ? 'border-red-500' : ''}
+                  className={validationErrors[field.id] ? "border-red-500" : ""}
                 />
               )}
 

@@ -11,36 +11,47 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "./header-skeleton";
 export function InventoryManagement() {
-     const {
-      isFetchingInventorySummary,
-    } = useCategory();
-  
+  const { isFetchingInventorySummary } = useCategory();
+
   const { user, activeStore } = useAuthStore();
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
-  const { categories, addCategory } = useCategory();
+  const { categories, addCategory, isAddingCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
   const userStoreId = activeStore?.id;
-    const isLoading = isFetchingInventorySummary || isFetchingProducts
-  
-  const handleAddCategory = async (newCategoryName: string) => {
-    if (!newCategoryName) return;
+  const isLoading = isFetchingInventorySummary || isFetchingProducts;
+
+  const handleAddCategory = async (
+    newCategoryName: string
+  ): Promise<boolean> => {
+    if (!newCategoryName) return false;
+
     const alreadyExists = categories?.some(
       (category) =>
         category.name.toLowerCase() === newCategoryName.toLowerCase()
     );
+
     if (alreadyExists) {
-      toast.success("Category already exist");
-      return;
+      toast.success("Category already exists");
+      return false;
     }
+
     try {
-      await addCategory({ name: newCategoryName, description: "", storeId: userStoreId! });
+      await addCategory({
+        name: newCategoryName,
+        description: "",
+        storeId: userStoreId!,
+      });
+
       toast.success("Category successfully added");
+      return true; // ✅ success
     } catch (error) {
       console.error(error);
+      toast.error("Failed to add category");
+      return false; // ❌ failed
     }
   };
 
@@ -103,17 +114,17 @@ export function InventoryManagement() {
     }
   };
 
-   const handleAddProductDrawer = () => {
-      if (!user?.business) {
-        toast("Please Register your business to carryout this action")
-        return
-      } 
-      setIsOpen(true)
+  const handleAddProductDrawer = () => {
+    if (!user?.business) {
+      toast("Please Register your business to carryout this action");
+      return;
     }
+    setIsOpen(true);
+  };
 
-     if (isLoading) {
-          return  <PageHeaderSkeleton />;
-       }
+  if (isLoading) {
+    return <PageHeaderSkeleton />;
+  }
   return (
     <div>
       <PageHeader
@@ -132,6 +143,7 @@ export function InventoryManagement() {
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
+        isAddingCategory={isAddingCategory}
         fields={[
           {
             id: "name",

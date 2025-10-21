@@ -139,8 +139,7 @@ export default function Page() {
                     variant="outline"
                     size="sm"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Product
+                    Manage Products
                   </Button>
                 </Link>
               </CardHeader>

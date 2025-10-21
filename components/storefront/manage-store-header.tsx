@@ -17,7 +17,7 @@ export function ManageStoreHeader() {
   
   const { user, activeStore } = useAuthStore();
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
-  const { categories, addCategory } = useCategory();
+  const { categories, addCategory, isAddingCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -26,23 +26,34 @@ export function ManageStoreHeader() {
   const userStoreId = activeStore?.id;
     const isLoading = isFetchingInventorySummary || isFetchingProducts
   
-  const handleAddCategory = async (newCategoryName: string) => {
-    if (!newCategoryName) return;
-    const alreadyExists = categories?.some(
-      (category) =>
-        category.name.toLowerCase() === newCategoryName.toLowerCase()
-    );
-    if (alreadyExists) {
-      toast.success("Category already exist");
-      return;
-    }
-    try {
-      await addCategory({ name: newCategoryName, description: "", storeId: userStoreId! });
-      toast.success("Category successfully added");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+ const handleAddCategory = async (newCategoryName: string): Promise<boolean> => {
+  if (!newCategoryName) return false;
+
+  const alreadyExists = categories?.some(
+    (category) =>
+      category.name.toLowerCase() === newCategoryName.toLowerCase()
+  );
+
+  if (alreadyExists) {
+    toast.success("Category already exists");
+    return false;
+  }
+
+  try {
+    await addCategory({
+      name: newCategoryName,
+      description: "",
+      storeId: userStoreId!,
+    });
+
+    toast.success("Category successfully added");
+    return true; // ✅ explicitly return boolean
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to add category");
+    return false; // ✅ explicitly return boolean
+  }
+};
 
   const categoryNames =
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
@@ -132,6 +143,7 @@ export function ManageStoreHeader() {
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
+        isAddingCategory={isAddingCategory}
         fields={[
           {
             id: "name",

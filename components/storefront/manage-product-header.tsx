@@ -11,38 +11,47 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "../header-skeleton";
 export function ManageStoreFrontHeader() {
-     const {
-      isFetchingInventorySummary,
-    } = useCategory();
-  
+  const { isFetchingInventorySummary } = useCategory();
+
   const { user, activeStore } = useAuthStore();
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
-  const { categories, addCategory } = useCategory();
+  const { categories, addCategory, isAddingCategory } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
   const userStoreId = activeStore?.id;
-    const isLoading = isFetchingInventorySummary || isFetchingProducts
-  
-  const handleAddCategory = async (newCategoryName: string) => {
-    if (!newCategoryName) return;
-    const alreadyExists = categories?.some(
-      (category) =>
-        category.name.toLowerCase() === newCategoryName.toLowerCase()
-    );
-    if (alreadyExists) {
-      toast.success("Category already exist");
-      return;
-    }
-    try {
-      await addCategory({ name: newCategoryName, description: "", storeId: userStoreId! });
-      toast.success("Category successfully added");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const isLoading = isFetchingInventorySummary || isFetchingProducts;
+
+ const handleAddCategory = async (newCategoryName: string): Promise<boolean> => {
+  if (!newCategoryName) return false;
+
+  const alreadyExists = categories?.some(
+    (category) =>
+      category.name.toLowerCase() === newCategoryName.toLowerCase()
+  );
+
+  if (alreadyExists) {
+    toast.success("Category already exists");
+    return false;
+  }
+
+  try {
+    await addCategory({
+      name: newCategoryName,
+      description: "",
+      storeId: userStoreId!,
+    });
+
+    toast.success("Category successfully added");
+    return true; // ✅ explicitly return boolean
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to add category");
+    return false; // ✅ explicitly return boolean
+  }
+};
 
   const categoryNames =
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
@@ -103,22 +112,23 @@ export function ManageStoreFrontHeader() {
     }
   };
 
-   const handleAddProductDrawer = () => {
-      if (!user?.business) {
-        toast("Please Register your business to carryout this action")
-        return
-      } 
-      setIsOpen(true)
+  const handleAddProductDrawer = () => {
+    if (!user?.business) {
+      toast("Please Register your business to carryout this action");
+      return;
     }
+    setIsOpen(true);
+  };
 
-     if (isLoading) {
-          return  <PageHeaderSkeleton />;
-       }
+  if (isLoading) {
+    return <PageHeaderSkeleton />;
+  }
   return (
     <div>
       <PageHeader
-        title="Inventory Management"
-        subtitle="Manage your products and track stock levels"
+        title="Storefront Products"
+        semiSubtitle="Storefront / Manage Products"
+        subtitle="Manage which products appear in your online store"
         onAddClick={handleAddProductDrawer}
         addLabel="Add Product"
       />
@@ -132,6 +142,7 @@ export function ManageStoreFrontHeader() {
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
+        isAddingCategory={isAddingCategory}
         fields={[
           {
             id: "name",
