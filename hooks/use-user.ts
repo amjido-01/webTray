@@ -36,23 +36,26 @@ export const useUser = () => {
     },
   });
 
-
-const dashboardQuery = useQuery({
-  queryKey: [...userKeys.dashboard(), storeId],
-  queryFn: async (): Promise<DashboardSummary> => {
-    const { data } = await api.get<ApiResponse<DashboardSummary>>(`/user/dashboard`, {
-      params: {
-        storeId: storeId
+  const dashboardQuery = useQuery({
+    queryKey: [...userKeys.dashboard(), storeId],
+    queryFn: async (): Promise<DashboardSummary> => {
+      const { data } = await api.get<ApiResponse<DashboardSummary>>(
+        `/user/dashboard`,
+        {
+          params: {
+            storeId: storeId,
+          },
+        }
+      );
+      if (data?.responseSuccessful) {
+        return data.responseBody;
       }
-    });
-    if (data?.responseSuccessful) {
-      return data.responseBody;
-    }
-    throw new Error(data?.responseMessage || "Failed to fetch dashboard summary");
-  },
-  enabled: !!storeId, // Query will only run if storeId exists
-});
-
+      throw new Error(
+        data?.responseMessage || "Failed to fetch dashboard summary"
+      );
+    },
+    enabled: !!storeId, // Query will only run if storeId exists
+  });
 
   const registerBusinessMutation = useMutation({
     mutationFn: async (

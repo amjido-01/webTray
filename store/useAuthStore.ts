@@ -8,7 +8,7 @@ import {
   ResetPasswordPayload,
   VerifyOtpPayload,
   LoginPayload,
-  Store
+  Store,
 } from "@/types";
 
 interface AuthState {
@@ -37,6 +37,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   refreshToken: () => Promise<void>;
+  fetchStores: () => Promise<void>; // Add this line
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -126,50 +127,115 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post("/auth/login", payload);
           const { responseBody } = response.data;
 
-          // Store the basic user and tokens
+          // 1) Save tokens & basic user immediately so caller can navigate
           set({
             accessToken: responseBody.accessToken,
             refreshTokenValue: responseBody.refreshToken,
-            user: responseBody.user,
+            user: responseBody.user, // basic user payload from auth endpoint
           });
 
-          // ✅ Now fetch the full user, business, and store
-          const profileResponse = await api.get("/user/profile");
-          const { user, business } = profileResponse.data.responseBody;
+          // 2) Kick off fetching profile & stores in background (do not await)
+          //    this updates stores/activeStore when available
+          get()
+            .fetchStores()
+            .catch((e) => {
+              console.warn("fetchStores background error", e);
+            });
 
-          const storeRsponse = await api.get("/user/stores");
-          const stores = storeRsponse.data.responseBody
-
-          const lastStoreId = localStorage.getItem("lastActiveStoreId");
-          const activeStore = lastStoreId 
-            ? stores.find((store: Store) => store.id === parseInt(lastStoreId))
-            : stores[0];
-
-          set({
-            user: {
-              ...user,
-              business,
-            },
-            stores,
-            activeStore,
-          });
-
-           if (activeStore) {
-            localStorage.setItem("lastActiveStoreId", activeStore.id.toString());
-          }
-        } catch (error) {
-          console.error("Login failed:", error);
-          throw error;
+          return responseBody.user;
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+          const customMessage =
+            error.response?.data?.responseMessage || "Login failed";
+          throw new Error(customMessage);
         } finally {
           set({ loading: false });
         }
       },
 
-      
+      // login: async (payload) => {
+      //   set({ loading: true });
+      //   try {
+      //     const response = await api.post("/auth/login", payload);
+      //     const { responseBody } = response.data;
+
+      //     // Store the basic user and tokens
+      //     set({
+      //       accessToken: responseBody.accessToken,
+      //       refreshTokenValue: responseBody.refreshToken,
+      //       user: responseBody.user,
+      //     });
+
+      //     // ✅ Now fetch the full user, business, and store
+      //     const profileResponse = await api.get("/user/profile");
+      //     const { user, business } = profileResponse.data.responseBody;
+
+      //     const storeRsponse = await api.get("/user/stores");
+      //     const stores = storeRsponse.data.responseBody;
+
+      //     const lastStoreId = localStorage.getItem("lastActiveStoreId");
+      //     const activeStore = lastStoreId
+      //       ? stores.find((store: Store) => store.id === parseInt(lastStoreId))
+      //       : stores[0];
+
+      //     set({
+      //       user: {
+      //         ...user,
+      //         business,
+      //       },
+      //       stores,
+      //       activeStore,
+      //     });
+
+      //     if (activeStore) {
+      //       localStorage.setItem(
+      //         "lastActiveStoreId",
+      //         activeStore.id.toString()
+      //       );
+      //     }
+      //   } catch (error) {
+      //     console.error("Login failed:", error);
+      //     throw error;
+      //   } finally {
+      //     set({ loading: false });
+      //   }
+      // },
+
+      // helper to fetch profile and stores (callable independently)
+      fetchStores: async () => {
+        try {
+          const profileResp = await api.get("/user/profile");
+          const { user, business } = profileResp.data.responseBody;
+
+          const storesResp = await api.get("/user/stores");
+          const stores = storesResp.data.responseBody.stores ?? [];
+
+          // choose lastActiveStoreId or first store if available
+          const lastStoreId = localStorage.getItem("lastActiveStoreId");
+          const activeStore =
+            (lastStoreId &&
+              stores.find((s: any) => s.id === Number(lastStoreId))) ||
+            stores[0] ||
+            null;
+
+          set({
+            user: { ...get().user, ...user, business },
+            stores,
+            activeStore,
+          });
+
+          if (activeStore)
+            localStorage.setItem("lastActiveStoreId", String(activeStore.id));
+        } catch (err) {
+          console.warn("Failed to fetch profile/stores", err);
+          // keep user & tokens so app can navigate; dashboard will show CTA
+        }
+      },
+
       switchStore: (storeId) => {
         const state = get();
-        const newStore = state.stores.find(store => store.id === storeId);
-        
+        const newStore = state.stores.find((store) => store.id === storeId);
+
         if (!newStore) {
           throw new Error("Store not found");
         }
@@ -259,7 +325,13 @@ export const useAuthStore = create<AuthState>()(
           console.warn("Logout failed, but clearing user data anyway:", error);
         }
         localStorage.removeItem("lastActiveStoreId");
-        set({ user: null, accessToken: null, refreshTokenValue: null, stores: [], activeStore: null });
+        set({
+          user: null,
+          accessToken: null,
+          refreshTokenValue: null,
+          stores: [],
+          activeStore: null,
+        });
       },
     }),
     {

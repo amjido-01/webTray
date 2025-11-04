@@ -44,8 +44,12 @@ export default function LoginPage() {
       reset();
       router.push("/dashboard");
     } catch (error) {
+      // prefer API response message when available
       let errorMessage = "Something went wrong";
-      if (error instanceof Error) {
+      const err = error as any;
+      if (err?.response?.data?.responseMessage) {
+        errorMessage = err.response.data.responseMessage;
+      } else if (error instanceof Error) {
         errorMessage = error.message;
       }
       setError(errorMessage);
