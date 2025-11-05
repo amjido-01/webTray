@@ -10,6 +10,7 @@ import { CustomAlert } from "@/components/CustomAlert";
 import { OTPInput } from "@/components/OTPInput";
 import { useResendTimer } from "@/hooks/use-resend-timer";
 import { useAlertManager } from "@/hooks/use-alert-manager";
+import Link from "next/link";
 
 function OTPContent() {
   const searchParams = useSearchParams();
@@ -99,7 +100,9 @@ function OTPContent() {
   return (
     <div className="p-4">
       <div className="flex items-center gap-2">
-        <Image src="/logo.svg" width={140} height={40} alt="logo" />
+        <Link href="/">
+          <Image src="/webtraylogo.png" width={100} height={100} alt="logo" />
+        </Link>
       </div>
 
       <div className="flex-col flex items-center justify-start px-8">

@@ -2,7 +2,10 @@ import * as yup from "yup";
 
 export const signupSchema = yup.object().shape({
   fullname: yup.string().required("Full Name is required"),
-  phone: yup.string().required("Phone Number is required"),
+  phone: yup
+    .string()
+    .required("Phone Number is required")
+    .matches(/^\+234\d{10}$/, "Phone number must be in the format +23490*********"),
   email: yup
     .string()
     .email("Invalid email address")

@@ -70,23 +70,29 @@ export const useUser = () => {
       }
       throw new Error(data?.responseMessage || "Failed to register business");
     },
-    onSuccess: (registerResponse) => {
-      toast.success("Business registered successfully");
+     onSuccess: (registerResponse) => {
+    toast.success("Business registered successfully");
 
-      const { user } = useAuthStore.getState();
+    const { user } = useAuthStore.getState();
 
-      if (user) {
-        useAuthStore.setState({
-          user: {
-            ...user,
-            business: registerResponse.business,
-            store: registerResponse.store,
-          },
-        });
-      }
+    if (user) {
+      useAuthStore.setState({
+        user: {
+          ...user,
+          business: registerResponse.business,
+          store: registerResponse.store,
+        },
+        // Add these lines to update stores and activeStore
+        stores: [registerResponse.store],
+        activeStore: registerResponse.store
+      });
 
-      // Optionally refetch any queries
-      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      // Save the store ID as last active
+      localStorage.setItem("lastActiveStoreId", registerResponse.store.id.toString());
+    }
+
+    // Invalidate relevant queries
+    queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
     onError: (error: Error) => {
       toast.error(error.message || "Business registration failed");
