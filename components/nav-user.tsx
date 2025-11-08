@@ -6,8 +6,10 @@ import {
   IconLogout,
   IconNotification,
   IconUserCircle,
+  IconLoader
 } from "@tabler/icons-react"
-
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/useAuthStore"
 import {
   Avatar,
   AvatarFallback,
@@ -28,6 +30,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useState } from "react"
 
 export function NavUser({
   user,
@@ -40,6 +43,26 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const logout = useAuthStore((s) => s.logout)
+  const isLoading = useAuthStore((s) => s.loading)  
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+
+  const handleLogout = async (event: Event) => {
+  event.preventDefault();
+  if (isLoading) return;
+
+  setIsLoggingOut(true); // Set logging out state
+  try {
+    await logout();
+    router.push("/signin");
+  } catch (error) {
+    console.error("Logout failed:", error);
+  } finally {
+    setIsLoggingOut(false); // Reset logging out state
+  }
+};
 
   return (
     <SidebarMenu>
@@ -99,10 +122,47 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <IconLogout />
-              Log out
-            </DropdownMenuItem>
+
+           {/* <DropdownMenuItem
+              // prevent the dropdown from auto-closing; handle logout manually
+              onSelect={(event: any) => {
+                event.preventDefault()
+                if (isLoggingOut) return
+
+                (async () => {
+                  try {
+                    setIsLoggingOut(true)
+                    await logout()
+                    router.push("/signin")
+                  } catch (err) {
+                    console.error("Logout failed", err)
+                  } finally {
+                    setIsLoggingOut(false)
+                  }
+                })()
+              }}
+              disabled={isLoggingOut}
+              aria-busy={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <IconLoader className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <IconLogout className="mr-2 h-4 w-4" />
+              )}
+              {isLoggingOut ? "Logging out..." : "Log out"}
+            </DropdownMenuItem> */}
+         <DropdownMenuItem
+      onSelect={handleLogout}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <IconLoader className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <IconLogout className="mr-2 h-4 w-4" />
+      )}
+      {isLoading ? "Logging out..." : "Log out"}
+    </DropdownMenuItem>
+
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

@@ -11,7 +11,9 @@ import { formatCurrency } from "@/lib/format-currency";
 export default function OrderStatCard() {
   const { orderSummary, isFetchingOrderSummary } = useOrder();
   const { user } = useAuthStore();
-  if (isFetchingOrderSummary) {
+
+  const isLoading = isFetchingOrderSummary;
+  if (isLoading) {
     return <InventoryPageSkeleton />;
   }
 
@@ -43,10 +45,12 @@ export default function OrderStatCard() {
       noteColor: "text-red-500",
     },
   ];
+
+  const hasBusiness = user?.business != null;
   return (
     <div>
       <OrderManagement />
-       {!user?.business && <HasBusinessAlert />}
+       {!hasBusiness && <HasBusinessAlert />}
     <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, i) => (
         <StatCard key={i} {...stat} />

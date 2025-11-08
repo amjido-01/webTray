@@ -1,9 +1,8 @@
 "use client";
 
-// import { useUser } from "@/hooks/use-user"
 import { useAuthStore } from "@/store/useAuthStore";
 import StoreFrontHeader from "@/components/storefront/store-front-header";
-import { Edit, Globe, Plus } from "lucide-react";
+import { Edit, Globe } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Card,
@@ -15,43 +14,81 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useStoreFront } from "@/hooks/use-store-front";
-export default function Page() {
-  const { storeInfo, 
-    // isFetchingStoreInfo,
-    //  storeInfoError
-     } = useStoreFront()
-  const { activeStore } = useAuthStore();
+import { useActiveStore } from "@/hooks/use-active-store";
 
-  console.log(storeInfo)
+export default function Page() {
+  // Use the safe hook to get activeStore
+  const { activeStore, isLoading: storeLoading } = useActiveStore();
+  
+  const { storeInfo } = useStoreFront();
+
+  console.log("Storefront page:", { activeStore, storeInfo });
+
+  // Show loading state while store is being fetched
+  if (storeLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
+          <p className="text-sm text-muted-foreground">Loading store...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: Ensure we have an active store
+  if (!activeStore) {
+    return (
+      <div className="p-6">
+        <Card className="shadow-none rounded-none">
+          <CardHeader className="text-center">
+            <CardTitle className="text-[#4D4D4D] font-bold text-[20px]">
+              No Active Store
+            </CardTitle>
+            <CardDescription>
+              Please select or create a store to continue.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // Generate store domain safely
+  const defaultDomain = `${activeStore.storeName
+    ?.replace(/\s+/g, "")
+    .toLowerCase()}@webtry.com`;
+
+  const customDomain = storeInfo?.store?.customDomain || defaultDomain;
 
   return (
     <div>
       <StoreFrontHeader />
       <div className="mt-[20px]">
         {!storeInfo ? (
-          <Card className=" shadow-none rounded-none">
+          <Card className="shadow-none rounded-none">
             <CardHeader className="text-center leading-[24px]">
               <CardTitle className="text-[#4D4D4D] font-bold text-[20px]">
                 No Storefronts Yet
               </CardTitle>
               <CardDescription>
-                You don’t have an active stores yet.
-                <button className="text-[#365BEB] ml-1 cursor-pointer font-normal tedxt-[16px]">
+                You don't have an active stores yet.
+                <button className="text-[#365BEB] ml-1 cursor-pointer font-normal text-[16px]">
                   Create new store
                 </button>
               </CardDescription>
             </CardHeader>
           </Card>
         ) : (
-          <Card className=" shadow-none rounded-none">
+          <Card className="shadow-none rounded-none">
             <CardHeader className="leading-[24px]">
               <CardTitle className="text-[#4D4D4D] flex justify-between">
                 <p className="font-bold text-[20px]">
-                  {storeInfo?.store?.storeName}
+                  {storeInfo?.store?.storeName || activeStore.storeName}
                 </p>
 
                 <div className="flex items-center gap-[8px]">
-                  <p className=" text-[16px] leading-[24px] font-normal">
+                  <p className="text-[16px] leading-[24px] font-normal">
                     Store online
                   </p>
                   <Switch />
@@ -69,16 +106,14 @@ export default function Page() {
                   className="text-[#365BEB] hover:no-underline cursor-pointer font-normal text-[16px]"
                 >
                   <Globe className="text-black" />
-                  {storeInfo?.store?.customDomain ||
-                    `${activeStore?.storeName
-                      ?.replace(/\s+/g, "")
-                      .toLowerCase()}@webtry.com`}
+                  {customDomain}
                 </Button>
               </CardContent>
             </CardHeader>
           </Card>
         )}
       </div>
+
       <div className="container mx-auto mt-[24px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Store Information Card */}
@@ -94,19 +129,20 @@ export default function Page() {
             <CardContent className="flex-1 space-y-4">
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Store Name</h3>
-                <p className="text-gray-600">{storeInfo?.store?.storeName}</p>
+                <p className="text-gray-600">
+                  {storeInfo?.store?.storeName || activeStore.storeName}
+                </p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Description</h3>
                 <p className="text-gray-600">
-                  Premium coffee and fresh pastries delivered to your door
+                  {/* {storeInfo?.store?.description || */}
+                    Premium coffee and fresh pastries delivered to your door
                 </p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Domain</h3>
-                <p className="text-gray-600"> {`${activeStore?.storeName
-                      ?.replace(/\s+/g, "")
-                      .toLowerCase()}@webtry.com`}</p>
+                <p className="text-gray-600">{defaultDomain}</p>
               </div>
               <div className="pt-4">
                 <Button
@@ -145,7 +181,9 @@ export default function Page() {
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="text-center py-8">
-                  <div className="text-4xl font-bold text-gray-900 mb-2">{storeInfo?.productCount}</div>
+                  <div className="text-4xl font-bold text-gray-900 mb-2">
+                    {storeInfo?.productCount || 0}
+                  </div>
                   <p className="text-gray-500">Products listed</p>
                 </div>
               </CardContent>
@@ -172,9 +210,7 @@ export default function Page() {
                   <div className="flex items-center space-x-2">
                     <Globe className="w-4 h-4 text-gray-500" />
                     <span className="text-blue-600 hover:text-blue-800 cursor-pointer">
-                      {`${activeStore?.storeName
-                      ?.replace(/\s+/g, "")
-                      .toLowerCase()}@webtry.com`}
+                      {defaultDomain}
                     </span>
                   </div>
                   <p className="text-sm text-gray-500">Default Domain</p>

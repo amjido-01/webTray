@@ -8,26 +8,45 @@ import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { useProduct } from "@/hooks/use-product";
 import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useActiveStore } from "@/hooks/use-active-store";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "./header-skeleton";
+
 export function InventoryManagement() {
   const { isFetchingInventorySummary } = useCategory();
+  const { user } = useAuthStore();
+  
+  // Use the safe hook to get activeStore
+  const { activeStore, isLoading: storeLoading } = useActiveStore();
 
-  const { user, activeStore } = useAuthStore();
+  
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
   const { categories, addCategory, isAddingCategory } = useCategory();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
+
+  // Now activeStore is guaranteed to exist after loading
   const userStoreId = activeStore?.id;
-  const isLoading = isFetchingInventorySummary || isFetchingProducts;
+  console.log(userStoreId)
+  const isLoading = 
+    isFetchingInventorySummary || 
+    isFetchingProducts || 
+    storeLoading; // Include store loading state
 
   const handleAddCategory = async (
     newCategoryName: string
   ): Promise<boolean> => {
     if (!newCategoryName) return false;
+    
+    // Guard: Ensure we have a store ID
+    if (!userStoreId) {
+      toast.error("No active store selected");
+      return false;
+    }
 
     const alreadyExists = categories?.some(
       (category) =>
@@ -43,15 +62,15 @@ export function InventoryManagement() {
       await addCategory({
         name: newCategoryName,
         description: "",
-        storeId: userStoreId!,
+        storeId: userStoreId,
       });
 
       toast.success("Category successfully added");
-      return true; // ✅ success
+      return true;
     } catch (error) {
       console.error(error);
       toast.error("Failed to add category");
-      return false; // ❌ failed
+      return false;
     }
   };
 
@@ -59,6 +78,12 @@ export function InventoryManagement() {
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
 
   const handleSubmit = async (data: Record<string, string>) => {
+    // Guard: Ensure we have a store ID
+    if (!userStoreId) {
+      toast.error("No active store selected");
+      return;
+    }
+
     try {
       setValidationErrors({});
 
@@ -73,9 +98,7 @@ export function InventoryManagement() {
         toast.error("Invalid category selected");
         return;
       }
-      if (typeof userStoreId !== "number") {
-        throw new Error("Store ID is not available");
-      }
+
       const productPayload = {
         storeId: userStoreId,
         categoryId: selectedCategory.id,
@@ -84,13 +107,14 @@ export function InventoryManagement() {
         price: parseFloat(data.price),
         quantity: parseInt(data.stock),
         images: {
-          main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image", // Default image
+          main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image",
           thumbnail:
-            "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb", // Default thumbnail
+            "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb",
         },
       };
 
       await addProduct(productPayload);
+      toast.success("Product added successfully");
       setShouldClearForm(true);
       setIsOpen(false);
     } catch (error) {
@@ -116,20 +140,41 @@ export function InventoryManagement() {
 
   const handleAddProductDrawer = () => {
     if (!user?.business) {
-      toast("Please Register your business to carryout this action");
+      toast.error("Please register your business to carry out this action");
       return;
     }
+    
+    if (!activeStore) {
+      toast.error("Please select a store first");
+      return;
+    }
+    
     setIsOpen(true);
   };
 
+  // Show loading while fetching store data
   if (isLoading) {
     return <PageHeaderSkeleton />;
   }
+
+  // Show message if no active store (shouldn't happen after loading)
+  if (!activeStore) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <p className="text-sm text-orange-800">
+            No active store selected. Please create or select a store.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
         title="Inventory Management"
-        subtitle="Manage your products and track stock levels"
+        subtitle={`Manage products for ${activeStore.storeName}`}
         onAddClick={handleAddProductDrawer}
         addLabel="Add Product"
       />

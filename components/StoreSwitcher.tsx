@@ -1,12 +1,12 @@
 "use client"
-
 import * as React from "react"
 import {
   Check,
   Store,
   ChevronDown,
+  Loader2,
+  Plus,
 } from "lucide-react"
-// import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -22,26 +22,54 @@ import {
 } from "@/components/ui/popover"
 import { useAuthStore } from "@/store/useAuthStore"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function StoreSwitcher() {
   const [open, setOpen] = React.useState(false)
-  const { user, stores, activeStore, switchStore } = useAuthStore()
+  const { stores, activeStore, switchStore, _hasHydrated, user } = useAuthStore()
   const queryClient = useQueryClient()
+  const router = useRouter()
 
-  if (!user || !stores?.length) {
+  if (!_hasHydrated) {
+    return (
+      <Button
+        variant="outline"
+        disabled
+        className="w-[200px] justify-between rounded-full"
+      >
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Loading...
+      </Button>
+    )
+  }
+
+  if (!stores || stores.length === 0) {
+    if (user?.business) {
+      console.warn("User has business but no stores in Zustand state")
+    }
     return null
   }
 
   const handleStoreSelect = (storeId: number) => {
-    switchStore(storeId)
-    setOpen(false)
+    try {
+      switchStore(storeId)
+      setOpen(false)
 
-    // Invalidate all store-dependent queries
-    queryClient.invalidateQueries({ queryKey: ['products'] })
-    queryClient.invalidateQueries({ queryKey: ['categories'] })
-    queryClient.invalidateQueries({ queryKey: ['orders'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-    queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      // Invalidate store-dependent queries
+      const queries = ['products', 'categories', 'orders', 'dashboard', 'inventory']
+      queries.forEach(key => queryClient.invalidateQueries({ queryKey: [key] }))
+
+      toast.success(`Switched to ${stores.find(s => s.id === storeId)?.storeName}`)
+    } catch (error) {
+      console.error("Store switch error:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to switch store")
+    }
+  }
+
+  const handleAddNewStore = () => {
+    setOpen(false)
+    router.push("/createstore") // 👈 Change this route if needed
   }
 
   return (
@@ -55,11 +83,12 @@ export function StoreSwitcher() {
           className="w-[200px] justify-between"
         >
           <Store className="mr-2 h-4 w-4" />
-          {activeStore?.storeName}
+          {activeStore?.storeName || "Select store"}
           <ChevronDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+
+      <PopoverContent className="w-[220px] p-0">
         <Command>
           <CommandInput placeholder="Search store..." />
           <CommandEmpty>No store found.</CommandEmpty>
@@ -78,6 +107,18 @@ export function StoreSwitcher() {
               </CommandItem>
             ))}
           </CommandGroup>
+
+          {/* 👇 Add New Store Button */}
+          <div className="border-t p-2">
+            <Button
+              // variant="ghost"
+              className="w-full justify-center rounded-full text-sm"
+              onClick={handleAddNewStore}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Store
+            </Button>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>

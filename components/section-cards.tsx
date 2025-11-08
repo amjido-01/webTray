@@ -10,7 +10,8 @@ export function SectionCards() {
   const { dashboard, isFetchingDashboard, dashboardError } = useUser();
   const { user } = useAuthStore();
 
-  if (isFetchingDashboard) {
+  const isLoading = isFetchingDashboard;
+  if (isLoading) {
     return (
       <div className="">
         <PageHeader
@@ -83,13 +84,15 @@ export function SectionCards() {
     },
   ];
 
+  const hasBusiness = user?.business != null;
+
   return (
     <div className="">
       <PageHeader
         title="Overview"
         subtitle="Manage your products and track stock levels"
       />
-      {!user?.business && <HasBusinessAlert />}
+      {!hasBusiness && <HasBusinessAlert />}
       <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <StatCard key={i} {...stat} />

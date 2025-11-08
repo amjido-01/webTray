@@ -11,7 +11,9 @@ export function SectionCards() {
     useCustomer();
     const { user } = useAuthStore()
 
-  if (isFetchingCustomerSummary) {
+    const isLoading = isFetchingCustomerSummary;
+
+  if (isLoading) {
     return (
       <div className="">
         <PageHeader
@@ -90,13 +92,15 @@ export function SectionCards() {
     },
   ];
 
+  const hasBusiness = user?.business != null;
+
   return (
     <div className="">
       <PageHeader
         title="Customer Management"
         subtitle="Track customer activity and manage relationships with ease."
       />
-        {!user?.business && <HasBusinessAlert />}
+        {!hasBusiness && <HasBusinessAlert />}
       <div className="grid mt-6 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <StatCard key={i} {...stat} />

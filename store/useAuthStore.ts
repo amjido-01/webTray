@@ -10,24 +10,33 @@ import {
   LoginPayload,
   Store,
 } from "@/types";
+import Cookies from "js-cookie";
+
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
+  expires: 1 / 24, // 1 hour
+  secure: isProduction,
+  sameSite: isProduction ? ("None" as const) : ("Lax" as const),
+};
+
+const refreshCookieOptions = {
+  expires: 7, // 7 days
+  secure: isProduction,
+  sameSite: isProduction ? ("None" as const) : ("Lax" as const),
+};
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshTokenValue: string | null;
-
   loading: boolean;
   _hasHydrated: boolean;
-
   stores: Store[];
   activeStore: Store | null;
+  lastActiveStoreId: number | null;
+
   switchStore: (storeId: number) => void;
-
   setHasHydrated: (state: boolean) => void;
-
   isLoggedIn: () => boolean;
   isBusinessRegistered: () => boolean;
-
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
   verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
@@ -36,19 +45,16 @@ interface AuthState {
   resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
-  refreshToken: () => Promise<void>;
-  fetchStores: () => Promise<void>; // Add this line
+  refreshStores: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      accessToken: null,
-      refreshTokenValue: null,
       loading: false,
       _hasHydrated: false,
-
+      lastActiveStoreId: null,
       stores: [],
       activeStore: null,
 
@@ -57,8 +63,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       isLoggedIn: () => {
-        const state = get();
-        return !!state.accessToken;
+        return !!Cookies.get("accessToken") || !!Cookies.get("refreshToken");
       },
 
       isBusinessRegistered: () => {
@@ -96,7 +101,10 @@ export const useAuthStore = create<AuthState>()(
 
           const { user, accessToken, refreshToken } = responseBody;
 
-          set({ user, accessToken, refreshToken });
+          Cookies.set("accessToken", accessToken, cookieOptions);
+          Cookies.set("refreshToken", refreshToken, refreshCookieOptions);
+
+          set({ user });
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
           const customMessage =
@@ -127,20 +135,36 @@ export const useAuthStore = create<AuthState>()(
           const response = await api.post("/auth/login", payload);
           const { responseBody } = response.data;
 
-          // 1) Save tokens & basic user immediately so caller can navigate
-          set({
-            accessToken: responseBody.accessToken,
-            refreshTokenValue: responseBody.refreshToken,
-            user: responseBody.user, // basic user payload from auth endpoint
+          const { user, business, accessToken, refreshToken } = responseBody;
+          const fetchedStores = business?.store ?? [];
+
+          console.log("login - fetched stores:", fetchedStores);
+
+          Cookies.set("accessToken", accessToken, cookieOptions);
+          Cookies.set("refreshToken", refreshToken, refreshCookieOptions);
+
+          // FIXED: Use persisted lastActiveStoreId to find active store
+          const lastStoreId = get().lastActiveStoreId;
+          const activeStore =
+            (lastStoreId && fetchedStores.find((s: Store) => s.id === lastStoreId)) ||
+            fetchedStores[0] ||
+            null;
+
+          console.log("login - setting state:", {
+            storesCount: fetchedStores.length,
+            activeStoreId: activeStore?.id,
+            lastStoreId
           });
 
-          // 2) Kick off fetching profile & stores in background (do not await)
-          //    this updates stores/activeStore when available
-          get()
-            .fetchStores()
-            .catch((e) => {
-              console.warn("fetchStores background error", e);
-            });
+          set({
+            user: {
+              ...user,
+              business: business || null,
+            },
+            stores: fetchedStores, // IMPORTANT: Make sure this is set!
+            activeStore,
+            lastActiveStoreId: activeStore?.id || null,
+          });
 
           return responseBody.user;
         } catch (err) {
@@ -153,85 +177,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // login: async (payload) => {
-      //   set({ loading: true });
-      //   try {
-      //     const response = await api.post("/auth/login", payload);
-      //     const { responseBody } = response.data;
-
-      //     // Store the basic user and tokens
-      //     set({
-      //       accessToken: responseBody.accessToken,
-      //       refreshTokenValue: responseBody.refreshToken,
-      //       user: responseBody.user,
-      //     });
-
-      //     // ✅ Now fetch the full user, business, and store
-      //     const profileResponse = await api.get("/user/profile");
-      //     const { user, business } = profileResponse.data.responseBody;
-
-      //     const storeRsponse = await api.get("/user/stores");
-      //     const stores = storeRsponse.data.responseBody;
-
-      //     const lastStoreId = localStorage.getItem("lastActiveStoreId");
-      //     const activeStore = lastStoreId
-      //       ? stores.find((store: Store) => store.id === parseInt(lastStoreId))
-      //       : stores[0];
-
-      //     set({
-      //       user: {
-      //         ...user,
-      //         business,
-      //       },
-      //       stores,
-      //       activeStore,
-      //     });
-
-      //     if (activeStore) {
-      //       localStorage.setItem(
-      //         "lastActiveStoreId",
-      //         activeStore.id.toString()
-      //       );
-      //     }
-      //   } catch (error) {
-      //     console.error("Login failed:", error);
-      //     throw error;
-      //   } finally {
-      //     set({ loading: false });
-      //   }
-      // },
-
-      // helper to fetch profile and stores (callable independently)
-      fetchStores: async () => {
-        try {
-          const profileResp = await api.get("/user/profile");
-          const { user, business } = profileResp.data.responseBody;
-
-          const storesResp = await api.get("/user/stores");
-          const stores = storesResp.data.responseBody.stores ?? [];
-
-          // choose lastActiveStoreId or first store if available
-          const lastStoreId = localStorage.getItem("lastActiveStoreId");
-          const activeStore =
-            (lastStoreId &&
-              stores.find((s: any) => s.id === Number(lastStoreId))) ||
-            stores[0] ||
-            null;
-
-          set({
-            user: { ...get().user, ...user, business },
-            stores,
-            activeStore,
-          });
-
-          if (activeStore)
-            localStorage.setItem("lastActiveStoreId", String(activeStore.id));
-        } catch (err) {
-          console.warn("Failed to fetch profile/stores", err);
-          // keep user & tokens so app can navigate; dashboard will show CTA
-        }
-      },
-
+      // FIXED: Update both activeStore and lastActiveStoreId
       switchStore: (storeId) => {
         const state = get();
         const newStore = state.stores.find((store) => store.id === storeId);
@@ -240,8 +186,13 @@ export const useAuthStore = create<AuthState>()(
           throw new Error("Store not found");
         }
 
-        set({ activeStore: newStore });
-        localStorage.setItem("lastActiveStoreId", storeId.toString());
+        // Update both activeStore and lastActiveStoreId atomically
+        set({ 
+          activeStore: newStore, 
+          lastActiveStoreId: storeId 
+        });
+        
+        // No need for localStorage.setItem - Zustand persistence handles this
       },
 
       forgotPassword: async (email) => {
@@ -286,63 +237,134 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const accessToken = get().accessToken;
+        const hasSession =
+          !!Cookies.get("accessToken") || !!Cookies.get("refreshToken");
 
-        if (!accessToken) {
-          set({ user: null, loading: false });
+        if (!hasSession) {
+          set({ user: null, stores: [], activeStore: null, loading: false });
           return false;
         }
 
         try {
           const response = await api.get("/user/profile");
-          const { user } = response.data.responseBody;
+          console.log("checkAuth - profile response:", response.data);
+          const { user, business } = response.data.responseBody;
 
-          set({ user }); // user now contains any business
+          if (business) {
+            // Fetch stores from API
+            const storesResp = await api.get("/user/stores");
+            console.log("checkAuth - stores response:", storesResp.data);
+            const fetchedStores = storesResp.data.responseBody ?? [];
+            
+            console.log("checkAuth - fetched stores:", fetchedStores);
+
+            // FIXED: Use persisted lastActiveStoreId to restore active store
+            const lastStoreId = get().lastActiveStoreId;
+            const activeStore =
+              (lastStoreId &&
+                fetchedStores.find((s: Store) => s.id === lastStoreId)) ||
+              fetchedStores[0] ||
+              null;
+
+            console.log("checkAuth - setting state:", {
+              storesCount: fetchedStores.length,
+              activeStoreId: activeStore?.id,
+              lastStoreId
+            });
+
+            set({
+              user: { ...user, business },
+              stores: fetchedStores, // IMPORTANT: Make sure this is set!
+              activeStore,
+              lastActiveStoreId: activeStore?.id || null,
+            });
+          } else {
+            set({
+              user: { ...user, business: null },
+              stores: [],
+              activeStore: null,
+              lastActiveStoreId: null,
+            });
+          }
+
           return true;
         } catch (error) {
           console.error("Error fetching user data:", error);
-          set({ user: null, loading: false });
+          Cookies.remove("accessToken");
+          Cookies.remove("refreshToken");
+          set({ 
+            user: null, 
+            stores: [], 
+            activeStore: null, 
+            loading: false 
+          });
           return false;
         }
       },
 
-      refreshToken: async () => {
+      refreshStores: async () => {
         try {
-          const response = await api.post("/auth/refresh");
-          const { accessToken } = response.data;
-          set({ accessToken });
-        } catch (error) {
-          console.error("Error refreshing token:", error);
-          set({ user: null, accessToken: null, refreshTokenValue: null });
-          throw error;
+          const profileResp = await api.get("/user/profile");
+          const { user, business } = profileResp.data.responseBody;
+
+          if (business) {
+            const storesResp = await api.get("/user/stores");
+            const stores = storesResp.data.responseBody.stores ?? [];
+
+            // FIXED: Use persisted lastActiveStoreId
+            const lastStoreId = get().lastActiveStoreId;
+            const activeStore =
+              (lastStoreId &&
+                stores.find((s: Store) => s.id === lastStoreId)) ||
+              stores[0] ||
+              null;
+
+            set({
+              user: { ...user, business },
+              stores,
+              activeStore, // FIXED: Set activeStore
+              lastActiveStoreId: activeStore?.id || null,
+            });
+          } else {
+            set({
+              user: { ...user, business: null },
+              stores: [],
+              activeStore: null,
+              lastActiveStoreId: null,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to refresh stores", err);
+          throw err;
         }
       },
 
       logout: async () => {
+        set({ loading: true });
         try {
-          await api.post("/auth/logout");
+          Cookies.remove("accessToken");
+          Cookies.remove("refreshToken");
+
+          set({
+            user: null,
+            stores: [],
+            activeStore: null,
+            lastActiveStoreId: null,
+          });
+
+          await new Promise((resolve) => setTimeout(resolve, 50));
         } catch (error) {
-          console.warn("Logout failed, but clearing user data anyway:", error);
+          console.error("Logout error:", error);
+        } finally {
+          set({ loading: false });
         }
-        localStorage.removeItem("lastActiveStoreId");
-        set({
-          user: null,
-          accessToken: null,
-          refreshTokenValue: null,
-          stores: [],
-          activeStore: null,
-        });
       },
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshTokenValue: state.refreshTokenValue,
-        stores: state.stores,
-        activeStore: state.activeStore,
+        lastActiveStoreId: state.lastActiveStoreId,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
