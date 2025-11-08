@@ -31,6 +31,7 @@ import { useCategory } from "@/hooks/use-category";
 import { useAuthStore } from "@/store/useAuthStore";
 import { TableSkeleton } from "../table-skeleton";
 import { StoreProduct, Category } from "@/types";
+import { useProduct } from "@/hooks/use-product";
 
 /* TanStack Table */
 import {
@@ -226,8 +227,14 @@ export default function ManageProductTable() {
     changeProductVisibility,
     isUpdatingProductVisibility,
     changeProductFeatured,
-    isUpdatingProductFeatured
+    isUpdatingProductFeatured,
   } = useStoreFront();
+  const {
+    deleteProduct,
+    deleteProductError,
+    isDeletingProduct,
+    deleteProductSuccess,
+  } = useProduct();
 
   const { categories } = useCategory();
 
@@ -320,7 +327,7 @@ export default function ManageProductTable() {
   // Handler for feature toggle (TODO: Add API endpoint)
   const handleToggleFeature = useCallback(
     async (productId: number, currentFeature: boolean) => {
-       if (!storeId || isUpdatingProductFeatured) return;
+      if (!storeId || isUpdatingProductFeatured) return;
       setUpdatingProductId(productId);
       try {
         await changeProductFeatured({
@@ -349,12 +356,23 @@ export default function ManageProductTable() {
   }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deleteConfirm) return;
+    if (!deleteConfirm || !storeId || isDeletingProduct) return;
+
+    // Capture id locally to avoid clearing state before the API call
+    const productId = deleteConfirm;
 
     // TODO: Implement delete product API call
-    console.log("Delete product:", deleteConfirm);
-    setDeleteConfirm(null);
-  }, [deleteConfirm]);
+    console.log("Delete product:", productId);
+
+    try {
+      await deleteProduct(productId);
+      // clear the confirmation only after a successful request
+      setDeleteConfirm(null);
+    } catch (error) {
+      // Error already handled by the hook with toast
+      console.error("Failed to delete product:", error);
+    }
+  }, [deleteConfirm, storeId, isDeletingProduct, deleteProduct]);
 
   const handleCategoryChange = useCallback(
     (value: string) => {
@@ -542,7 +560,12 @@ export default function ManageProductTable() {
       {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={deleteConfirm !== null}
-        onOpenChange={(open) => !open && setDeleteConfirm(null)}
+        onOpenChange={(open) => {
+          // Prevent closing while deletion is in progress
+          if (!open && !isDeletingProduct) {
+            setDeleteConfirm(null);
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -563,12 +586,25 @@ export default function ManageProductTable() {
             <AlertDialogCancel className="flex-1 rounded-full border-2 border-[#111827] hover:bg-accent/50 bg-transparent">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="flex-1 rounded-full bg-[#111827] hover:bg-slate-800 text-white"
-            >
-              Delete
-            </AlertDialogAction>
+           <Button
+  onClick={handleDeleteConfirm}
+  disabled={isDeletingProduct}
+  className={`flex-1 rounded-full text-white ${
+    isDeletingProduct
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-[#111827] hover:bg-slate-800"
+  }`}
+>
+  {isDeletingProduct ? (
+    <div className="flex items-center justify-center gap-2">
+      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      Deleting...
+    </div>
+  ) : (
+    "Delete"
+  )}
+</Button>
+
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

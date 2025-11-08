@@ -150,7 +150,8 @@ export const useProduct = () => {
 const deleteProductMutation = useMutation({
   mutationFn: async (id: number): Promise<void> => {
     const { data } = await api.delete<ApiResponse<object>>(
-      `/inventory/product/${id}`
+      `/inventory/product/${id}`,
+      { params: { storeId } } // <- include storeId as query param
     );
     if (!data?.responseSuccessful) {
       throw new Error(data?.responseMessage || "Failed to delete product");
@@ -179,6 +180,7 @@ const deleteProductMutation = useMutation({
     toast.error(error.message || "Failed to delete product");
   },
 });
+
 
   return {
     products: productsQuery.data,
