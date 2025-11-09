@@ -586,25 +586,24 @@ export default function ManageProductTable() {
             <AlertDialogCancel className="flex-1 rounded-full border-2 border-[#111827] hover:bg-accent/50 bg-transparent">
               Cancel
             </AlertDialogCancel>
-           <Button
-  onClick={handleDeleteConfirm}
-  disabled={isDeletingProduct}
-  className={`flex-1 rounded-full text-white ${
-    isDeletingProduct
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-[#111827] hover:bg-slate-800"
-  }`}
->
-  {isDeletingProduct ? (
-    <div className="flex items-center justify-center gap-2">
-      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-      Deleting...
-    </div>
-  ) : (
-    "Delete"
-  )}
-</Button>
-
+            <Button
+              onClick={handleDeleteConfirm}
+              disabled={isDeletingProduct}
+              className={`flex-1 rounded-full text-white ${
+                isDeletingProduct
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#111827] hover:bg-slate-800"
+              }`}
+            >
+              {isDeletingProduct ? (
+                <div className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                "Delete"
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
