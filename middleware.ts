@@ -5,7 +5,7 @@ import * as jose from "jose";
 const protectedPatterns = ["/dashboard", "/welcome"];
 
 // Auth routes (should redirect to dashboard if logged in)
-const authPages = ["/signin", "/signup"];
+const authPages = ["/signin", "/signup", "/welcome", "/register-business", "/"];
 
 // Public routes (should redirect to dashboard if logged in)
 const publicRoutes = ["/about", "/contact", "/pricing", "/features", "/"];
