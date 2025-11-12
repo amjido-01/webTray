@@ -1,15 +1,27 @@
 import * as yup from "yup";
 
 export const signupSchema = yup.object().shape({
-  fullname: yup.string().required("Full Name is required"),
+  fullname: yup
+    .string()
+    .required("Full Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  
+  countryCode: yup.string().required("Country code is required"),
+  
   phone: yup
     .string()
     .required("Phone Number is required")
-    .matches(/^\+234\d{10}$/, "Phone number must be in the format +23490*********"),
+    .matches(/^\d+$/, "Phone number must contain only digits")
+    .min(6, "Phone number must be at least 6 digits")
+    .max(15, "Phone number cannot exceed 15 digits"),
+  
   email: yup
     .string()
     .email("Invalid email address")
-    .required("Email is required"),
+    .required("Email is required")
+    .lowercase()
+    .trim(),
+  
   password: yup
     .string()
     .required("Password is required")
