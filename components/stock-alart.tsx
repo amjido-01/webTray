@@ -1,12 +1,11 @@
 "use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-// import { StockAlertsModal } from "./view-all-alert-modal";
+import { StockAlertsModal } from "./view-all-alert-modal";
 import { useCategory } from "@/hooks/use-category";
 import { useProduct } from "@/hooks/use-product";
-// import { useState } from "react";
+import { useState } from "react";
 
 const getStockLevel = (quantity: number) => {
   if (quantity === 0) return "Out of Stock";
@@ -25,12 +24,19 @@ const getStockBadgeColor = (quantity: number) => {
 export function StockAlertTable() {
   const {} = useCategory();
   const { products } = useProduct();
+  const [viewAllModal, setViewAllModal] = useState(false);
 
-  // const [viewAllModal, setViewAllModal] = useState(false);
   const lowProducts = products?.filter((item) => item.quantity < 10);
 
+  // Transform lowProducts into the format expected by StockAlertsModal
+  const stockAlerts = lowProducts?.map((product) => ({
+    name: product.name,
+    units: product.quantity,
+    level: getStockLevel(product.quantity) as "Critical" | "Low Stock" | "Medium Stock",
+  })) || [];
+
   if (!lowProducts || lowProducts.length === 0) {
-    return null; // Don't render the component if there are no low stock products
+    return null;
   }
 
   return (
@@ -46,7 +52,7 @@ export function StockAlertTable() {
           <Button
             variant="outline"
             size="sm"
-            // onClick={() => setViewAllModal(true)}
+            onClick={() => setViewAllModal(true)}
           >
             View All
           </Button>
@@ -54,10 +60,10 @@ export function StockAlertTable() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {lowProducts?.map((item, index) => (
+          {lowProducts?.slice(0, 5).map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between border-b"
+              className="flex items-center justify-between border-b pb-3"
             >
               <div>
                 <p className="font-medium text-gray-900">{item.name}</p>
@@ -77,7 +83,13 @@ export function StockAlertTable() {
           ))}
         </div>
       </CardContent>
-      {/* <StockAlertsModal open={viewAllModal} onOpenChange={setViewAllModal} /> */}
+      
+      {/* Pass the required props */}
+      <StockAlertsModal 
+        isOpen={viewAllModal} 
+        onOpenChange={setViewAllModal}
+        stockAlerts={stockAlerts}
+      />
     </Card>
   );
 }
