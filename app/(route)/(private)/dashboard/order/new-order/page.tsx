@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Plus,
@@ -8,6 +8,7 @@ import {
   Trash2,
   Loader2,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,19 +17,24 @@ import { useOrder } from "@/hooks/use-order";
 import { useProduct } from "@/hooks/use-product";
 import * as yup from "yup";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
+  quantity: number; // Available stock
 }
 
 interface CartItem extends Product {
-  quantity: number;
+  quantity: number; // Quantity in cart
+  maxStock: number; // Store original available stock
 }
 
 interface FormErrors {
+  paymentMethod?: string;
+  onlinePaymentType?: string;
   customerName?: string;
   customerPhone?: string;
   cartItems?: string;
@@ -57,6 +63,12 @@ const orderValidationSchema = yup.object({
     .array()
     .min(1, "Please add at least one product to the cart")
     .required("Cart cannot be empty"),
+
+  paymentMethod: yup.string().required("Please select payment method"),
+  onlinePaymentType: yup.string().when("paymentMethod", {
+    is: "online",
+    then: (schema) => schema.required("Please select online payment type"),
+  }),
 });
 
 export default function AddOrderPage() {
@@ -66,9 +78,11 @@ export default function AddOrderPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [onlinePaymentType, setOnlinePaymentType] = useState("");
 
   const { addOrder, isAddingOrder, addOrderError } = useOrder();
-  const { products, isFetchingProducts } = useProduct();
+  const { products, isFetchingProducts, updateProduct } = useProduct();
 
   const mockProducts: Product[] = [
     {
@@ -76,44 +90,59 @@ export default function AddOrderPage() {
       name: "Coffee Delight",
       description: "A rich blend of coffee and chocolate.",
       price: 2000.0,
+      quantity: 10,
     },
     {
       id: "2",
       name: "Coffee Bliss",
       description: "A smooth and creamy coffee experience.",
       price: 1800.0,
-    },
-    {
-      id: "3",
-      name: "Coffee Burst",
-      description: "An energizing coffee with a hint of citrus.",
-      price: 2200.0,
-    },
-    {
-      id: "4",
-      name: "Coffee Dream",
-      description: "A dreamy mix of coffee and vanilla.",
-      price: 1900.0,
-    },
-    {
-      id: "5",
-      name: "Coffee Fusion",
-      description: "A unique blend of coffee and spices.",
-      price: 2100.0,
-    },
-    {
-      id: "6",
-      name: "Coffee Harmony",
-      description: "A balanced coffee with floral notes.",
-      price: 2300.0,
-    },
-    {
-      id: "7",
-      name: "Coffee Magic",
-      description: "A magical blend of coffee and caramel.",
-      price: 2400.0,
+      quantity: 5,
     },
   ];
+
+  // Load cart items from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart);
+      if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+        setCartItems(parsedCart);
+      }
+    }
+  }, []);
+
+  // Save cart items to localStorage whenever they change
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem("cartItems");
+    }
+  }, [cartItems]);
+
+  // Load payment method and type from localStorage
+  useEffect(() => {
+    const savedMethod = localStorage.getItem("paymentMethod");
+    const savedType = localStorage.getItem("onlinePaymentType");
+    if (savedMethod) setPaymentMethod(savedMethod);
+    if (savedType) setOnlinePaymentType(savedType);
+  }, []);
+
+  // Save payment method and type whenever they change
+  useEffect(() => {
+    if (paymentMethod) {
+      localStorage.setItem("paymentMethod", paymentMethod);
+    } else {
+      localStorage.removeItem("paymentMethod");
+    }
+
+    if (onlinePaymentType) {
+      localStorage.setItem("onlinePaymentType", onlinePaymentType);
+    } else {
+      localStorage.removeItem("onlinePaymentType");
+    }
+  }, [paymentMethod, onlinePaymentType]);
 
   const availableProducts = products
     ? products.map((p) => ({
@@ -121,6 +150,7 @@ export default function AddOrderPage() {
         name: p.name,
         description: p.description || "",
         price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
+        quantity: p.quantity || 0,
       }))
     : mockProducts;
 
@@ -130,59 +160,46 @@ export default function AddOrderPage() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const validateField = async (
-    fieldName: keyof FormErrors,
-    value: string | CartItem[]
-  ) => {
-    try {
-      await (
-        yup.reach(orderValidationSchema, fieldName) as yup.Schema
-      ).validate(value);
-      setErrors((prev) => ({ ...prev, [fieldName]: undefined }));
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setErrors((prev) => ({ ...prev, [fieldName]: error.message }));
-      }
-    }
+  // Check available stock for a product
+  const getAvailableStock = (productId: string): number => {
+    const product = availableProducts.find((p) => p.id === productId);
+    return product?.quantity || 0;
   };
 
-  const isCustomerDetailsValid = () => {
-    return (
-      customerName.trim().length >= 2 &&
-      customerPhone.trim().length > 0 &&
-      !errors.customerName &&
-      !errors.customerPhone
-    );
-  };
-
+  // Add product to cart with stock validation
   const addToCart = (product: Product) => {
-    if (!isCustomerDetailsValid()) {
-      if (!customerName.trim()) {
-        setErrors((prev) => ({
-          ...prev,
-          customerName: "Please enter customer name before adding products",
-        }));
-      }
-      if (!customerPhone.trim()) {
-        setErrors((prev) => ({
-          ...prev,
-          customerPhone: "Please enter customer phone before adding products",
-        }));
-      }
+    const availableStock = getAvailableStock(product.id);
+
+    // Check if product is out of stock
+    if (availableStock <= 0) {
+      toast.error(`${product.name} is out of stock`);
       return;
     }
 
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.id === product.id);
+      
       if (existingItem) {
+        // Check if adding one more exceeds available stock
+        if (existingItem.quantity >= availableStock) {
+          toast.error(`Cannot add more. Only ${availableStock} units available`);
+          return prev;
+        }
+        
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      
+      // Add new item to cart with maxStock tracking
+      return [
+        ...prev,
+        { ...product, quantity: 1, maxStock: availableStock },
+      ];
     });
+    
     setSearchQuery("");
     setShowSuggestions(false);
     if (errors.cartItems) {
@@ -192,25 +209,30 @@ export default function AddOrderPage() {
 
   const updateQuantity = (id: string, change: number) => {
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + change) }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === id) {
+          const newQuantity = item.quantity + change;
+          const availableStock = getAvailableStock(id);
+          
+          // Prevent going below 1
+          if (newQuantity < 1) return item;
+          
+          // Prevent exceeding available stock
+          if (newQuantity > availableStock) {
+            toast.error(`Only ${availableStock} units available`);
+            return item;
+          }
+          
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      })
     );
   };
 
   const removeFromCart = (id: string) => {
     const newCartItems = cartItems.filter((item) => item.id !== id);
     setCartItems(newCartItems);
-
-    // Validate cart after removal
-    if (newCartItems.length === 0) {
-      setErrors((prev) => ({
-        ...prev,
-        cartItems: "Please add at least one product to the cart",
-      }));
-    }
   };
 
   const total = cartItems.reduce(
@@ -220,14 +242,27 @@ export default function AddOrderPage() {
 
   const handleSaveOrder = async () => {
     try {
-      // Validate all fields
+      // Validate all fields when saving
       const formData = {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         cartItems: cartItems,
+        paymentMethod: paymentMethod,
+        onlinePaymentType: onlinePaymentType,
       };
 
       await orderValidationSchema.validate(formData, { abortEarly: false });
+
+      // Double-check stock availability before submitting
+      for (const item of cartItems) {
+        const availableStock = getAvailableStock(item.id);
+        if (item.quantity > availableStock) {
+          toast.error(
+            `${item.name}: Only ${availableStock} units available, but you're trying to order ${item.quantity}`
+          );
+          return;
+        }
+      }
 
       setErrors({});
 
@@ -241,16 +276,46 @@ export default function AddOrderPage() {
         customerName: formData.customerName,
         phone: formData.customerPhone,
         orderItems,
+        paymentMethod: formData.paymentMethod,
+        onlinePaymentType: formData.onlinePaymentType || undefined,
       };
 
+      // Submit order
       await addOrder(orderPayload);
 
+      // ✅ Update product quantities in the database
+      const updatePromises = cartItems.map(async (item) => {
+        const product = availableProducts.find((p) => p.id === item.id);
+        if (product) {
+          const newQuantity = product.quantity - item.quantity;
+          try {
+            await updateProduct({
+              id: parseInt(item.id),
+              quantity: newQuantity,
+            });
+          } catch (error) {
+            console.error(`Failed to update quantity for product ${item.id}:`, error);
+          }
+        }
+      });
+
+      // Wait for all quantity updates to complete
+      await Promise.all(updatePromises);
+
+      // Clear all form data and localStorage after successful submission
       setCustomerName("");
       setCustomerPhone("");
       setCartItems([]);
       setSearchQuery("");
       setShowSuggestions(false);
+      setPaymentMethod("");
+      setOnlinePaymentType("");
       setErrors({});
+
+      // Clear localStorage
+      localStorage.removeItem("cartItems");
+      localStorage.removeItem("paymentMethod");
+      localStorage.removeItem("onlinePaymentType");
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         const validationErrors: FormErrors = {};
@@ -271,7 +336,9 @@ export default function AddOrderPage() {
   const handleCustomerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setCustomerName(value);
-    validateField("customerName", value.trim());
+    if (errors.customerName) {
+      setErrors((prev) => ({ ...prev, customerName: undefined }));
+    }
   };
 
   const handleCustomerPhoneChange = (
@@ -279,14 +346,16 @@ export default function AddOrderPage() {
   ) => {
     const value = e.target.value;
     setCustomerPhone(value);
-    validateField("customerPhone", value.trim());
+    if (errors.customerPhone) {
+      setErrors((prev) => ({ ...prev, customerPhone: undefined }));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 md:p-6 border2">
+    <div className="min-h-screen bg-gray-50 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-center justify-between p-2 md:p-4 bg-white rounded-lg">
-          <div className="flex items-center gap-2 ">
+          <div className="flex items-center gap-2">
             <Link
               href="/dashboard/order"
               className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -383,121 +452,153 @@ export default function AddOrderPage() {
                       id="productSearch"
                       type="text"
                       placeholder={
-                        !isCustomerDetailsValid()
-                          ? "Please enter customer details first"
-                          : isFetchingProducts
+                        isFetchingProducts
                           ? "Loading products..."
                           : "Search product"
                       }
                       value={searchQuery}
                       onChange={(e) => {
-                        if (!isCustomerDetailsValid()) return;
                         setSearchQuery(e.target.value);
                         setShowSuggestions(e.target.value.length > 0);
                       }}
                       onFocus={() => {
-                        if (!isCustomerDetailsValid()) return;
                         setShowSuggestions(searchQuery.length > 0);
                       }}
                       className="pl-10 w-full"
-                      disabled={
-                        isAddingOrder ||
-                        isFetchingProducts ||
-                        !isCustomerDetailsValid()
-                      }
+                      disabled={isAddingOrder || isFetchingProducts}
                     />
                   </div>
 
-                  {showSuggestions &&
-                    filteredProducts.length > 0 &&
-                    isCustomerDetailsValid() && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {filteredProducts.map((product) => (
-                          <button
-                            key={product.id}
-                            onClick={() => addToCart(product)}
-                            className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                            disabled={isAddingOrder}
-                          >
-                            <div className="font-medium text-gray-900">
-                              {product.name}
+                  {showSuggestions && filteredProducts.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {filteredProducts.map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => addToCart(product)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={isAddingOrder || product.quantity <= 0}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">
+                                {product.name}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {product.description}
+                              </div>
+                              <div className="text-sm text-gray-800 font-medium mt-1">
+                                ₦{product.price.toFixed(2)}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              {product.description}
+                            <div className="text-right ml-4">
+                              {product.quantity > 0 ? (
+                                <span className="text-xs text-green-600 font-medium">
+                                  {product.quantity} in stock
+                                </span>
+                              ) : (
+                                <span className="text-xs text-red-600 font-medium">
+                                  Out of stock
+                                </span>
+                              )}
                             </div>
-                            <div className="text-sm text-gray-800 font-medium">
-                              ₦{product.price.toFixed(2)}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {showSuggestions &&
                     filteredProducts.length === 0 &&
-                    searchQuery.length > 0 &&
-                    isCustomerDetailsValid() && (
+                    searchQuery.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
                         <div className="px-4 py-3 text-sm text-gray-500">
                           No products found
                         </div>
                       </div>
                     )}
+                </div>
 
-                  {!isCustomerDetailsValid() && (
-                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                      <div className="flex items-center">
-                        <div className="text-amber-600 text-sm">
-                          <strong>Complete customer details first:</strong>
-                          <ul className="mt-1 ml-4 list-disc text-xs">
-                            {!customerName.trim() && (
-                              <li>Enter customer name</li>
-                            )}
-                            {!customerPhone.trim() && (
-                              <li>Enter customer phone number</li>
-                            )}
-                            {errors.customerName && (
-                              <li>Fix customer name error</li>
-                            )}
-                            {errors.customerPhone && (
-                              <li>Fix phone number error</li>
-                            )}
-                          </ul>
-                        </div>
-                      </div>
+                {/* Payment Section */}
+                <div className="mt-6 space-y-4 border-t border-gray-200 pt-4">
+                  <div>
+                    <Label
+                      htmlFor="paymentMethod"
+                      className="text-sm font-medium text-gray-700 mb-2 block"
+                    >
+                      Payment Method
+                    </Label>
+                    <select
+                      id="paymentMethod"
+                      value={paymentMethod}
+                      onChange={(e) => {
+                        setPaymentMethod(e.target.value);
+                        if (e.target.value !== "online")
+                          setOnlinePaymentType("");
+                        if (errors.paymentMethod) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            paymentMethod: undefined,
+                          }));
+                        }
+                      }}
+                      className={`w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 ${
+                        errors.paymentMethod
+                          ? "border-red-500 focus:ring-red-500"
+                          : ""
+                      }`}
+                      disabled={isAddingOrder}
+                    >
+                      <option value="">Select payment method</option>
+                      <option value="offline">Offline (Cash)</option>
+                      <option value="online">Online</option>
+                    </select>
+                    {errors.paymentMethod && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.paymentMethod}
+                      </p>
+                    )}
+                  </div>
+
+                  {paymentMethod === "online" && (
+                    <div>
+                      <Label
+                        htmlFor="onlinePaymentType"
+                        className="text-sm font-medium text-gray-700 mb-2 block"
+                      >
+                        Online Payment Type
+                      </Label>
+                      <select
+                        id="onlinePaymentType"
+                        value={onlinePaymentType}
+                        onChange={(e) => {
+                          setOnlinePaymentType(e.target.value);
+                          if (errors.onlinePaymentType) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              onlinePaymentType: undefined,
+                            }));
+                          }
+                        }}
+                        className={`w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 ${
+                          errors.onlinePaymentType
+                            ? "border-red-500 focus:ring-red-500"
+                            : ""
+                        }`}
+                        disabled={isAddingOrder}
+                      >
+                        <option value="">Select payment type</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="bank">Bank</option>
+                        <option value="card_payment">Card Payment</option>
+                      </select>
+                      {errors.onlinePaymentType && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.onlinePaymentType}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
-
-                <button
-                  className={`mt-3 text-sm font-medium flex items-center gap-1 ${
-                    isCustomerDetailsValid()
-                      ? "text-blue-600 hover:text-blue-700"
-                      : "text-gray-400 cursor-not-allowed"
-                  } disabled:opacity-50`}
-                  disabled={isAddingOrder || !isCustomerDetailsValid()}
-                  onClick={() => {
-                    if (!isCustomerDetailsValid()) {
-                      if (!customerName.trim()) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          customerName:
-                            "Please enter customer name before adding products",
-                        }));
-                      }
-                      if (!customerPhone.trim()) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          customerPhone:
-                            "Please enter customer phone before adding products",
-                        }));
-                      }
-                    }
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add custom product
-                </button>
               </div>
             </div>
           </div>
@@ -507,106 +608,118 @@ export default function AddOrderPage() {
               Cart Summary
             </h2>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm font-medium text-gray-700 pb-2">
-                <span>Products</span>
-                <span>PRICE/NGN</span>
-              </div>
-
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div
-                    key={`${item.id}-${Math.random()}`}
-                    className="space-y-2"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {item.description}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium text-gray-900">
-                          ₦{item.price.toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">QTY</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
-                            disabled={isAddingOrder}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="w-8 text-center text-sm">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
-                            disabled={isAddingOrder}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                        disabled={isAddingOrder}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {cartItems.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">No products added yet</div>
-                  {errors.cartItems && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.cartItems}
-                    </p>
-                  )}
+            {cartItems.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-sm font-medium text-gray-700 pb-2">
+                  <span>Products</span>
+                  <span>PRICE/NGN</span>
                 </div>
-              )}
 
-              {cartItems.length > 0 && (
-                <>
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="flex justify-between items-center text-lg font-semibold">
-                      <span>Total:</span>
-                      <span>₦{total.toFixed(2)}</span>
-                    </div>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {cartItems.map((item) => {
+                    const availableStock = getAvailableStock(item.id);
+                    const isLowStock = item.quantity >= availableStock;
+                    
+                    return (
+                      <div key={item.id} className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">
+                              {item.name}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {item.description}
+                            </p>
+                            {isLowStock && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <AlertCircle className="w-3 h-3 text-amber-600" />
+                                <span className="text-xs text-amber-600">
+                                  Max quantity reached
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-gray-900">
+                              ₦{item.price.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">QTY</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => updateQuantity(item.id, -1)}
+                                className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50"
+                                disabled={isAddingOrder}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="w-8 text-center text-sm">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.id, 1)}
+                                className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isAddingOrder || isLowStock}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                            disabled={isAddingOrder}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border-t border-gray-200 pt-4 space-y-4">
+                  <div className="flex justify-between items-center text-lg font-semibold">
+                    <span>Total:</span>
+                    <span>₦{total.toFixed(2)}</span>
                   </div>
+
+                  {errors.cartItems && (
+                    <p className="text-red-500 text-sm">{errors.cartItems}</p>
+                  )}
 
                   <Button
                     onClick={handleSaveOrder}
-                    disabled={isAddingOrder}
+                    disabled={isAddingOrder || cartItems.length === 0}
                     className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isAddingOrder ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Adding Order...
+                        Processing Order...
                       </>
                     ) : (
                       "Save Order"
                     )}
                   </Button>
-                </>
-              )}
-            </div>
+
+                  {cartItems.length > 0 && !customerName.trim() && (
+                    <p className="text-sm text-amber-600 text-center">
+                      💡 Don't forget to fill customer details before saving
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>No items in cart</p>
+                <p className="text-sm mt-2">Add products to get started</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
