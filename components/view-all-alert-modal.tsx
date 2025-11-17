@@ -59,8 +59,6 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
     setCurrentPage(1)
   }
 
-  // Remove unused functions and variables
-  // Get available levels is removed since we have fixed 3 options
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>

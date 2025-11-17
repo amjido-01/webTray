@@ -9,6 +9,7 @@ import {
   Loader2,
   ChevronRight,
   AlertCircle,
+  PlusIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { useProduct } from "@/hooks/use-product";
 import * as yup from "yup";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ReusableModal } from "@/components/reuseable-modal";
 
 interface Product {
   id: string;
@@ -80,7 +82,7 @@ export default function AddOrderPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [paymentMethod, setPaymentMethod] = useState("");
   const [onlinePaymentType, setOnlinePaymentType] = useState("");
-
+  const [viewAllModal, setViewAllModal] = useState(false);
   const { addOrder, isAddingOrder, addOrderError } = useOrder();
   const { products, isFetchingProducts, updateProduct } = useProduct();
 
@@ -153,6 +155,7 @@ export default function AddOrderPage() {
         quantity: p.quantity || 0,
       }))
     : mockProducts;
+    console.log(availableProducts)
 
   const filteredProducts = availableProducts.filter(
     (product) =>
@@ -178,28 +181,27 @@ export default function AddOrderPage() {
 
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.id === product.id);
-      
+
       if (existingItem) {
         // Check if adding one more exceeds available stock
         if (existingItem.quantity >= availableStock) {
-          toast.error(`Cannot add more. Only ${availableStock} units available`);
+          toast.error(
+            `Cannot add more. Only ${availableStock} units available`
+          );
           return prev;
         }
-        
+
         return prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      
+
       // Add new item to cart with maxStock tracking
-      return [
-        ...prev,
-        { ...product, quantity: 1, maxStock: availableStock },
-      ];
+      return [...prev, { ...product, quantity: 1, maxStock: availableStock }];
     });
-    
+
     setSearchQuery("");
     setShowSuggestions(false);
     if (errors.cartItems) {
@@ -213,16 +215,16 @@ export default function AddOrderPage() {
         if (item.id === id) {
           const newQuantity = item.quantity + change;
           const availableStock = getAvailableStock(id);
-          
+
           // Prevent going below 1
           if (newQuantity < 1) return item;
-          
+
           // Prevent exceeding available stock
           if (newQuantity > availableStock) {
             toast.error(`Only ${availableStock} units available`);
             return item;
           }
-          
+
           return { ...item, quantity: newQuantity };
         }
         return item;
@@ -294,7 +296,10 @@ export default function AddOrderPage() {
               quantity: newQuantity,
             });
           } catch (error) {
-            console.error(`Failed to update quantity for product ${item.id}:`, error);
+            console.error(
+              `Failed to update quantity for product ${item.id}:`,
+              error
+            );
           }
         }
       });
@@ -518,8 +523,19 @@ export default function AddOrderPage() {
                     )}
                 </div>
 
+                <div>
+                  <Button
+                    onClick={() => setViewAllModal(true)}
+                    className="text-[#365BEB] text-[12px] leading-[100%] font-normal cursor-pointer"
+                    variant="link"
+                  >
+                    <PlusIcon />
+                    View Products
+                  </Button>
+                </div>
+
                 {/* Payment Section */}
-                <div className="mt-6 space-y-4 border-t border-gray-200 pt-4">
+                <div className="mt-4 space-y-4 border-t border-gray-200 pt-4">
                   <div>
                     <Label
                       htmlFor="paymentMethod"
@@ -619,7 +635,7 @@ export default function AddOrderPage() {
                   {cartItems.map((item) => {
                     const availableStock = getAvailableStock(item.id);
                     const isLowStock = item.quantity >= availableStock;
-                    
+
                     return (
                       <div key={item.id} className="space-y-2">
                         <div className="flex justify-between items-start">
@@ -723,6 +739,23 @@ export default function AddOrderPage() {
           </div>
         </div>
       </div>
+      <ReusableModal
+        isOpen={viewAllModal}
+        onOpenChange={setViewAllModal}
+        title="All Products"
+        placeholder="Search product..."
+        items={availableProducts}
+        renderItem={(item) => (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{item.name}</p>
+              <p className="text-sm text-gray-500">
+                {item.quantity} Total Products
+              </p>
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }

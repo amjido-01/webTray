@@ -6,6 +6,7 @@ import { StockAlertsModal } from "./view-all-alert-modal";
 import { useCategory } from "@/hooks/use-category";
 import { useProduct } from "@/hooks/use-product";
 import { useState } from "react";
+import { ReusableModal } from "./reuseable-modal";
 
 const getStockLevel = (quantity: number) => {
   if (quantity === 0) return "Out of Stock";
@@ -29,11 +30,15 @@ export function StockAlertTable() {
   const lowProducts = products?.filter((item) => item.quantity < 10);
 
   // Transform lowProducts into the format expected by StockAlertsModal
-  const stockAlerts = lowProducts?.map((product) => ({
-    name: product.name,
-    units: product.quantity,
-    level: getStockLevel(product.quantity) as "Critical" | "Low Stock" | "Medium Stock",
-  })) || [];
+  const stockAlerts =
+    lowProducts?.map((product) => ({
+      name: product.name,
+      units: product.quantity,
+      level: getStockLevel(product.quantity) as
+        | "Critical"
+        | "Low Stock"
+        | "Medium Stock",
+    })) || [];
 
   if (!lowProducts || lowProducts.length === 0) {
     return null;
@@ -83,13 +88,31 @@ export function StockAlertTable() {
           ))}
         </div>
       </CardContent>
-      
+
       {/* Pass the required props */}
       <StockAlertsModal 
         isOpen={viewAllModal} 
         onOpenChange={setViewAllModal}
         stockAlerts={stockAlerts}
       />
+      {/* <ReusableModal
+        isOpen={viewAllModal}
+        onOpenChange={setViewAllModal}
+        title="Stock Alerts"
+        placeholder="Search stock items..."
+        items={stockAlerts}
+        renderItem={(item) => (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{item.name}</p>
+              <p className="text-sm text-gray-500">{item.units} units left</p>
+            </div>
+            <Badge className={getStockLevel(item.level)}>
+              {item.level}
+            </Badge>
+          </div>
+        )}
+      /> */}
     </Card>
   );
 }

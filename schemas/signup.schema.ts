@@ -8,12 +8,15 @@ export const signupSchema = yup.object().shape({
   
   countryCode: yup.string().required("Country code is required"),
   
-  phone: yup
-    .string()
-    .required("Phone Number is required")
-    .matches(/^\d+$/, "Phone number must contain only digits")
-    .min(6, "Phone number must be at least 6 digits")
-    .max(15, "Phone number cannot exceed 15 digits"),
+phone: yup
+  .string()
+  .trim()
+  .transform((value) => value.replace(/\s+/g, "")) 
+  .required("Phone Number is required")
+  .matches(/^\d+$/, "Phone number must contain only digits")
+  .min(6, "Phone number must be at least 6 digits")
+  .max(15, "Phone number cannot exceed 15 digits"),
+
   
   email: yup
     .string()
