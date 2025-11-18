@@ -3,6 +3,7 @@ import Image from "next/image"
 import hero from "@/public/hero.png"
 import confeti_right from "@/public/confeti_right.svg"
 import confeti_left from "@/public/confeti_left.svg"
+import Link from "next/link"
 
 export default function Hero() {
   return (
@@ -12,16 +13,22 @@ export default function Hero() {
           Your Business, <span className="bg-gradient-to-br from-[#365BEB] to-[#9233EA] bg-clip-text text-transparent">Simplified</span>
         </h1>
         <p className="text-[16px] mt-[24px] font-normal leading-6 text-[#4D4D4D] max-w-3xl mx-auto">
-          WebTray is the all-in-one SaaS platform for restaurants and retail shops. Manage inventory, create your
+          WebTray is the all-in-one <Link href="/signin" className="">SaaS</Link> platform for restaurants and retail shops. Manage inventory, create your
           online store, and grow your business with ease.
         </p>
         <div className="flex mt-[40px] flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" className="bg-[#111827] hover:bg-[#30343e] rounded-full text-white px-[16px] py-[14px]">
-            Sign Up for Free
+            Join Waitlist
           </Button>
           <Button size="lg" variant="outline" className="rounded-full text-[16px] text-[#111827] px-[16px] py-[14px]">
             Contact for Enquiries
           </Button>
+          {/* <Button size="lg" className="bg-[#111827] hover:bg-[#30343e] rounded-full text-white px-[16px] py-[14px]">
+            Sign Up for Free
+          </Button>
+          <Button size="lg" variant="outline" className="rounded-full text-[16px] text-[#111827] px-[16px] py-[14px]">
+            Contact for Enquiries
+          </Button> */}
         </div>
 
         <Image className="absolute w-[300px] h-[300px] -left-5 top-22" src={confeti_left} alt="confeti" />

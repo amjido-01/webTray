@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface StockAlert {
@@ -40,6 +44,7 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [filterOpen, setFilterOpen] = useState(false)
   const itemsPerPage = 8
 
   // Filter alerts based on search term and selected level (only one at a time)
@@ -57,8 +62,14 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
   // Reset to page 1 when filters change
   const handleApplyFilters = () => {
     setCurrentPage(1)
+    setFilterOpen(false)
   }
 
+  const handleClearFilters = () => {
+    setSelectedLevels([])
+    setCurrentPage(1)
+    setFilterOpen(false)
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -87,25 +98,25 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
             </div>
 
             {/* Category Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
+            <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+              <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="rounded-full flex items-center gap-2">
                   {selectedLevels.length > 0 ? selectedLevels[0] : "All Levels"}
                   <ChevronDown className="w-4 h-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-3" align="end">
-                <div className="space-y-3">
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 p-3" align="end" onInteractOutside={(e) => e.preventDefault()}>
+                <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
                   {["Critical", "Low Stock", "Medium Stock"].map((level) => (
                     <div key={level} className="flex items-center gap-2">
                       <Checkbox
                         className="w-5 h-5 border-[1.5px] border-black"
                         id={level}
                         checked={selectedLevels.includes(level)}
-                        onCheckedChange={() => {
+                        onCheckedChange={(checked) => {
                           // Only allow single selection
                           setSelectedLevels(
-                            selectedLevels.includes(level) ? [] : [level]
+                            checked ? [level] : []
                           )
                         }}
                       />
@@ -121,10 +132,7 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
                 <div className="flex gap-2 mt-4">
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setSelectedLevels([])
-                      setCurrentPage(1)
-                    }}
+                    onClick={handleClearFilters}
                     className="flex-1 rounded-full text-xs"
                     size="sm"
                   >
@@ -138,8 +146,8 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
                     Apply
                   </Button>
                 </div>
-              </PopoverContent>
-            </Popover>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Active Filter */}

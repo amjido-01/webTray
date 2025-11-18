@@ -60,6 +60,17 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
             </nav>
             
             <div className="hidden md:flex items-center space-x-4">
+             
+              <Button 
+                size="lg" 
+                className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
+               
+              ><Link href="/">
+                 Join Waitlist
+              </Link>
+              </Button>
+            </div>
+            {/* <div className="hidden md:flex items-center space-x-4">
               <Button 
                 size="lg" 
                 variant="link" 
@@ -77,7 +88,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 Get Started for Free
               </Link>
               </Button>
-            </div>
+            </div> */}
             
             <button 
               className="md:hidden p-2 text-[#4D4D4D] z-[60]" 
@@ -129,20 +140,27 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 </nav>
                 
                 <div className="flex flex-col space-y-3 pt-4 border-t border-gray-200">
-                  <Button 
+                  {/* <Button 
                     size="lg" 
                     variant="outline" 
                     className="w-full font-medium text-[16px]"
                     onClick={() => handleTabClick('signin')}
                   >
                     Sign In
-                  </Button>
-                  <Button 
+                  </Button> */}
+                  {/* <Button 
                     size="lg" 
                     className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
                     onClick={() => handleTabClick('signup')}
                   >
                     Get Started for Free
+                  </Button> */}
+                  <Button 
+                    size="lg" 
+                    className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
+                    onClick={() => handleTabClick('/')}
+                  >
+                    Join Waitlist
                   </Button>
                 </div>
               </div>
