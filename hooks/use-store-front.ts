@@ -110,77 +110,125 @@ export const useStoreFront = () => {
     enabled: !!storeId,
   });
 
-  // ✅ Mutation for changing product visibility
-  const changeProductVisibilityMutation = useMutation({
-    mutationFn: async ({
-      productId,
-      visibility,
-      storeId,
-    }: ChangeProductVisibilityPayload) => {
-      const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
-        `/storefront/products/visibility`,
-        { productId, visibility },
-        { params: { storeId } }
+const changeProductVisibilityMutation = useMutation({
+  mutationFn: async ({
+    productId,
+    visibility,
+    storeId,
+  }: ChangeProductVisibilityPayload) => {
+    const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
+      `/storefront/products/visibility`,
+      { productId, visibility },
+      { params: { storeId } }
+    );
+    
+    if (data?.responseSuccessful) {
+      return data.responseBody.product;
+    }
+    throw new Error(
+      data?.responseMessage || "Failed to update product visibility"
+    );
+  },
+  // Add optimistic update
+  onMutate: async ({ productId, visibility, storeId }) => {
+    // Cancel outgoing refetches
+    await queryClient.cancelQueries({
+      queryKey: storeFrontKeys.products(storeId),
+    });
+
+    // Snapshot previous value
+    const previousProducts = queryClient.getQueryData<StoreProduct[]>(
+      storeFrontKeys.products(storeId)
+    );
+
+    // Optimistically update
+    if (previousProducts) {
+      queryClient.setQueryData<StoreProduct[]>(
+        storeFrontKeys.products(storeId),
+        previousProducts.map((p) =>
+          p.id === productId ? { ...p, visible: visibility } : p
+        )
       );
-      console.log(data)
+    }
 
-      if (data?.responseSuccessful) {
-        return data.responseBody.product;
-      }
-
-      throw new Error(
-        data?.responseMessage || "Failed to update product visibility"
+    return { previousProducts };
+  },
+  onSuccess: (updatedProduct) => {
+    toast.success("Product visibility updated successfully");
+    // Invalidate to ensure consistency
+    queryClient.invalidateQueries({
+      queryKey: storeFrontKeys.products(updatedProduct.storeId),
+    });
+  },
+  onError: (error: Error, variables, context) => {
+    // Rollback on error
+    if (context?.previousProducts) {
+      queryClient.setQueryData(
+        storeFrontKeys.products(variables.storeId),
+        context.previousProducts
       );
-    },
+    }
+    toast.error(error.message || "Error updating product visibility");
+  },
+});
 
-    onSuccess: (updatedProduct) => {
-      toast.success("Product visibility updated successfully");
+const changeProductFeaturedMutation = useMutation({
+  mutationFn: async ({
+    productId,
+    featured,
+    storeId,
+  }: ChangeProductFeaturedPayload) => {
+    const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
+      `/storefront/products/featured`,
+      { productId, featured },
+      { params: { storeId } }
+    );
+    
+    if (data?.responseSuccessful) {
+      return data.responseBody.product;
+    }
+    throw new Error(
+      data?.responseMessage || "Failed to update product featured status"
+    );
+  },
+  // Add optimistic update
+  onMutate: async ({ productId, featured, storeId }) => {
+    await queryClient.cancelQueries({
+      queryKey: storeFrontKeys.products(storeId),
+    });
 
-      // ✅ Refresh products list in cache
-      queryClient.invalidateQueries({
-        queryKey: storeFrontKeys.products(updatedProduct.storeId),
-      });
-    },
+    const previousProducts = queryClient.getQueryData<StoreProduct[]>(
+      storeFrontKeys.products(storeId)
+    );
 
-    onError: (error: Error) => {
-      toast.error(error.message || "Error updating product visibility");
-    },
-  });
-  const changeProductFeaturedMutation = useMutation({
-    mutationFn: async ({
-      productId,
-      featured,
-      storeId,
-    }: ChangeProductFeaturedPayload) => {
-      const { data } = await api.put<ApiResponse<{ product: StoreProduct }>>(
-        `/storefront/products/featured`,
-        { productId, featured },
-        { params: { storeId } }
+    if (previousProducts) {
+      queryClient.setQueryData<StoreProduct[]>(
+        storeFrontKeys.products(storeId),
+        previousProducts.map((p) =>
+          p.id === productId ? { ...p, feature: featured } : p
+        )
       );
-      console.log(data)
+    }
 
-      if (data?.responseSuccessful) {
-        return data.responseBody.product;
-      }
-
-      throw new Error(
-        data?.responseMessage || "Failed to update product featured"
+    return { previousProducts };
+  },
+  onSuccess: (updatedProduct) => {
+    toast.success("Product featured status updated successfully");
+    queryClient.invalidateQueries({
+      queryKey: storeFrontKeys.products(updatedProduct.storeId),
+    });
+  },
+  onError: (error: Error, variables, context) => {
+    if (context?.previousProducts) {
+      queryClient.setQueryData(
+        storeFrontKeys.products(variables.storeId),
+        context.previousProducts
       );
-    },
+    }
+    toast.error(error.message || "Error updating product featured status");
+  },
+});
 
-    onSuccess: (updatedProduct) => {
-      toast.success("Product featured updated successfully");
-
-      // ✅ Refresh products list in cache
-      queryClient.invalidateQueries({
-        queryKey: storeFrontKeys.products(updatedProduct.storeId),
-      });
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message || "Error updating product visibility");
-    },
-  });
 
   const changeProductVisibility = async (payload: ChangeProductVisibilityPayload) => {
     return changeProductVisibilityMutation.mutateAsync(payload);

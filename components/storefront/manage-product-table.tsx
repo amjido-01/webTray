@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Search, Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -302,49 +302,67 @@ export default function ManageProductTable() {
     },
   });
 
-  // Handler for visibility toggle
-  const handleToggleVisible = useCallback(
-    async (productId: number, currentVisibility: boolean) => {
-      if (!storeId || isUpdatingProductVisibility) return;
+ const pendingOperations = useRef<Set<number>>(new Set());
 
-      setUpdatingProductId(productId);
-      try {
-        await changeProductVisibility({
-          productId,
-          visibility: !currentVisibility,
-          storeId,
-        });
-      } catch (error) {
-        // Error already handled by the hook with toast
-        console.error("Failed to toggle visibility:", error);
-      } finally {
-        setUpdatingProductId(null);
-      }
-    },
-    [storeId, changeProductVisibility, isUpdatingProductVisibility]
-  );
+// Handler for visibility toggle - FIXED VERSION
+const handleToggleVisible = useCallback(
+  async (productId: number, currentVisibility: boolean) => {
+    if (!storeId) return;
+    
+    // Prevent concurrent operations on same product
+    if (pendingOperations.current.has(productId)) {
+      console.log("Operation already in progress for product:", productId);
+      return;
+    }
 
-  // Handler for feature toggle (TODO: Add API endpoint)
-  const handleToggleFeature = useCallback(
-    async (productId: number, currentFeature: boolean) => {
-      if (!storeId || isUpdatingProductFeatured) return;
-      setUpdatingProductId(productId);
-      try {
-        await changeProductFeatured({
-          productId,
-          featured: !currentFeature,
-          storeId,
-        });
-      } catch (error) {
-        // Error already handled by the hook with toast
-        console.error("Failed to toggle visibility:", error);
-      } finally {
-        setUpdatingProductId(null);
-      }
-      // You'll need to add a similar mutation in useStoreFront hook
-    },
-    [storeId, changeProductFeatured, isUpdatingProductFeatured]
-  );
+    pendingOperations.current.add(productId);
+    setUpdatingProductId(productId);
+    
+    try {
+      await changeProductVisibility({
+        productId,
+        visibility: !currentVisibility,
+        storeId,
+      });
+    } catch (error) {
+      console.error("Failed to toggle visibility:", error);
+    } finally {
+      pendingOperations.current.delete(productId);
+      setUpdatingProductId(null);
+    }
+  },
+  [storeId, changeProductVisibility]
+);
+
+// Handler for feature toggle - FIXED VERSION
+const handleToggleFeature = useCallback(
+  async (productId: number, currentFeature: boolean) => {
+    if (!storeId) return;
+    
+    // Prevent concurrent operations on same product
+    if (pendingOperations.current.has(productId)) {
+      console.log("Operation already in progress for product:", productId);
+      return;
+    }
+
+    pendingOperations.current.add(productId);
+    setUpdatingProductId(productId);
+    
+    try {
+      await changeProductFeatured({
+        productId,
+        featured: !currentFeature,
+        storeId,
+      });
+    } catch (error) {
+      console.error("Failed to toggle feature:", error);
+    } finally {
+      pendingOperations.current.delete(productId);
+      setUpdatingProductId(null);
+    }
+  },
+  [storeId, changeProductFeatured]
+);
 
   const handleEdit = useCallback((productId: number) => {
     // Navigate to edit page or open edit modal
