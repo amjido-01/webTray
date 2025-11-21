@@ -83,6 +83,7 @@ export default function AddOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [onlinePaymentType, setOnlinePaymentType] = useState("");
   const [viewAllModal, setViewAllModal] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const { addOrder, isAddingOrder, addOrderError } = useOrder();
   const { products, isFetchingProducts, updateProduct } = useProduct();
 
@@ -155,7 +156,6 @@ export default function AddOrderPage() {
         quantity: p.quantity || 0,
       }))
     : mockProducts;
-    console.log(availableProducts)
 
   const filteredProducts = availableProducts.filter(
     (product) =>
@@ -356,6 +356,36 @@ export default function AddOrderPage() {
     }
   };
 
+  const handleProductSelect = (productId: string) => {
+    setSelectedProducts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAddSelectedProducts = () => {
+    let addedCount = 0;
+    selectedProducts.forEach((productId) => {
+      const product = availableProducts.find((p) => p.id === productId);
+      if (product && product.quantity > 0) {
+        addToCart(product);
+        addedCount++;
+      }
+    });
+    
+    if (addedCount > 0) {
+      toast.success(`${addedCount} product${addedCount > 1 ? 's' : ''} added to cart`);
+    }
+    
+    setSelectedProducts(new Set());
+    setViewAllModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -527,6 +557,7 @@ export default function AddOrderPage() {
                   <Button
                     onClick={() => setViewAllModal(true)}
                     className="text-[#365BEB] text-[12px] leading-[100%] font-normal cursor-pointer"
+                    disabled={!customerName.trim() || !customerPhone.trim() || isAddingOrder}
                     variant="link"
                   >
                     <PlusIcon />
@@ -739,22 +770,59 @@ export default function AddOrderPage() {
           </div>
         </div>
       </div>
+      
       <ReusableModal
         isOpen={viewAllModal}
-        onOpenChange={setViewAllModal}
+        onOpenChange={(open) => {
+          setViewAllModal(open);
+          if (!open) {
+            setSelectedProducts(new Set());
+          }
+        }}
         title="All Products"
         placeholder="Search product..."
         items={availableProducts}
         renderItem={(item) => (
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">{item.name}</p>
-              <p className="text-sm text-gray-500">
-                {item.quantity} Total Products
-              </p>
+          <div className="flex items-center justify-between gap-4 py-2">
+            <div className="flex items-center gap-3 flex-1">
+              <input
+                type="checkbox"
+                checked={selectedProducts.has(item.id)}
+                onChange={() => handleProductSelect(item.id)}
+                disabled={item.quantity <= 0}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">{item.name}</p>
+                <p className="text-sm text-gray-500">
+                  {item.quantity > 0 ? (
+                    <span className="text-green-600">{item.quantity} in stock</span>
+                  ) : (
+                    <span className="text-red-600">Out of stock</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold text-gray-900">₦{item.price.toFixed(2)}</p>
             </div>
           </div>
         )}
+        footerContent={
+          selectedProducts.size > 0 ? (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-gray-600">
+                {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
+              </p>
+              <Button
+                onClick={handleAddSelectedProducts}
+                className="bg-gray-900 hover:bg-gray-800 text-white"
+              >
+                Add to Cart
+              </Button>
+            </div>
+          ) : null
+        }
       />
     </div>
   );

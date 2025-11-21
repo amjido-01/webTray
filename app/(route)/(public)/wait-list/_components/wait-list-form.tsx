@@ -130,7 +130,7 @@ export default function WaitlistForm() {
             </Label>
             <Input
               {...register("phone")}
-              placeholder="Enter your phone number"
+              placeholder="Enter your WhatsApp number"
               className="h-11 placeholder:text-[#676767] text-[14px] font-normal border-2"
             />
             {errors.phone && (

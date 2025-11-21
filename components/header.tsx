@@ -65,7 +65,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 size="lg" 
                 className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
                
-              ><Link href="/">
+              ><Link href="/wait-list">
                  Join Waitlist
               </Link>
               </Button>

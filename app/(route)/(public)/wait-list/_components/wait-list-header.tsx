@@ -24,7 +24,9 @@ export default function Header() {
             <div 
               className="flex items-center z-[60] cursor-pointer" 
             >
+              <Link href="/">
               <Image src="/webtraylogo.png" width={140} height={40} alt="logo" />
+              </Link>
             </div>
             
             <nav className="hidden md:flex text-[#4D4D4D] space-x-[20px]">
@@ -54,7 +56,7 @@ export default function Header() {
                 className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
                
               ><Link href="/">
-                 Join Waitlist
+                 Home
               </Link>
               </Button>
             </div>
