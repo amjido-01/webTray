@@ -10,6 +10,9 @@ import {
   ChevronRight,
   AlertCircle,
   PlusIcon,
+  ChevronLeft,
+  MoveLeft,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -391,13 +394,13 @@ export default function AddOrderPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-center justify-between p-2 md:p-4 bg-white rounded-lg">
           <div className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4 text-black"/>
             <Link
               href="/dashboard/order"
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Orders
+              Back
             </Link>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
           </div>
           <span className="text-gray-900">New Order</span>
         </div>

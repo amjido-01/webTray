@@ -131,6 +131,8 @@ export function ManageStoreFrontHeader() {
         subtitle="Manage which products appear in your online store"
         onAddClick={handleAddProductDrawer}
         addLabel="Add Product"
+        showBackButton={true}
+        backButtonHref="/dashboard/storefront"
       />
       <ModalForm
         isOpen={isOpen}

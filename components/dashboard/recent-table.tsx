@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { useCategory } from "@/hooks/use-category";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function RecentOrdersTable() {
   const { categories } = useCategory();
@@ -63,7 +65,7 @@ export default function RecentOrdersTable() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-medium text-gray-800">Recent Orders</h1>
           
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          {/* <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-56 bg-white border border-gray-200 rounded-full h-10">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
@@ -75,7 +77,10 @@ export default function RecentOrdersTable() {
                 </SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
+          <Link href="/dashboard/order">
+          <Button className="rounded-full flex items-center gap-2">Go to order</Button>
+          </Link>
         </div>
         
         <DataTable columns={columns} data={formattedOrders} />
