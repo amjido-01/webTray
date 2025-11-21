@@ -76,22 +76,32 @@ export const useStoreFront = () => {
     enabled: !!storeId,
   });
 
-  const storeProductsQuery = useQuery({
-    queryKey: storeFrontKeys.products(storeId),
-    queryFn: async (): Promise<StoreProduct[]> => {
-      const { data } = await api.get<ApiResponse<StoreProductsResponse>>(
-        `/storefront/products`,
-        {
-          params: { storeId },
-        }
-      );
-      if (data?.responseSuccessful) {
-        return data.responseBody.products;
+const storeProductsQuery = useQuery({
+  queryKey: storeFrontKeys.products(storeId),
+  queryFn: async (): Promise<StoreProduct[]> => {
+    const { data } = await api.get<ApiResponse<StoreProductsResponse>>(
+      `/storefront/products`,
+      {
+        params: { storeId },
       }
-      throw new Error(data?.responseMessage || "Failed to fetch store products");
-    },
-    enabled: !!storeId,
-  });
+    );
+
+    if (data?.responseSuccessful) {
+      const products = data.responseBody.products;
+
+      // 🔥 Sort newest first
+      return products.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
+    throw new Error(
+      data?.responseMessage || "Failed to fetch store products"
+    );
+  },
+  enabled: !!storeId,
+});
+
 
   const storeFrontInfoQuery = useQuery({
     queryKey: storeFrontKeys.info(storeId),
