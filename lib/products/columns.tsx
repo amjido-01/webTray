@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { getStatusColor, getStockStatus } from "./get-status";
+import { formatCurrency } from "../format-currency";
 
 export type Product = {
   id: number;
@@ -164,7 +165,7 @@ export const createColumns = (
     },
   },
   {
-    accessorKey: "price",
+    accessorKey: "formattedPrice",
     header: "Price ₦",
     cell: ({ row }) => {
       const product = row.original;
@@ -186,7 +187,7 @@ export const createColumns = (
               className="h-8 w-24"
             />
           ) : (
-            Number(product.price).toFixed(2)
+            formatCurrency(product.price)
           )}
         </div>
       );

@@ -19,6 +19,7 @@ import Link from "next/link";
 export default function RecentOrdersTable() {
   const { categories } = useCategory();
   const { orders, ordersError, isFetchingOrders } = useOrder();
+  console.log(orders)
   
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 

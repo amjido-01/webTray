@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Order } from "@/types";
 import { capitalizeFirstLetter } from "../capitalize";
 import { getOrderStatus, getStatusColor } from "./get-status";
+import { formatCurrency } from "../format-currency";
 
 
 
@@ -65,7 +66,7 @@ export const createColumns = (): ColumnDef<Order>[] => [
     header: "Total ₦",
     cell: ({ row }) => {
       const order = row.original;
-      return <div className="font-normal text-[16px] leading-[100%]">{Number(order.totalAmount).toFixed(2)}</div>;
+      return <div className="font-normal text-[16px] leading-[100%]">{formatCurrency(order.totalAmount)}</div>;
     },
   },
   {

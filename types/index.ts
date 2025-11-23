@@ -157,7 +157,7 @@ export type Order = {
   storeId: number;
   customerId: number;
   status: "pending" | "shipped" | "cancel" | "completed";
-  totalAmount: string;
+  totalAmount: number;
   createdAt: string;
   updatedAt: string;
   customer: Customer | null;

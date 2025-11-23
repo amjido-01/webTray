@@ -41,10 +41,10 @@ export function DataTable<TData, TValue>({
       sorting,
     },
   });
-    const currentPage = table.getState().pagination.pageIndex + 1;
+  const currentPage = table.getState().pagination.pageIndex + 1;
   const totalPages = table.getPageCount();
 
-   const getPageNumbers = () => {
+  const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
 
