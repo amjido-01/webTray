@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
+import { useWaitlist } from "@/hooks/use-wait-list";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import Image from "next/image";
-import alert from "@/public/alert.png"
+import alert from "@/public/alert.png";
 const waitlistSchema = yup.object().shape({
   fullname: yup.string().required("Full name is required"),
   business: yup.string().required("Business name is required"),
@@ -37,6 +37,8 @@ const waitlistSchema = yup.object().shape({
 type WaitlistFormData = yup.InferType<typeof waitlistSchema>;
 
 export default function WaitlistForm() {
+  const { joinWaitlist, isJoiningWaitlist, joinWaitlistSuccess } =
+    useWaitlist();
   const [open, setOpen] = useState(false);
   const {
     register,
@@ -49,15 +51,26 @@ export default function WaitlistForm() {
     mode: "onChange",
   });
 
-  const onSubmit = (data: WaitlistFormData) => {
-    console.log("Form Submitted:", data);
-    
-    // Show the success dialog
+const onSubmit = async (data: WaitlistFormData) => {
+  try {
+    await joinWaitlist({
+      fullName: data.fullname,
+      businessName: data.business,
+      businessType: data.product,
+      phone: data.phone,
+      email: data.email,
+      location: data.location,
+      how: data.sellingMethod,
+    });
+
+    // Show success dialog AFTER API success
     setOpen(true);
-    
-    // Optional: Reset form after submission
+
     // reset();
-  };
+  } catch (error) {
+    // error toast is automatically handled in the hook
+  }
+};
 
   const handleDialogClose = () => {
     setOpen(false);
@@ -199,10 +212,10 @@ export default function WaitlistForm() {
           <div className="flex justify-center items-center mt-[50px]">
             <Button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || isJoiningWaitlist}
               className="w-1/2 h-11 bg-gray-800 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Join the Waitlist
+              {isJoiningWaitlist ? "Submitting..." : "Join the Waitlist"}
             </Button>
           </div>
         </form>
@@ -211,10 +224,10 @@ export default function WaitlistForm() {
           <DialogContent className="max-w-md text-center py-10">
             <DialogHeader>
               <div className="text-5xl mb4">
-                <Image 
-                src={alert}
-                alt="alert"
-                className="w-[104px] h-[120px] mx-auto"
+                <Image
+                  src={alert}
+                  alt="alert"
+                  className="w-[104px] h-[120px] mx-auto"
                 />
               </div>
               <DialogTitle className="text-[24px] text-center font-extrabold leading-[34px] text-[#1A1A1A]">
