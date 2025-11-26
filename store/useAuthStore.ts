@@ -338,7 +338,7 @@ export const useAuthStore = create<AuthState>()(
           throw err;
         }
       },
-
+       // still thinking of a better way
       logout: async () => {
         set({ loading: true });
         try {

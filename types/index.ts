@@ -138,18 +138,19 @@ export type OrderItem = {
   };
 };
 
-export type Customer = {
+// @/types/index.ts
+export interface Customer {
   id: number;
   fullname: string;
   phone: string;
   email: string;
   address: string | null;
-  createdAt: string;
-  updatedAt: string;
   totalOrders: number;
   totalSpent: number;
-  status?: 'active' | 'inactive';  // Optional since it's not in API response
-};
+  createdAt: string;
+  updatedAt: string;
+  status: "active" | "inactive";
+}
 
 export type Order = {
   // Original API fields
