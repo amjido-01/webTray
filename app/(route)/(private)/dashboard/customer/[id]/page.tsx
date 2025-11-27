@@ -5,11 +5,13 @@ import { use } from "react";
 import { useCustomer } from "@/hooks/use-customer";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { useState } from "react";
-import { ChevronLeft, Mail, Phone, Calendar, ArrowLeft } from "lucide-react";
+import { Mail, Phone, Calendar, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { PageHeader } from "@/components/page-header";
+// import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/format-currency";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
   CardHeader,
@@ -27,15 +29,20 @@ export default function CustomerDetailPage({
 }: CustomerDetailPageProps) {
   // this is just like using await in server, but in client use handle all that for you since it a promise
   const { id } = use(params);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const tabFromUrl = searchParams.get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+
   const { customers, isLoading } = useCustomer();
-  const [activeTab, setActiveTab] = useState("overview");
+  // const [activeTab, setActiveTab] = useState("overview");
 
   if (isLoading) {
     return <TableSkeleton />;
   }
 
   const customer = customers?.find((c) => c.id.toString() === id);
-  console.log(customer);
 
   if (!customer) {
     return (
@@ -47,6 +54,12 @@ export default function CustomerDetailPage({
 
   const avgOrder =
     customer?.totalOrders > 0 ? customer?.totalSpent / customer.totalOrders : 0;
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+
+    router.push(`?tab=${tab}`, { scroll: false });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,7 +98,9 @@ export default function CustomerDetailPage({
           <div className="flex items-start gap-4">
             <Avatar className="w-16 h-16">
               <AvatarFallback className="text-lg font-semibold bg-gray-200 text-gray-700">
-                AB
+                {customer?.fullname
+                  ? customer.fullname.slice(0, 2).toUpperCase()
+                  : "NA"}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -125,13 +140,17 @@ export default function CustomerDetailPage({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[16px] font-bold mb-[8px] text-[#1A1A1A] leading-[100%]">{`₦ ${customer?.totalSpent}`}</p>
+              <p className="text-[16px] font-bold mb-[8px] text-[#1A1A1A] leading-[100%]">
+                {formatCurrency(customer?.totalSpent)}
+              </p>
               <p className="text-sm font-normal leading-[100%] text-[#4D4D4D]">
                 Total Spent
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[16px] font-bold text-[#1A1A1A] leading-[100%] mb-[8px]">{`₦ ${avgOrder}`}</p>
+              <p className="text-[16px] font-bold text-[#1A1A1A] leading-[100%] mb-[8px]">
+                {formatCurrency(avgOrder)}
+              </p>
               <p className="text-sm font-normal leading-[100%] text-[#4D4D4D]">
                 Avg. Order
               </p>
@@ -146,7 +165,7 @@ export default function CustomerDetailPage({
           {["overview", "orders", "activity", "preferences"].map((tab) => (
             <Button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`px-8 py-4 font-normal shadow-none text-[#343434] hover:bg-white text-[16px] capitalize transition-colors ${
                 activeTab === tab
                   ? "bg-white"
