@@ -19,6 +19,8 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import CustomerOrdersTable from "@/components/customer/customer-order-table";
+import CustomerActivityList from "@/components/customer/customer-activity-list";
 
 interface CustomerDetailPageProps {
   params: Promise<{ id: string }>;
@@ -264,14 +266,20 @@ export default function CustomerDetailPage({
           )}
 
           {activeTab === "orders" && (
-            <div className="text-center py-8 text-gray-600">
-              <p>Orders content goes here</p>
+            <div className="py-8">
+              <CustomerOrdersTable customerId={customer?.id} />
             </div>
           )}
 
           {activeTab === "activity" && (
-            <div className="text-center py-8 text-gray-600">
-              <p>Activity content goes here</p>
+            <div className="py-6 border border-gray-200 rounded-lg mx-6">
+              <div className="px-4 py-2">
+                <h2 className="text-[16px] font-semibold text-gray-900 mb4">
+                  Recent Activity
+                </h2>
+                <p className=" ">Customer interactions and activities</p>
+              </div>
+              <CustomerActivityList customerId={customer?.id} />
             </div>
           )}
 

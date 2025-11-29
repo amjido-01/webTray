@@ -7,11 +7,8 @@ import {
   Minus,
   Trash2,
   Loader2,
-  ChevronRight,
   AlertCircle,
   PlusIcon,
-  ChevronLeft,
-  MoveLeft,
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

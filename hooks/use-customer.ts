@@ -1,6 +1,6 @@
 // hooks/use-customer.ts
 import api from "@/lib/axios";
-import { ApiResponse, Customer, CustomerSummary } from "@/types";
+import { ApiResponse, Customer, CustomerSummary, Order } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -10,8 +10,14 @@ export interface CustomersResponse {
 
 export const customerKeys = {
   all: ["customers"] as const,
-  list: (storeId: string | number) => [...customerKeys.all, "list", storeId] as const,
-  summary: (storeId: string | number) => [...customerKeys.all, "summary", storeId] as const,
+  list: (storeId: string | number) =>
+    [...customerKeys.all, "list", storeId] as const,
+  summary: (storeId: string | number) =>
+    [...customerKeys.all, "summary", storeId] as const,
+  customer: (id: number, storeId: string | number) =>
+    [...customerKeys.all, "customer", id, storeId] as const,
+  orders: (id: number, storeId: string | number) =>
+    [...customerKeys.all, "orders", id, storeId] as const,
 };
 
 export const useCustomer = () => {
@@ -22,23 +28,23 @@ export const useCustomer = () => {
     queryKey: customerKeys.list(storeId || ""),
     queryFn: async (): Promise<Customer[]> => {
       // Add a small delay to ensure data is fully ready
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const { data } = await api.get<ApiResponse<{ customers: Customer[] }>>(
         "/customer",
         {
-          params: { storeId }
+          params: { storeId },
         }
       );
-      
+
       console.log("✅ API Response:", data);
-      
+
       if (!data?.responseSuccessful) {
         throw new Error(data?.responseMessage || "Failed to fetch customers");
       }
 
       const customers = data.responseBody.customers;
-      
+
       // Validate data structure
       if (!Array.isArray(customers)) {
         console.error("❌ Invalid data: not an array", customers);
@@ -46,7 +52,7 @@ export const useCustomer = () => {
       }
 
       // Transform and validate each customer
-      const validatedCustomers = customers.map(customer => ({
+      const validatedCustomers = customers.map((customer) => ({
         id: customer.id,
         fullname: customer.fullname || "Unknown",
         phone: customer.phone || "",
@@ -78,35 +84,83 @@ export const useCustomer = () => {
         "/customer/customer-summary",
         { params: { storeId } }
       );
-      
+
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
-      throw new Error(data?.responseMessage || "Failed to fetch customer summary");
+      throw new Error(
+        data?.responseMessage || "Failed to fetch customer summary"
+      );
     },
     enabled: !!storeId,
     staleTime: 60000,
     refetchOnWindowFocus: false,
   });
 
+  // Single customer hook
+  const useCustomerQuery = (id: number) =>
+    useQuery({
+      queryKey: customerKeys.customer(id, storeId || ""),
+      queryFn: async (): Promise<Customer> => {
+        const { data } = await api.get<ApiResponse<{ customer: Customer }>>(
+          `/customer/${id}`,
+          { params: { storeId } }
+        );
+
+        if (data?.responseSuccessful) {
+          return data.responseBody.customer;
+        }
+        throw new Error(data?.responseMessage || "Failed to fetch customer");
+      },
+      enabled: !!(id && storeId),
+      staleTime: 60000,
+      refetchOnWindowFocus: false,
+    });
+
+  // Single customer orders hook
+  const useCustomerOrdersQuery = (id: number) =>
+    useQuery({
+      queryKey: customerKeys.orders(id, storeId || ""),
+      queryFn: async (): Promise<Order[]> => {
+        const { data } = await api.get<ApiResponse<{ orders: Order[] }>>(
+          `/customer/orders/${id}`,
+          { params: { storeId } }
+        );
+
+        if (data?.responseSuccessful) {
+          return data.responseBody.orders;
+        }
+        throw new Error(
+          data?.responseMessage || "Failed to fetch customer orders"
+        );
+      },
+      enabled: !!(id && storeId),
+      staleTime: 60000,
+      refetchOnWindowFocus: false,
+    });
+
   return {
     // Data
     customers: customersQuery.data,
     customerSummary: customerSummaryQuery.data,
-    
+
+    // Hooks for getting customers
+    useCustomerQuery,
+    useCustomerOrdersQuery,
+
     // Loading states
     isLoading: customersQuery.isPending,
     isFetching: customersQuery.isFetching,
-    
+
     // Success/Error states
     isSuccess: customersQuery.isSuccess,
     isError: customersQuery.isError,
     error: customersQuery.error,
-    
+
     // Summary states
     isSummaryLoading: customerSummaryQuery.isPending,
     summaryError: customerSummaryQuery.error,
-    
+
     // Refetch
     refetchCustomers: customersQuery.refetch,
     refetchSummary: customerSummaryQuery.refetch,

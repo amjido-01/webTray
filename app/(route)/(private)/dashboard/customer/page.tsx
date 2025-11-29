@@ -12,7 +12,6 @@ export default function DashboardPage() {
           <div>
             <CustomerTable />
           </div>
-         
         </div>
       </div>
     </div>
