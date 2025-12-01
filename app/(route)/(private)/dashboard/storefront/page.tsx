@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import StoreFrontHeader from "@/components/storefront/store-front-header";
 import { Edit, Globe } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,8 +20,9 @@ import { useActiveStore } from "@/hooks/use-active-store";
 export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
-  
-  const { storeInfo } = useStoreFront();
+
+  const { storeInfo, changeStoreStatus, isUpdatingStoreStatus } =
+    useStoreFront();
 
   console.log("Storefront page:", { activeStore, storeInfo });
 
@@ -53,6 +55,20 @@ export default function Page() {
       </div>
     );
   }
+  console.log("Active Store:", storeInfo);
+
+  const storeId = storeInfo?.store?.id ?? activeStore.id;
+  const isStoreOnline = storeInfo?.store?.online ?? false; 
+
+ 
+  const handleToggleStoreOnline = async (checked: boolean) => {
+    if (!storeId || isUpdatingStoreStatus) return;
+    try {
+      await changeStoreStatus({ storeId, onlineStatus: checked });
+    } catch (err) {
+      console.error("Failed to change store status:", err);
+    }
+  };
 
   // Generate store domain safely
   const defaultDomain = `${activeStore.storeName
@@ -91,7 +107,17 @@ export default function Page() {
                   <p className="text-[16px] leading-[24px] font-normal">
                     Store online
                   </p>
-                  <Switch />
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={isStoreOnline}
+                      onCheckedChange={handleToggleStoreOnline}
+                      disabled={isUpdatingStoreStatus}
+                      aria-label="Toggle store online"
+                    />
+                    {isUpdatingStoreStatus && (
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+                    )}
+                  </div>
                 </div>
               </CardTitle>
               <CardDescription>
@@ -137,7 +163,7 @@ export default function Page() {
                 <h3 className="font-medium text-gray-900 mb-1">Description</h3>
                 <p className="text-gray-600">
                   {/* {storeInfo?.store?.description || */}
-                    Premium coffee and fresh pastries delivered to your door
+                  Premium coffee and fresh pastries delivered to your door
                 </p>
               </div>
               <div>
