@@ -31,7 +31,6 @@ export function InventoryManagement() {
 
   // Now activeStore is guaranteed to exist after loading
   const userStoreId = activeStore?.id;
-  console.log(userStoreId)
   const isLoading = 
     isFetchingInventorySummary || 
     isFetchingProducts || 

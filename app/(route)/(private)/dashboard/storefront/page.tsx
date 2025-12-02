@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthStore } from "@/store/useAuthStore";
 import StoreFrontHeader from "@/components/storefront/store-front-header";
 import { Edit, Globe } from "lucide-react";
 import { Switch } from "@/components/ui/switch";

@@ -41,6 +41,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { ModalForm } from "../modal-form";
 
 /* Constants */
 const PAGE_SIZE = 10;
@@ -69,6 +70,7 @@ const ProductCard = React.memo<{
     const imgSrc =
       product.images?.main || product.images?.thumbnail || FALLBACK_IMAGE;
     const [imgError, setImgError] = useState(false);
+    
 
     return (
       <article
@@ -234,6 +236,10 @@ export default function ManageProductTable() {
     deleteProductError,
     isDeletingProduct,
     deleteProductSuccess,
+    updateProduct,
+    isUpdatingProduct,
+    updateProductError,
+    updateProductSuccess
   } = useProduct();
 
   const { categories } = useCategory();
@@ -245,6 +251,9 @@ export default function ManageProductTable() {
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
+  const [isOpen, setIsOpen] = useState(false);
+const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(null);
+
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -364,10 +373,17 @@ const handleToggleFeature = useCallback(
   [storeId, changeProductFeatured]
 );
 
-  const handleEdit = useCallback((productId: number) => {
-    // Navigate to edit page or open edit modal
-    console.log("Edit product:", productId);
-  }, []);
+const handleEdit = useCallback(
+  (productId: number) => {
+    const product = storeProducts?.find((p) => p.id === productId);
+    if (!product) return;
+
+    setEditingProduct(product);
+    setIsOpen(true);
+  },
+  [storeProducts]
+);
+
 
   const handleDeleteClick = useCallback((productId: number) => {
     setDeleteConfirm(productId);
@@ -444,6 +460,20 @@ const handleToggleFeature = useCallback(
   if (isFetchingStoreProducts) return <TableSkeleton />;
 
   const pageRows = table.getPaginationRowModel().rows;
+
+  const handleSubmit = async (formData: Record<string, any>) => {
+  if (editingProduct) {
+    // Update existing product
+    // await updateProduct(editingProduct.id, formData);
+  } else {
+    // Create a new product
+    // await createProduct(formData);
+  }
+
+  setIsOpen(false);
+  setEditingProduct(null);
+};
+
 
   return (
     <>
@@ -625,6 +655,52 @@ const handleToggleFeature = useCallback(
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ModalForm
+  isOpen={isOpen}
+  onOpenChange={setIsOpen}
+  title="Edit Product"
+  submitLabel={isUpdatingProduct ? "Updating..." : "Update Product"}
+  onSubmit={handleSubmit}
+  // defaultValues={
+  //   editingProduct
+  //     ? {
+  //         name: editingProduct.name,
+  //         category: editingProduct.categoryId,
+  //         price: editingProduct.price,
+  //         stock: editingProduct.quantity,
+  //         description: editingProduct.description,
+  //       }
+  //     : {}
+  // }
+  fields={[
+    { id: "name", label: "Product Name", required: true },
+    {
+      id: "category",
+      label: "Category",
+      type: "select",
+      allowCustom: true,
+      required: true,
+    },
+    {
+      id: "price",
+      label: "Price",
+      type: "currency",
+      required: true,
+    },
+    {
+      id: "stock",
+      label: "Stock",
+      required: true,
+    },
+    {
+      id: "description",
+      label: "Description",
+      type: "textarea",
+      required: false,
+    },
+  ]}
+/>
+
     </>
   );
 }
