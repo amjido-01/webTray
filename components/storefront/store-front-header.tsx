@@ -37,7 +37,6 @@ export default function StoreFrontHeader() {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         title="Add new store"
-        // submitLabel={isAddingProduct ? "Adding..." : "Add Product"}
         submitLabel="Add store"
         onSubmit={handleSubmit}
         validationErrors={validationErrors}
