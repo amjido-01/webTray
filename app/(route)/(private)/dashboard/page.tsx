@@ -12,11 +12,11 @@ export default function DashboardPage() {
       <SectionCards />
      
       <div className="">
-        <div className="flex flex-col gap-10">
-          <div>
+        <div className="flex flex-col md:flex-row gap-10 md:gap-2">
+          <div className="md:w-1/2">
             <RecentOrdersTable />
           </div>
-          <div>
+          <div className="md:w-1/2">
             <StockAlertTable />
           </div>
         </div>

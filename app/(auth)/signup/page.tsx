@@ -14,24 +14,30 @@ import { Label } from "@/components/ui/label";
 import { SignupFormData, signupSchema } from "@/schemas/signup.schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
+import { useCountryCode } from "@/hooks/use-countries";
+import { CountryCodeSelect } from "@/components/country-code-select";
 
 type FormData = SignupFormData;
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { data: countries = [], isLoading, isError } = useCountryCode();
   const { register: signup } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
-
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
     watch,
+     setValue, // Add this
   } = useForm<FormData>({
     resolver: yupResolver(signupSchema),
+    defaultValues: {
+      countryCode: "+234", // Default to Nigeria
+    },
   });
 
   const watchedFields = watch();
@@ -44,7 +50,23 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const email = await signup(data);
+      let cleanedPhone = data.phone;
+      if (cleanedPhone.startsWith("0")) {
+        cleanedPhone = cleanedPhone.substring(1);
+      }
+
+      const fullPhone = `${data.countryCode}${cleanedPhone}`;
+
+      const signupData = {
+        fullname: data.fullname,
+        phone: fullPhone, // Send combined phone with country code
+        email: data.email,
+        password: data.password,
+      };
+
+      console.log(signupData, "sign up data to send");
+
+      const email = await signup(signupData);
       setSubmitSuccess(true);
       reset();
       localStorage.setItem("fromRegistration", "true");
@@ -124,21 +146,47 @@ export default function SignUpPage() {
 
               <div>
                 <Label
-                  className="mb-[8px] text-[#1A1A1A] text-[16px] leading-[24px] font-normal"
-                  htmlFor="businessName"
+                  htmlFor="phone"
+                  className="mb-2 text-[#1A1A1A] font-normal"
                 >
                   Phone Number
                 </Label>
-                <Input
-                  id="businessName"
-                  placeholder="Enter your phone number"
-                  {...register("phone")}
-                  aria-invalid={!!errors.phone}
-                  className="h-[44px] shadow-none text-[14px] leading-[24px] text-[#1A1A1A]"
-                />
+                <div className="flex gap-2">
+                  <CountryCodeSelect
+                    value={watchedFields.countryCode || "+234"}
+                    onChange={(code) => {
+                      // Properly update react-hook-form value using setValue
+                      setValue("countryCode", code, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
+                    }}
+                    countries={countries}
+                    isLoading={isLoading}
+                    disabled={isSubmitting}
+                  />
+
+                  <Input
+                    id="phone"
+                    placeholder="Enter a valid phone number"
+                    {...register("phone")}
+                    aria-invalid={!!errors.phone}
+                    className="flex-1 h-[44px] shadow-none text-[#1A1A1A]"
+                  />
+                </div>
                 {errors.phone && (
-                  <p className="text-sm mt-[8px] text-red-600">
+                  <p className="text-sm mt-1 text-red-600">
                     {errors.phone.message}
+                  </p>
+                )}
+                {errors.countryCode && (
+                  <p className="text-sm mt-1 text-red-600">
+                    {errors.countryCode.message}
+                  </p>
+                )}
+                {isError && (
+                  <p className="text-sm mt-1 text-yellow-600">
+                    Unable to load countries. Using default options.
                   </p>
                 )}
               </div>

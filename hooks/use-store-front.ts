@@ -28,6 +28,7 @@ interface StoreFrontInfo {
     currency: string;
     createdAt: string;
     updatedAt: string;
+    online?: boolean;
   };
   productCount: number;
 }
@@ -41,6 +42,12 @@ interface ChangeProductFeaturedPayload {
   productId: number;
   featured: boolean;
   storeId: number | string;
+}
+
+// Added interface for store status change
+interface ChangeStoreStatusPayload {
+  storeId: number | string;
+  onlineStatus: boolean;
 }
 
 // Query Keys
@@ -71,7 +78,9 @@ export const useStoreFront = () => {
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
-      throw new Error(data?.responseMessage || "Failed to fetch store front summary");
+      throw new Error(
+        data?.responseMessage || "Failed to fetch store front summary"
+      );
     },
     enabled: !!storeId,
   });
@@ -85,10 +94,20 @@ export const useStoreFront = () => {
           params: { storeId },
         }
       );
+
       if (data?.responseSuccessful) {
-        return data.responseBody.products;
+        const products = data.responseBody.products;
+
+        // 🔥 Sort newest first
+        return products.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
-      throw new Error(data?.responseMessage || "Failed to fetch store products");
+
+      throw new Error(
+        data?.responseMessage || "Failed to fetch store products"
+      );
     },
     enabled: !!storeId,
   });
@@ -105,12 +124,13 @@ export const useStoreFront = () => {
       if (data?.responseSuccessful) {
         return data.responseBody;
       }
-      throw new Error(data?.responseMessage || "Failed to fetch store front info");
+      throw new Error(
+        data?.responseMessage || "Failed to fetch store front info"
+      );
     },
     enabled: !!storeId,
   });
 
-  // ✅ Mutation for changing product visibility
   const changeProductVisibilityMutation = useMutation({
     mutationFn: async ({
       productId,
@@ -122,30 +142,57 @@ export const useStoreFront = () => {
         { productId, visibility },
         { params: { storeId } }
       );
-      console.log(data)
 
       if (data?.responseSuccessful) {
         return data.responseBody.product;
       }
-
       throw new Error(
         data?.responseMessage || "Failed to update product visibility"
       );
     },
+    // Add optimistic update
+    onMutate: async ({ productId, visibility, storeId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: storeFrontKeys.products(storeId),
+      });
 
+      // Snapshot previous value
+      const previousProducts = queryClient.getQueryData<StoreProduct[]>(
+        storeFrontKeys.products(storeId)
+      );
+
+      // Optimistically update
+      if (previousProducts) {
+        queryClient.setQueryData<StoreProduct[]>(
+          storeFrontKeys.products(storeId),
+          previousProducts.map((p) =>
+            p.id === productId ? { ...p, visible: visibility } : p
+          )
+        );
+      }
+
+      return { previousProducts };
+    },
     onSuccess: (updatedProduct) => {
       toast.success("Product visibility updated successfully");
-
-      // ✅ Refresh products list in cache
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries({
         queryKey: storeFrontKeys.products(updatedProduct.storeId),
       });
     },
-
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      // Rollback on error
+      if (context?.previousProducts) {
+        queryClient.setQueryData(
+          storeFrontKeys.products(variables.storeId),
+          context.previousProducts
+        );
+      }
       toast.error(error.message || "Error updating product visibility");
     },
   });
+
   const changeProductFeaturedMutation = useMutation({
     mutationFn: async ({
       productId,
@@ -157,37 +204,109 @@ export const useStoreFront = () => {
         { productId, featured },
         { params: { storeId } }
       );
-      console.log(data)
 
       if (data?.responseSuccessful) {
         return data.responseBody.product;
       }
-
       throw new Error(
-        data?.responseMessage || "Failed to update product featured"
+        data?.responseMessage || "Failed to update product featured status"
       );
     },
+    // Add optimistic update
+    onMutate: async ({ productId, featured, storeId }) => {
+      await queryClient.cancelQueries({
+        queryKey: storeFrontKeys.products(storeId),
+      });
 
+      const previousProducts = queryClient.getQueryData<StoreProduct[]>(
+        storeFrontKeys.products(storeId)
+      );
+
+      if (previousProducts) {
+        queryClient.setQueryData<StoreProduct[]>(
+          storeFrontKeys.products(storeId),
+          previousProducts.map((p) =>
+            p.id === productId ? { ...p, feature: featured } : p
+          )
+        );
+      }
+
+      return { previousProducts };
+    },
     onSuccess: (updatedProduct) => {
-      toast.success("Product featured updated successfully");
-
-      // ✅ Refresh products list in cache
+      toast.success("Product featured status updated successfully");
       queryClient.invalidateQueries({
         queryKey: storeFrontKeys.products(updatedProduct.storeId),
       });
     },
-
-    onError: (error: Error) => {
-      toast.error(error.message || "Error updating product visibility");
+    onError: (error: Error, variables, context) => {
+      if (context?.previousProducts) {
+        queryClient.setQueryData(
+          storeFrontKeys.products(variables.storeId),
+          context.previousProducts
+        );
+      }
+      toast.error(error.message || "Error updating product featured status");
     },
   });
 
-  const changeProductVisibility = async (payload: ChangeProductVisibilityPayload) => {
+  // New mutation: change store online status
+ const changeStoreStatusMutation = useMutation({
+  mutationFn: async ({ storeId, onlineStatus }: ChangeStoreStatusPayload) => {
+    const { data } = await api.patch<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
+      `/storefront/status`,
+      { onlineStatus },
+      { params: { storeId } }
+    );
+    console.log("Change Store Status Response:", data);
+
+    if (data?.responseSuccessful) return data.responseBody.store;
+    throw new Error(data?.responseMessage || 'Failed to update store status');
+  },
+  onMutate: async ({ storeId, onlineStatus }) => {
+    await queryClient.cancelQueries({ queryKey: storeFrontKeys.info(storeId) });
+    const previous = queryClient.getQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId));
+    if (previous) {
+      queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId), {
+        ...previous,
+        store: { ...previous.store, online: onlineStatus },
+      });
+    }
+    return { previous };
+  },
+  onSuccess: (updatedStore) => {
+    // set returned store to cache to avoid flicker
+    queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(updatedStore.id), (prev) => {
+      if (!prev) return undefined;
+      return {
+        ...prev,
+        store: { ...prev.store, ...updatedStore },
+        productCount: prev.productCount // always preserve productCount
+      };
+    });
+    queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(updatedStore.id) });
+  },
+  onError: (error, variables, context) => {
+    if (context?.previous) {
+      queryClient.setQueryData(storeFrontKeys.info(variables.storeId), context.previous);
+    }
+    toast.error(error.message || 'Error updating store status');
+  },
+});
+
+  const changeProductVisibility = async (
+    payload: ChangeProductVisibilityPayload
+  ) => {
     return changeProductVisibilityMutation.mutateAsync(payload);
   };
-  const changeProductFeatured = async (payload: ChangeProductFeaturedPayload) => {
+  const changeProductFeatured = async (
+    payload: ChangeProductFeaturedPayload
+  ) => {
     return changeProductFeaturedMutation.mutateAsync(payload);
   };
+
+  const changeStoreStatus = async (payload: ChangeStoreStatusPayload) =>
+    changeStoreStatusMutation.mutateAsync(payload);
 
   return {
     storefrontSummary: storeFrontSummaryQuery.data,
@@ -211,6 +330,10 @@ export const useStoreFront = () => {
 
     // ✅ Featured Mutations
     changeProductFeatured,
-    isUpdatingProductFeatured: changeProductVisibilityMutation.isPending,
+    isUpdatingProductFeatured: changeProductFeaturedMutation.isPending,
+
+    // ✅ Store Status Mutations
+    changeStoreStatus,
+    isUpdatingStoreStatus: changeStoreStatusMutation.isPending,
   };
 };

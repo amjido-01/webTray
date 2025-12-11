@@ -55,6 +55,7 @@ export function NavUser({
 
   setIsLoggingOut(true); // Set logging out state
   try {
+    // still thinking of a better way
     await logout();
     router.push("/signin");
   } catch (error) {

@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface StockAlert {
   name: string
   units: number
-  level: "Critical" | "Low Stock" | "Medium Stock"
+  level: "Critical" | "Low Stock" | "Medium Stock" | "Out of Stock"
 }
 
 interface StockAlertsModalProps {
@@ -23,10 +27,12 @@ interface StockAlertsModalProps {
 
 const getStockLevelColor = (level: string) => {
   switch (level) {
+    case "Out of Stock":
+      return "bg-red-500 text-white hover:bg-red-600"
     case "Critical":
       return "bg-[#EF4444] rounded-full text-[#FFFFFF] hover:bg-red-100"
     case "Low Stock":
-      return "bg-red-100 rounded-full text-[#1A1A1A] hover:bg-red-100"
+      return "bg-yellow-100 rounded-full text-yellow-800 hover:bg-yellow-200"
     case "Medium Stock":
       return "bg-[#EBEBEB] rounded-full text-[#1A1A1A] hover:bg-gray-100"
     default:
@@ -36,88 +42,139 @@ const getStockLevelColor = (level: string) => {
 
 export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAlertsModalProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [filterOpen, setFilterOpen] = useState(false)
   const itemsPerPage = 8
 
+  // Filter alerts based on search term and selected level (only one at a time)
   const filteredAlerts = stockAlerts.filter((alert) => {
     const matchesSearch = alert.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory =
-      selectedCategories.length === 0 || selectedCategories.includes(alert.level)
-    return matchesSearch && matchesCategory
+    const matchesLevel = selectedLevels.length === 0 || selectedLevels[0] === alert.level
+    return matchesSearch && matchesLevel
   })
 
+  // Pagination logic
   const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedAlerts = filteredAlerts.slice(startIndex, startIndex + itemsPerPage)
 
+  // Reset to page 1 when filters change
+  const handleApplyFilters = () => {
+    setCurrentPage(1)
+    setFilterOpen(false)
+  }
+
+  const handleClearFilters = () => {
+    setSelectedLevels([])
+    setCurrentPage(1)
+    setFilterOpen(false)
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 overflow-y-auto">
-        <SheetHeader className="p-6 ">
-          <SheetTitle>Stock Alert</SheetTitle>
+      <SheetContent className="p-0 overflow-y-auto sm:max-w-[500px]">
+        <SheetHeader className="p-6">
+          <SheetTitle className="text-xl font-semibold">Stock Alert</SheetTitle>
+          <p className="text-sm text-muted-foreground">
+            {filteredAlerts.length} of {stockAlerts.length} items
+          </p>
         </SheetHeader>
 
         <div className="p-4 w-full space-y-6">
           {/* Search and Filter */}
           <div className="flex gap-4">
-            <div className="relative w-[65%] flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" />
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search Products"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
+                }}
                 className="pl-10 rounded-full"
               />
             </div>
 
             {/* Category Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
+            <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+              <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="rounded-full flex items-center gap-2">
-                  All categories <ChevronDown className="w-4 h-4" />
+                  {selectedLevels.length > 0 ? selectedLevels[0] : "All Levels"}
+                  <ChevronDown className="w-4 h-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-40 p-3 space-y-2">
-                <div className="space-y-2">
-                  {["Critical", "Low Stock", "Medium Stock"].map((category) => (
-                    <div key={category} className="flex  items-center space-y-3 gap-2">
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48 p-3" align="end" onInteractOutside={(e) => e.preventDefault()}>
+                <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                  {["Critical", "Low Stock", "Medium Stock"].map((level) => (
+                    <div key={level} className="flex items-center gap-2">
                       <Checkbox
-                      className="w-5 h-5 space-y-3 border-[1.5px] border-black"
-                        id={category}
-                        checked={selectedCategories.includes(category)}
-                        onCheckedChange={() => {
-                          setSelectedCategories((prev) =>
-                            prev.includes(category)
-                              ? prev.filter((c) => c !== category)
-                              : [...prev, category]
+                        className="w-5 h-5 border-[1.5px] border-black"
+                        id={level}
+                        checked={selectedLevels.includes(level)}
+                        onCheckedChange={(checked) => {
+                          // Only allow single selection
+                          setSelectedLevels(
+                            checked ? [level] : []
                           )
                         }}
                       />
-                      <label htmlFor={category} className="text-sm">
-                        {category}
+                      <label
+                        htmlFor={level}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        {level}
                       </label>
                     </div>
                   ))}
                 </div>
-                <Button
-                  onClick={() => setCurrentPage(1)}
-                  className="w-1/2 rounded-full mt-2 text-[#FFFFFF] bg-[#111827]"
-                >
-                  Apply
-                </Button>
-              </PopoverContent>
-            </Popover>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                    className="flex-1 rounded-full text-xs"
+                    size="sm"
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    onClick={handleApplyFilters}
+                    className="flex-1 rounded-full text-[#FFFFFF] bg-[#111827] text-xs"
+                    size="sm"
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
+          {/* Active Filter */}
+          {selectedLevels.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="secondary"
+                className="rounded-full px-3 py-1 cursor-pointer hover:bg-gray-200 flex items-center gap-2"
+                onClick={() => {
+                  setSelectedLevels([])
+                  setCurrentPage(1)
+                }}
+              >
+                {selectedLevels[0]} 
+                <span className="text-xs">×</span>
+              </Badge>
+            </div>
+          )}
 
           {/* Stock Alerts List */}
           <div className="space-y-4">
             {paginatedAlerts.map((alert, index) => (
               <div
-                key={index}
+                key={`${alert.name}-${index}`}
                 className="flex items-center justify-between py-3 border-b last:border-b-0"
               >
-                <div>
+                <div className="flex-1">
                   <h3 className="font-medium text-gray-900">{alert.name}</h3>
                   <p className="text-sm text-gray-500">{alert.units} units remaining</p>
                 </div>
@@ -126,17 +183,34 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
             ))}
 
             {paginatedAlerts.length === 0 && (
-              <p className="text-center text-gray-500 text-sm pt-6">No stock alerts found.</p>
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-sm">No stock alerts found.</p>
+                {(searchTerm || selectedLevels.length > 0) && (
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchTerm("")
+                      setSelectedLevels([])
+                      setCurrentPage(1)
+                    }}
+                    className="mt-2"
+                  >
+                    Clear all filters
+                  </Button>
+                )}
+              </div>
             )}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex items-center justify-between pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
+                size="sm"
+                className="rounded-full"
               >
                 Previous
               </Button>
@@ -150,7 +224,9 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
                       variant={currentPage === pageNum ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(pageNum)}
-                      className="w-8 h-8"
+                      className={`w-8 h-8 rounded-full ${
+                        currentPage === pageNum ? "bg-[#111827] text-white" : ""
+                      }`}
                     >
                       {pageNum}
                     </Button>
@@ -158,8 +234,8 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
                 })}
                 {totalPages > 5 && (
                   <>
-                    <span className="text-gray-500">of</span>
-                    <span className="font-medium">{totalPages}</span>
+                    <span className="text-gray-500 text-sm">...</span>
+                    <span className="font-medium text-sm">{totalPages}</span>
                   </>
                 )}
               </div>
@@ -168,6 +244,8 @@ export function StockAlertsModal({ isOpen, onOpenChange, stockAlerts }: StockAle
                 variant="outline"
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
+                size="sm"
+                className="rounded-full"
               >
                 Next
               </Button>

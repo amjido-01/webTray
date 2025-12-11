@@ -14,26 +14,6 @@ export interface User {
   store?: Store | null;
 }
 
-export interface Store {
-  id: number;
-  businessId: number;
-  storeName: string;
-  slogan: string;
-  customDomain: string;
-  paymentMethods: {
-    paystack: boolean;
-    bankTransfer: boolean;
-  };
-  deliveryOptions: {
-    inHouse: boolean;
-    thirdParty: string[];
-  };
-  status: string;
-  currency: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface RegisterPayload {
   fullname: string;
   phone: string;
@@ -78,23 +58,29 @@ export interface CreateCategoryPayload {
 }
 
 export interface Store {
-   id: number;
-    businessId: number;
-    storeName: string;
-    slogan: string;
-    customDomain: string;
-    paymentMethods: {
-      paystack: boolean;
-      bankTransfer: boolean;
-    };
-    deliveryOptions: {
-      inHouse: boolean;
-      thirdParty: string[];
-    };
-    status: string;
-    currency: string;
-    createdAt: string;
-    updatedAt: string;
+  id: number;
+  businessId: number;
+  storeName: string | null;
+  slogan: string | null;
+  slug?: string | null;
+  customDomain: string | null;
+  paymentMethods: {
+    paystack?: boolean;
+    bankTransfer?: boolean;
+    [key: string]: unknown;
+  } | null;
+  deliveryOptions:
+    | {
+        inHouse?: boolean;
+        thirdParty?: string[];
+        [key: string]: unknown;
+      }
+    | null;
+  status?: string | null; // keep for backward compatibility if used
+  online?: boolean; // <-- add this
+  currency?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Business {
@@ -138,18 +124,19 @@ export type OrderItem = {
   };
 };
 
-export type Customer = {
+// @/types/index.ts
+export interface Customer {
   id: number;
   fullname: string;
   phone: string;
   email: string;
   address: string | null;
-  createdAt: string;
-  updatedAt: string;
   totalOrders: number;
   totalSpent: number;
-  status?: 'active' | 'inactive';  // Optional since it's not in API response
-};
+  createdAt: string;
+  updatedAt: string;
+  status: "active" | "inactive";
+}
 
 export type Order = {
   // Original API fields
@@ -157,7 +144,7 @@ export type Order = {
   storeId: number;
   customerId: number;
   status: "pending" | "shipped" | "cancel" | "completed";
-  totalAmount: string;
+  totalAmount: number;
   createdAt: string;
   updatedAt: string;
   customer: Customer | null;

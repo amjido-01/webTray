@@ -7,11 +7,11 @@ import { useCustomer } from "@/hooks/use-customer";
 import { HasBusinessAlert } from "./hasBusinessAlert";
 import { useAuthStore } from "@/store/useAuthStore";
 export function SectionCards() {
-  const { CustomerSummary, customerSummaryError, isFetchingCustomerSummary } =
+  const { customerSummary, summaryError, isSummaryLoading } =
     useCustomer();
     const { user } = useAuthStore()
 
-    const isLoading = isFetchingCustomerSummary;
+    const isLoading = isSummaryLoading;
 
   if (isLoading) {
     return (
@@ -38,7 +38,7 @@ export function SectionCards() {
     );
   }
 
-  if (customerSummaryError) {
+  if (summaryError) {
     return (
       <div className="">
         <PageHeader
@@ -69,25 +69,25 @@ export function SectionCards() {
           height={20}
         />
       ),
-      value: formatNumber(CustomerSummary?.totalCustomer || 0),
+      value: formatNumber(customerSummary?.totalCustomer || 0),
       note: "+32.6% from last month", // You can calculate this if you have previous period data
     },
     {
       title: "New Customers",
-      value: formatNumber(CustomerSummary?.newCustomer || 0),
+      value: formatNumber(customerSummary?.newCustomer || 0),
       note: "+8% from last month",
       icon: <TrendingUp className="h-4 w-4 text-green-600" />,
     },
     {
       title: "Retention Rate",
-      value: CustomerSummary?.retentionRate || 0,
+      value: customerSummary?.retentionRate || 0,
       note: "+4 new this week",
       icon: <Image src="/icons/Group.png" alt="logo" width={20} height={20} />,
     },
     {
       title: "Top Spender",
-      value: formatNumber(CustomerSummary?.topSpenders?.totalSpent || 0),
-      note: `${CustomerSummary?.topSpenders?.name}`,
+      value: formatNumber(customerSummary?.topSpenders?.totalSpent || 0),
+      note: `${customerSummary?.topSpenders?.name}`,
       icon: <UserIcon className="h-4 w-4 text-muted-foreground" />,
     },
   ];

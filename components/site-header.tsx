@@ -4,7 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { User, Settings, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import SearchComponent from "@/components/search-component";
+// import SearchComponent from "@/components/search-component";
 import { StoreSwitcher } from "./StoreSwitcher";
 
 export function SiteHeader() {
@@ -19,7 +19,7 @@ export function SiteHeader() {
         />
         <StoreSwitcher />
 
-        {pathname === "/dashboard" && <SearchComponent />}
+        {/* {pathname === "/dashboard" && <SearchComponent />} */}
 
         {/* Right section */}
         <div className="ml-auto flex items-center gap-8">

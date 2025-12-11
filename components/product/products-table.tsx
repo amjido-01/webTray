@@ -38,7 +38,7 @@ export default function ProductsTable() {
     isDeletingProduct,
   } = useProduct();
   const { categories } = useCategory();
-  
+
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({});
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -50,7 +50,6 @@ export default function ProductsTable() {
     open: false,
     product: null,
   });
-
 
   const handleEditClick = (product: Product) => {
     setEditingProduct(product.id);
@@ -78,9 +77,8 @@ export default function ProductsTable() {
         description: editForm.description,
       };
 
-      
       await updateProduct(payload);
-      
+
       setEditingProduct(null);
       setEditForm({});
     } catch (error) {
@@ -108,11 +106,11 @@ export default function ProductsTable() {
   };
 
   // Create category lookup for sorting and display
-  const categoryLookup = categories?.reduce((acc, category) => {
-    acc[category.id] = category;
-    return acc;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }, {} as Record<number, any>) || {};
+  const categoryLookup =
+    categories?.reduce((acc, category) => {
+      acc[category.id] = category;
+      return acc;
+    }, {} as Record<number, any>) || {};
 
   // Create the handlers object for the columns
   const columnHandlers: ColumnHandlers = {
@@ -127,27 +125,36 @@ export default function ProductsTable() {
   };
 
   // Format products with category data and apply filters
-  const formattedProducts = products?.map(product => ({
-    ...product,
-    category: categoryLookup[product.categoryId],
-    categoryName: categoryLookup[product.categoryId]?.name || 'Unknown',
-    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price
-  }))
-  .filter(product => {
-    const matchesSearch = !searchTerm || 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategory === "all" || 
-      product.categoryId.toString() === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  }) || [];
+  const formattedProducts =
+    products
+      ?.map((product) => ({
+        ...product,
+        category: categoryLookup[product.categoryId],
+        categoryName: categoryLookup[product.categoryId]?.name || "Unknown",
+        price:
+          typeof product.price === "string"
+            ? parseFloat(product.price)
+            : product.price,
+      }))
+      .filter((product) => {
+        const matchesSearch =
+          !searchTerm ||
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          product.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesCategory =
+          selectedCategory === "all" ||
+          product.categoryId.toString() === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+      }) || [];
 
   // Create columns with all the handlers
   const columns = createColumns(columnHandlers, categories);
-   
+
   if (isFetchingProducts) return <TableSkeleton />;
   if (productsError) return <div>Error loading products</div>;
   if (!products || products.length === 0) return <div>No products found</div>;
@@ -156,7 +163,6 @@ export default function ProductsTable() {
     <>
       <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm">
         <div className="p-6">
-          
           <h1 className="text-xl font-medium text-gray-800 mb-6">Products</h1>
 
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
@@ -169,8 +175,8 @@ export default function ProductsTable() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select 
-              value={selectedCategory} 
+            <Select
+              value={selectedCategory}
               onValueChange={setSelectedCategory}
             >
               <SelectTrigger className="w-full sm:w-56 bg-white border border-gray-200 rounded-full h-10">
