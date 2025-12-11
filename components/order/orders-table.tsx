@@ -77,7 +77,7 @@ export default function OrdersTable() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Search customer name or order id"
-                className="pl-10 bg-white border border-gray-200 rounded-full h-10"
+                className="pl-10  border border-gray-200 rounded-full h-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />

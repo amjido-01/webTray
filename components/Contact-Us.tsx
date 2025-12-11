@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import ReadyToSection from "./Ready-to-transform";
 import Image from "next/image";
