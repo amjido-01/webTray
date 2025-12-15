@@ -690,7 +690,7 @@ export default function ManageProductTable() {
       <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-md overflow-y-auto"
+          className="w-[400px] sm:max-w-md overflow-y-auto"
         >
           <SheetHeader>
             <SheetTitle>Edit Product</SheetTitle>
@@ -757,6 +757,12 @@ export default function ManageProductTable() {
                 <Input
                   id="product-name"
                   value={formData.name}
+                  className="
+    border-gray-300
+    focus-visible:ring-0
+    focus-visible:ring-offset-0
+    focus-visible:border-gray-400
+  "
                   onChange={(e) => handleFormChange("name", e.target.value)}
                   placeholder="Premium Coffee Beans"
                   required
@@ -789,7 +795,7 @@ export default function ManageProductTable() {
               <div className="grid gap-2">
                 <Label htmlFor="product-price">Price</Label>
                 <div className="relative">
-                  <span className="absolute left3 h-full pt-1 px-1 top-1/2 border-2 -translate-y-1/2 text-[#676767] bg-[#EBEBEB]">
+                  <span className="absolute left3 h-full rounded-l pt-1 px-1 top-1/2 border-2 -translate-y-1/2 text-[#676767] bg-[#EBEBEB]">
                     NGN
                   </span>
                   <Input
@@ -798,7 +804,9 @@ export default function ManageProductTable() {
                     value={formData.price}
                     onChange={(e) => handleFormChange("price", e.target.value)}
                     placeholder="3000"
-                    className="pl-14"
+                    className="pl-14 
+    focus-visible:ring-0
+    focus-visible:ring-offset-0"
                     required
                     min="0"
                     step="0.01"
@@ -815,6 +823,12 @@ export default function ManageProductTable() {
                   value={formData.quantity}
                   onChange={(e) => handleFormChange("quantity", e.target.value)}
                   placeholder="300"
+                      className="
+    border-gray-300
+    focus-visible:ring-0
+    focus-visible:ring-offset-0
+    focus-visible:border-gray-400
+  "
                   required
                   min="0"
                 />
