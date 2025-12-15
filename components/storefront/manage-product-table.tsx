@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Search, Edit, Trash2 } from "lucide-react";
+import { Search, Edit, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 
 /* UI components */
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -25,6 +24,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
 import { useStoreFront } from "@/hooks/use-store-front";
 import { useCategory } from "@/hooks/use-category";
@@ -41,12 +51,11 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ModalForm } from "../modal-form";
 
 /* Constants */
 const PAGE_SIZE = 10;
 const MAX_VISIBLE_PAGES = 5;
-const FALLBACK_IMAGE = "/placeholder-product.png";
+const FALLBACK_IMAGE = "/cups.jpg";
 
 /* Extracted ProductCard Component */
 const ProductCard = React.memo<{
@@ -70,7 +79,6 @@ const ProductCard = React.memo<{
     const imgSrc =
       product.images?.main || product.images?.thumbnail || FALLBACK_IMAGE;
     const [imgError, setImgError] = useState(false);
-    
 
     return (
       <article
@@ -239,7 +247,7 @@ export default function ManageProductTable() {
     updateProduct,
     isUpdatingProduct,
     updateProductError,
-    updateProductSuccess
+    updateProductSuccess,
   } = useProduct();
 
   const { categories } = useCategory();
@@ -251,9 +259,19 @@ export default function ManageProductTable() {
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-  const [isOpen, setIsOpen] = useState(false);
-const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(null);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(
+    null
+  );
 
+  // Form state for editing
+  const [formData, setFormData] = useState({
+    name: "",
+    categoryId: "",
+    price: "",
+    quantity: "",
+    description: "",
+  });
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -311,79 +329,85 @@ const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(null);
     },
   });
 
- const pendingOperations = useRef<Set<number>>(new Set());
+  const pendingOperations = useRef<Set<number>>(new Set());
 
-// Handler for visibility toggle - FIXED VERSION
-const handleToggleVisible = useCallback(
-  async (productId: number, currentVisibility: boolean) => {
-    if (!storeId) return;
-    
-    // Prevent concurrent operations on same product
-    if (pendingOperations.current.has(productId)) {
-      console.log("Operation already in progress for product:", productId);
-      return;
-    }
+  // Handler for visibility toggle
+  const handleToggleVisible = useCallback(
+    async (productId: number, currentVisibility: boolean) => {
+      if (!storeId) return;
 
-    pendingOperations.current.add(productId);
-    setUpdatingProductId(productId);
-    
-    try {
-      await changeProductVisibility({
-        productId,
-        visibility: !currentVisibility,
-        storeId,
+      // Prevent concurrent operations on same product
+      if (pendingOperations.current.has(productId)) {
+        console.log("Operation already in progress for product:", productId);
+        return;
+      }
+
+      pendingOperations.current.add(productId);
+      setUpdatingProductId(productId);
+
+      try {
+        await changeProductVisibility({
+          productId,
+          visibility: !currentVisibility,
+          storeId,
+        });
+      } catch (error) {
+        console.error("Failed to toggle visibility:", error);
+      } finally {
+        pendingOperations.current.delete(productId);
+        setUpdatingProductId(null);
+      }
+    },
+    [storeId, changeProductVisibility]
+  );
+
+  // Handler for feature toggle
+  const handleToggleFeature = useCallback(
+    async (productId: number, currentFeature: boolean) => {
+      if (!storeId) return;
+
+      // Prevent concurrent operations on same product
+      if (pendingOperations.current.has(productId)) {
+        console.log("Operation already in progress for product:", productId);
+        return;
+      }
+
+      pendingOperations.current.add(productId);
+      setUpdatingProductId(productId);
+
+      try {
+        await changeProductFeatured({
+          productId,
+          featured: !currentFeature,
+          storeId,
+        });
+      } catch (error) {
+        console.error("Failed to toggle feature:", error);
+      } finally {
+        pendingOperations.current.delete(productId);
+        setUpdatingProductId(null);
+      }
+    },
+    [storeId, changeProductFeatured]
+  );
+
+  const handleEdit = useCallback(
+    (productId: number) => {
+      const product = storeProducts?.find((p) => p.id === productId);
+      if (!product) return;
+
+      setEditingProduct(product);
+      setFormData({
+        name: product.name || "",
+        categoryId: product.categoryId ? String(product.categoryId) : "",
+        price: product.price ? String(product.price) : "",
+        quantity: product.quantity ? String(product.quantity) : "",
+        description: product.description || "",
       });
-    } catch (error) {
-      console.error("Failed to toggle visibility:", error);
-    } finally {
-      pendingOperations.current.delete(productId);
-      setUpdatingProductId(null);
-    }
-  },
-  [storeId, changeProductVisibility]
-);
-
-// Handler for feature toggle - FIXED VERSION
-const handleToggleFeature = useCallback(
-  async (productId: number, currentFeature: boolean) => {
-    if (!storeId) return;
-    
-    // Prevent concurrent operations on same product
-    if (pendingOperations.current.has(productId)) {
-      console.log("Operation already in progress for product:", productId);
-      return;
-    }
-
-    pendingOperations.current.add(productId);
-    setUpdatingProductId(productId);
-    
-    try {
-      await changeProductFeatured({
-        productId,
-        featured: !currentFeature,
-        storeId,
-      });
-    } catch (error) {
-      console.error("Failed to toggle feature:", error);
-    } finally {
-      pendingOperations.current.delete(productId);
-      setUpdatingProductId(null);
-    }
-  },
-  [storeId, changeProductFeatured]
-);
-
-const handleEdit = useCallback(
-  (productId: number) => {
-    const product = storeProducts?.find((p) => p.id === productId);
-    if (!product) return;
-
-    setEditingProduct(product);
-    setIsOpen(true);
-  },
-  [storeProducts]
-);
-
+      setIsEditSheetOpen(true);
+    },
+    [storeProducts]
+  );
 
   const handleDeleteClick = useCallback((productId: number) => {
     setDeleteConfirm(productId);
@@ -394,9 +418,6 @@ const handleEdit = useCallback(
 
     // Capture id locally to avoid clearing state before the API call
     const productId = deleteConfirm;
-
-    // TODO: Implement delete product API call
-    console.log("Delete product:", productId);
 
     try {
       await deleteProduct(productId);
@@ -442,6 +463,33 @@ const handleEdit = useCallback(
     return pages;
   }, [currentPage, totalPages]);
 
+  const pageRows = table.getPaginationRowModel().rows;
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingProduct || !storeId) return;
+
+    try {
+      await updateProduct({
+        id: editingProduct.id,
+        name: formData.name,
+        price: Number(formData.price),
+        quantity: Number(formData.quantity),
+        description: formData.description,
+      });
+
+      setIsEditSheetOpen(false);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    }
+  };
+
+  const handleFormChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   // Error state
   if (storeProductsError) {
     return (
@@ -458,22 +506,6 @@ const handleEdit = useCallback(
 
   // Loading state
   if (isFetchingStoreProducts) return <TableSkeleton />;
-
-  const pageRows = table.getPaginationRowModel().rows;
-
-  const handleSubmit = async (formData: Record<string, any>) => {
-  if (editingProduct) {
-    // Update existing product
-    // await updateProduct(editingProduct.id, formData);
-  } else {
-    // Create a new product
-    // await createProduct(formData);
-  }
-
-  setIsOpen(false);
-  setEditingProduct(null);
-};
-
 
   return (
     <>
@@ -624,10 +656,8 @@ const handleEdit = useCallback(
                 </div>
               </div>
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              <h2 className="text-center text-[16px] font-medium text-[#343434] mb-5">
-                Are you sure you want to delete this product?
-              </h2>
+            <AlertDialogDescription className="text-center text-[16px] font-medium text-[#343434] mb-5">
+              Are you sure you want to delete this product?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-3 sm:flex-row">
@@ -655,52 +685,176 @@ const handleEdit = useCallback(
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <ModalForm
-  isOpen={isOpen}
-  onOpenChange={setIsOpen}
-  title="Edit Product"
-  submitLabel={isUpdatingProduct ? "Updating..." : "Update Product"}
-  onSubmit={handleSubmit}
-  // defaultValues={
-  //   editingProduct
-  //     ? {
-  //         name: editingProduct.name,
-  //         category: editingProduct.categoryId,
-  //         price: editingProduct.price,
-  //         stock: editingProduct.quantity,
-  //         description: editingProduct.description,
-  //       }
-  //     : {}
-  // }
-  fields={[
-    { id: "name", label: "Product Name", required: true },
-    {
-      id: "category",
-      label: "Category",
-      type: "select",
-      allowCustom: true,
-      required: true,
-    },
-    {
-      id: "price",
-      label: "Price",
-      type: "currency",
-      required: true,
-    },
-    {
-      id: "stock",
-      label: "Stock",
-      required: true,
-    },
-    {
-      id: "description",
-      label: "Description",
-      type: "textarea",
-      required: false,
-    },
-  ]}
-/>
 
+      {/* Edit Product Sheet */}
+      <Sheet open={isEditSheetOpen} onOpenChange={setIsEditSheetOpen}>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-md overflow-y-auto"
+        >
+          <SheetHeader>
+            <SheetTitle>Edit Product</SheetTitle>
+            <SheetDescription>
+              Make changes to your product here. Click save when you&apos;re
+              done.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form
+            onSubmit={handleEditSubmit}
+            className="flex flex-col px-6 h-full"
+          >
+            <div className="flex-1 space-y-6 py-6">
+              {/* Product Image Preview */}
+              {editingProduct && (
+                <div className="flex items-center gap-4">
+                  {/* Avatar */}
+                  <div className="relative h-20 w-20">
+                    <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-gray-200">
+                      <Image
+                        src={
+                          editingProduct.images?.main ||
+                          editingProduct.images?.thumbnail ||
+                          FALLBACK_IMAGE
+                        }
+                        alt={editingProduct.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Upload button */}
+                  <label
+                    htmlFor="product-image"
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                  >
+                    {/* Upload icon */}
+                    <Upload className="w-4 h-4" />
+                    Update photo
+                  </label>
+
+                  {/* Hidden file input */}
+                  <Input
+                    id="product-image"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      // handle preview or upload here
+                      console.log("Selected file:", file);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Product Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="product-name">Product Name</Label>
+                <Input
+                  id="product-name"
+                  value={formData.name}
+                  onChange={(e) => handleFormChange("name", e.target.value)}
+                  placeholder="Premium Coffee Beans"
+                  required
+                />
+              </div>
+
+              {/* Category */}
+              <div className="grid gap-2">
+                <Label htmlFor="product-category">Category</Label>
+                <Select
+                  value={formData.categoryId}
+                  onValueChange={(value) =>
+                    handleFormChange("categoryId", value)
+                  }
+                >
+                  <SelectTrigger className="w-full" id="product-category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories?.map((cat: Category) => (
+                      <SelectItem key={cat.id} value={String(cat.id)}>
+                        {capitalizeFirstLetter(cat.name)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Price */}
+              <div className="grid gap-2">
+                <Label htmlFor="product-price">Price</Label>
+                <div className="relative">
+                  <span className="absolute left3 h-full pt-1 px-1 top-1/2 border-2 -translate-y-1/2 text-[#676767] bg-[#EBEBEB]">
+                    NGN
+                  </span>
+                  <Input
+                    id="product-price"
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => handleFormChange("price", e.target.value)}
+                    placeholder="3000"
+                    className="pl-14"
+                    required
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {/* Stock */}
+              <div className="grid gap-2">
+                <Label htmlFor="product-stock">Stock</Label>
+                <Input
+                  id="product-stock"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) => handleFormChange("quantity", e.target.value)}
+                  placeholder="300"
+                  required
+                  min="0"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="grid gap-2">
+                <Label htmlFor="product-description">Description</Label>
+                <Textarea
+                  id="product-description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleFormChange("description", e.target.value)
+                  }
+                  placeholder="High-quality arabica coffee beans"
+                  rows={4}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+
+            <SheetFooter className="gap-2 pt-4">
+              <Button
+                type="submit"
+                className="flex-1 bg-[#111827] w-1/2 mx-auto rounded-full hover:bg-slate-800"
+                disabled={isUpdatingProduct}
+              >
+                {isUpdatingProduct ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </div>
+                ) : (
+                  "Save"
+                )}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
