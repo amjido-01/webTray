@@ -16,15 +16,26 @@ import { Button } from "@/components/ui/button";
 import { useStoreFront } from "@/hooks/use-store-front";
 import { useActiveStore } from "@/hooks/use-active-store";
 import { DomainSettingsSheet } from "@/components/storefront/domain-settings-sheet";
+import { ModalForm } from "@/components/modal-form";
+import { useState } from "react";
 
 export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [shouldClearForm, setShouldClearForm] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [initialFormData, setInitialFormData] = useState<
+    Record<string, string>
+  >({});
 
   const { storeInfo, changeStoreStatus, isUpdatingStoreStatus } =
     useStoreFront();
 
-  console.log("Storefront page:", { activeStore, storeInfo });
+    console.log(storeInfo)
 
   // Show loading state while store is being fetched
   if (storeLoading) {
@@ -58,9 +69,8 @@ export default function Page() {
   console.log("Active Store:", storeInfo);
 
   const storeId = storeInfo?.store?.id ?? activeStore.id;
-  const isStoreOnline = storeInfo?.store?.online ?? false; 
+  const isStoreOnline = storeInfo?.store?.online ?? false;
 
- 
   const handleToggleStoreOnline = async (checked: boolean) => {
     if (!storeId || isUpdatingStoreStatus) return;
     try {
@@ -76,6 +86,21 @@ export default function Page() {
     .toLowerCase()}@webtry.com`;
 
   const customDomain = storeInfo?.store?.customDomain || defaultDomain;
+
+  const handleUpdate = async () => {};
+
+  const handleEditStoreClick = () => {
+    setIsEditMode(true);
+    // Populate initial data from store info
+    setInitialFormData({
+      name: storeInfo?.store?.storeName || activeStore.storeName || "",
+      description:
+        storeInfo?.store?.slogan ||
+        "Premium coffee and fresh pastries delivered to your door",
+      domain: defaultDomain,
+    });
+    setIsOpen(true);
+  };
 
   return (
     <div>
@@ -172,6 +197,7 @@ export default function Page() {
               </div>
               <div className="pt-4">
                 <Button
+                  onClick={handleEditStoreClick}
                   variant="outline"
                   className="w-full rounded-full bg-transparent"
                 >
@@ -226,7 +252,7 @@ export default function Page() {
                     Configure your custom domain
                   </p>
                 </div>
-               
+
                 <DomainSettingsSheet />
               </CardHeader>
               <CardContent className="flex-1">
@@ -244,6 +270,45 @@ export default function Page() {
           </div>
         </div>
       </div>
+
+      <ModalForm
+        isOpen={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) {
+            setIsEditMode(false);
+            setInitialFormData({});
+          }
+        }}
+        title={isEditMode ? "Edit Store Info" : "Add new store"}
+        submitLabel={isEditMode ? "Update Store" : "Add store"}
+        onSubmit={handleUpdate}
+        validationErrors={validationErrors}
+        shouldClearForm={shouldClearForm}
+        onFormCleared={() => setShouldClearForm(false)}
+        initialData={initialFormData} // Add this prop
+        fields={[
+          {
+            id: "name",
+            label: "Store Name",
+            required: true,
+            placeholder: "Enter store name",
+          },
+          {
+            id: "description",
+            label: "Description",
+            type: "textarea",
+            placeholder: "Enter store description",
+            required: false,
+          },
+          {
+            id: "domain",
+            label: "Domain",
+            placeholder: "Enter domain name",
+            required: true,
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -28,12 +28,13 @@ interface ModalFormProps {
   title: string;
   submitLabel: string;
   fields: Field[];
- onAddCategory?: (category: string) => Promise<boolean>; 
+  onAddCategory?: (category: string) => Promise<boolean>;
   onSubmit: (data: Record<string, string>) => void;
   shouldClearForm?: boolean;
   isAddingCategory?: boolean;
   onFormCleared?: () => void;
   validationErrors?: Record<string, string>;
+  initialData?: Record<string, string>;
 }
 
 export function ModalForm({
@@ -48,11 +49,22 @@ export function ModalForm({
   shouldClearForm = false,
   isAddingCategory = false,
   onFormCleared,
+  initialData = {},
 }: ModalFormProps) {
-  const initialState = Object.fromEntries(fields.map((f) => [f.id, ""]));
+  const initialState = Object.fromEntries(
+    fields.map((f) => [f.id, initialData[f.id] || ""])
+  );
+
   const [formData, setFormData] = useState(initialState);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+
+  // Add useEffect to update form when initialData changes
+  useEffect(() => {
+    if (Object.keys(initialData).length > 0) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (shouldClearForm) {
