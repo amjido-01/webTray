@@ -5,10 +5,12 @@ import { Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "unset"
@@ -28,6 +30,7 @@ export default function Header() {
     { name: "Contact Us", path: "/contact-us-page" },
   ]
   
+
   return (
     <>
       <header className="bg-white/75 backdrop-blur-sm fixed top-0 left-0 right-0 w-full z-50 border-b border-gray-100/50">
@@ -172,7 +175,7 @@ export default function Header() {
                   <Button 
                     size="lg" 
                     className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
-                    onClick={() => handleTabClick('/')}
+                    onClick={() => router.push("/wait-list")}
                   >
                     Join Waitlist
                   </Button>
