@@ -6,23 +6,23 @@ import { toast } from "sonner";
 import { useState } from "react";
 
 export default function StoreFrontHeader() {
-    const { user } = useAuthStore();
-    const [isOpen, setIsOpen] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<
-        Record<string, string>
-      >({});
-      const [shouldClearForm, setShouldClearForm] = useState(false);
+  const { user } = useAuthStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [shouldClearForm, setShouldClearForm] = useState(false);
 
-    const handleSubmit = () => {
-      console.log("submitted")
-      setValidationErrors({});
-    }
+  const handleSubmit = () => {
+    console.log("submitted");
+    setValidationErrors({});
+  };
   const handleAddStoreDrawer = () => {
-      if (!user?.business) {
-        toast("Please Register your business to carryout this action")
-        return
-      } 
-      setIsOpen(true)
+    if (!user?.business) {
+      toast("Please Register your business to carryout this action");
+      return;
+    }
+    setIsOpen(true);
   };
   return (
     <div>
@@ -33,7 +33,7 @@ export default function StoreFrontHeader() {
         addLabel="New Store"
       />
 
-         <ModalForm
+      <ModalForm
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         title="Add new store"
@@ -43,7 +43,7 @@ export default function StoreFrontHeader() {
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
-         fields={[
+        fields={[
           {
             id: "name",
             label: "Store Name",
@@ -57,14 +57,14 @@ export default function StoreFrontHeader() {
             placeholder: "Enter store description",
             required: false,
           },
-            {
+          {
             id: "domain",
-            label: "Dtock",
+            label: "Domain",
             placeholder: "Enter domain name",
             required: true,
           },
         ]}
-        />
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useStoreFront } from "@/hooks/use-store-front";
 import { useActiveStore } from "@/hooks/use-active-store";
+import { DomainSettingsSheet } from "@/components/storefront/domain-settings-sheet";
 
 export default function Page() {
   // Use the safe hook to get activeStore
@@ -225,10 +226,8 @@ export default function Page() {
                     Configure your custom domain
                   </p>
                 </div>
-                <Button className="rounded-full" variant="outline" size="sm">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Domain
-                </Button>
+               
+                <DomainSettingsSheet />
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="space-y-4">

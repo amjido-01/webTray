@@ -209,7 +209,7 @@ function ResetPasswordContent() {
                 placeholder="••••••••"
                 {...register("confirmPassword")}
                 aria-invalid={!!errors.confirmPassword}
-                className={`pr-10 h-[44px] shadow-none ${
+                className={`pr-10cshadow-none ${
                   errors.confirmPassword ? "border-red-300 focus:border-red-500" : ""
                 }`}
               />
