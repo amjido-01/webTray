@@ -1,13 +1,15 @@
 "use client";
-
 import { StatCard } from "@/components/stat-card";
-import { PackageCheck, Layers, Users2 } from "lucide-react";
+import { PackageCheck, Layers, Users2, ArrowRight } from "lucide-react";
 import { formatNumber } from "@/lib/format-number";
 import { useStoreFront } from "@/hooks/use-store-front";
 import { Skeleton } from "../ui/skeleton";
-// import InventoryPageSkeleton from "../inventory-page-skeleton";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
 export default function StoreFrontStatCard() {
   const { storefrontSummary, isFetchingStorefrontSummary } = useStoreFront();
+  const router = useRouter();
 
   if (isFetchingStorefrontSummary) {
     return (
@@ -31,7 +33,10 @@ export default function StoreFrontStatCard() {
     );
   }
 
-  console.log("Storefront Summary:", storefrontSummary);
+  const handleNavigateToCategories = () => {
+    router.push("/dashboard/storefront/manage-categories");
+  };
+
   const stats = [
     {
       title: "Total Products",
@@ -44,6 +49,17 @@ export default function StoreFrontStatCard() {
       icon: <Layers className="h-4 w-4 text-muted-foreground" />,
       value: formatNumber(storefrontSummary?.numberOfCategories || 0),
       note: "+8% from last month",
+      action: (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleNavigateToCategories}
+          className="text-white hover:bg-[#5774e8] hover:text-white bg-[#365BEB] rounded-full h-7 text-xs gap-1 mt-2"
+        >
+          View All
+          <ArrowRight className="h-3 w-3" />
+        </Button>
+      ),
     },
     {
       title: "Total Customers",

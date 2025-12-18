@@ -69,13 +69,11 @@ export interface Store {
     bankTransfer?: boolean;
     [key: string]: unknown;
   } | null;
-  deliveryOptions:
-    | {
-        inHouse?: boolean;
-        thirdParty?: string[];
-        [key: string]: unknown;
-      }
-    | null;
+  deliveryOptions: {
+    inHouse?: boolean;
+    thirdParty?: string[];
+    [key: string]: unknown;
+  } | null;
   status?: string | null; // keep for backward compatibility if used
   online?: boolean; // <-- add this
   currency?: string | null;
@@ -100,9 +98,8 @@ export interface Business {
   status: string;
   createdAt: string;
   updatedAt: string;
-  store: Store[]
+  store: Store[];
 }
-
 
 export interface DashboardSummary {
   totalRevenue: number;
@@ -149,7 +146,7 @@ export type Order = {
   updatedAt: string;
   customer: Customer | null;
   orderItems: OrderItem[];
-  
+
   // Formatted fields for UI compatibility
   orderId?: number;
   customerName?: string;
@@ -158,7 +155,6 @@ export type Order = {
   items?: OrderItem[];
   total?: number;
 };
-
 
 // customerId: 2
 // id: 2
@@ -175,13 +171,13 @@ export interface OrderSummary {
   totalSales: number;
 }
 export interface CustomerSummary {
- totalCustomer: number;
+  totalCustomer: number;
   newCustomer: number;
   retentionRate: number;
   topSpenders: {
     name: string;
     totalSpent: number;
-  }
+  };
 }
 
 export interface CreateRegistrationPayload {
@@ -249,7 +245,6 @@ export interface Product {
   updatedAt: string;
 }
 
-
 export interface InventorySummary {
   noOfProducts: number;
   noOfLowStocksItems: number;
@@ -273,6 +268,7 @@ export interface StatCardProps {
   value: string | number;
   note: string;
   noteColor?: string;
+  action?: ReactNode;
 }
 
 export interface CategoryFormData {
@@ -286,7 +282,6 @@ export interface StoreFrontSummary {
   numberOfCategories: number;
   numberOfCustomers: number;
 }
-
 
 export interface StoreProduct {
   id: number;

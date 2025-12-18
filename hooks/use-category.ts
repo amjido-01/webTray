@@ -72,67 +72,91 @@ export const useCategory = () => {
       invalidateStoreCategories();
       toast.success("Category added successfully");
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to add category"),
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to add category"),
   });
 
- const updateCategoryMutation = useMutation({
-  mutationFn: async ({
-    id,
-    ...payload
-  }: { id: number } & CreateCategoryPayload): Promise<Category> => {
-    const { data } = await api.put<ApiResponse<{ category: Category }>>(
-      `/inventory/category/${id}`,
-      payload
-    );
-    if (data?.responseSuccessful) return data.responseBody.category;
-    throw new Error(data?.responseMessage || "Failed to update category");
-  },
-  onSuccess: (updatedCategory) => {
-    // ✅ Invalidate all queries for this store
-    invalidateStoreCategories();
-
-    // ✅ Optimistically update the categories list cache
-    queryClient.setQueryData<Category[]>(categoryKeys.categories(storeId), (old) => {
-      if (!old) return old;
-      return old.map(category => 
-        category.id === updatedCategory.id ? updatedCategory : category
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      description,
+      storeId: updateStoreId,
+    }: {
+      id: number;
+      name: string;
+      description: string;
+      storeId: number;
+    }): Promise<Category> => {
+      // ✅ Send storeId as query param, name and description in body
+      const { data } = await api.patch<ApiResponse<{ category: Category }>>(
+        `/inventory/category/${id}`,
+        { name, description },
+        { params: { storeId: updateStoreId } }
       );
-    });
+      if (data?.responseSuccessful) return data.responseBody.category;
+      throw new Error(data?.responseMessage || "Failed to update category");
+    },
+    onSuccess: (updatedCategory) => {
+      invalidateStoreCategories();
 
-    // ✅ Optimistically update single category cache
-    queryClient.setQueryData<Category>(
-      categoryKeys.category(updatedCategory.id, storeId), 
-      updatedCategory
-    );
+      // ✅ Optimistically update the categories list cache
+      queryClient.setQueryData<Category[]>(
+        categoryKeys.categories(storeId),
+        (old) => {
+          if (!old) return old;
+          return old.map((category) =>
+            category.id === updatedCategory.id ? updatedCategory : category
+          );
+        }
+      );
 
-    toast.success("Category updated successfully");
-  },
-  onError: (error: Error) => toast.error(error.message || "Failed to update category"),
-});
+      // ✅ Optimistically update single category cache
+      queryClient.setQueryData<Category>(
+        categoryKeys.category(updatedCategory.id, storeId),
+        updatedCategory
+      );
 
-const deleteCategoryMutation = useMutation({
-  mutationFn: async (id: number): Promise<void> => {
-    const { data } = await api.delete<ApiResponse<object>>(
-      `/inventory/category/${id}`
-    );
-    if (!data?.responseSuccessful) throw new Error(data?.responseMessage || "Failed to delete category");
-  },
-  onSuccess: (_, deletedCategoryId) => {
-    // ✅ Invalidate all queries for this store
-    invalidateStoreCategories();
+      toast.success("Category updated successfully");
+    },
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to update category"),
+  });
 
-    // ✅ Optimistically remove from categories list cache
-    queryClient.setQueryData<Category[]>(categoryKeys.categories(storeId), (old) => {
-      return old ? old.filter(category => category.id !== deletedCategoryId) : [];
-    });
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: number): Promise<void> => {
+      // ✅ Send storeId as query param
+      const { data } = await api.delete<ApiResponse<object>>(
+        `/inventory/category/${id}`,
+        { params: { storeId } }
+      );
+      if (!data?.responseSuccessful) {
+        throw new Error(data?.responseMessage || "Failed to delete category");
+      }
+    },
+    onSuccess: (_, deletedCategoryId) => {
+      invalidateStoreCategories();
 
-    // ✅ Remove single category cache
-    queryClient.removeQueries({ queryKey: categoryKeys.category(deletedCategoryId, storeId) });
+      // ✅ Optimistically remove from categories list cache
+      queryClient.setQueryData<Category[]>(
+        categoryKeys.categories(storeId),
+        (old) => {
+          return old
+            ? old.filter((category) => category.id !== deletedCategoryId)
+            : [];
+        }
+      );
 
-    toast.success("Category deleted successfully");
-  },
-  onError: (error: Error) => toast.error(error.message || "Failed to delete category"),
-});
+      // ✅ Remove single category cache
+      queryClient.removeQueries({
+        queryKey: categoryKeys.category(deletedCategoryId, storeId),
+      });
+
+      toast.success("Category deleted successfully");
+    },
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to delete category"),
+  });
 
   const inventorySummaryQuery = useQuery({
     queryKey: categoryKeys.summary(storeId),
@@ -142,7 +166,9 @@ const deleteCategoryMutation = useMutation({
         { params: { storeId } }
       );
       if (data?.responseSuccessful) return data.responseBody;
-      throw new Error(data?.responseMessage || "Failed to fetch inventory summary");
+      throw new Error(
+        data?.responseMessage || "Failed to fetch inventory summary"
+      );
     },
     enabled: !!storeId,
   });

@@ -9,13 +9,16 @@ import { toast } from "sonner";
 import { StatCardProps } from "@/types";
 import { categorySchema } from "@/schemas/category.schema";
 import * as yup from "yup";
+
+
 export function StatCard({
   title,
   icon,
   value,
   note,
   noteColor = "text-muted-foreground",
-}: StatCardProps) {
+  action,
+}: StatCardProps & { action?: React.ReactNode }) {
   const { activeStore, user } = useAuthStore();
   const { addCategory, isAddingCategory, categories } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,9 +29,11 @@ export function StatCard({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const storeId = activeStore?.id;
+  
   if (!storeId) {
-    return null; // or some fallback UI
+    return null;
   }
+
   const validateForm = async (data: Record<string, unknown>) => {
     try {
       await categorySchema.validate(data, { abortEarly: false });
@@ -76,34 +81,33 @@ export function StatCard({
   };
 
   const handleAddCategory = async (newCategoryName: string): Promise<boolean> => {
-  if (!newCategoryName) return false;
+    if (!newCategoryName) return false;
 
-  const alreadyExists = categories?.some(
-    (category) =>
-      category.name.toLowerCase() === newCategoryName.toLowerCase()
-  );
+    const alreadyExists = categories?.some(
+      (category) =>
+        category.name.toLowerCase() === newCategoryName.toLowerCase()
+    );
 
-  if (alreadyExists) {
-    toast.success("Category already exists");
-    return false;
-  }
+    if (alreadyExists) {
+      toast.success("Category already exists");
+      return false;
+    }
 
-  try {
-    await addCategory({
-      name: newCategoryName,
-      description: "",
-      storeId: storeId!,
-    });
+    try {
+      await addCategory({
+        name: newCategoryName,
+        description: "",
+        storeId: storeId!,
+      });
 
-    toast.success("Category successfully added");
-    return true; // ✅ success
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to add category");
-    return false; // ❌ failed
-  }
-};
-
+      toast.success("Category successfully added");
+      return true;
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add category");
+      return false;
+    }
+  };
 
   const handleAddCategoryDrawer = () => {
     if (!user?.business) {
@@ -140,15 +144,18 @@ export function StatCard({
             <p className={`text-xs mt-1 ${noteColor}`}>
               <span>{note}</span>
             </p>
-            {title === "Category" && (
-              <Button
-                size="sm"
-                className="text-white hover:bg-[#5f70b4] bg-[#365BEB] rounded-full"
-                onClick={handleAddCategoryDrawer}
-                disabled={isAddingCategory}
-              >
-                {isAddingCategory ? "Adding..." : "Add New"}
-              </Button>
+            {action && <div className="ml-2">{action}</div>}
+            {title === "Category" && !action && (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  className="text-white hover:bg-[#5f70b4] bg-[#365BEB] rounded-full"
+                  onClick={handleAddCategoryDrawer}
+                  disabled={isAddingCategory}
+                >
+                  {isAddingCategory ? "Adding..." : "Add New"}
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>
