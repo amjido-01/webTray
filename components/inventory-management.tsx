@@ -12,36 +12,41 @@ import { useActiveStore } from "@/hooks/use-active-store";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "./header-skeleton";
 
+
+interface PendingProduct {
+  id: string;
+  name: string;
+  category: string;
+  categoryId: number;
+  price: number;
+  stock: number;
+  description: string;
+}
+
 export function InventoryManagement() {
   const { isFetchingInventorySummary } = useCategory();
   const { user } = useAuthStore();
-  
-  // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
-
-  
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
   const { categories, addCategory, isAddingCategory } = useCategory();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
+  const [pendingProducts, setPendingProducts] = useState<PendingProduct[]>([]);
+  const [isSubmittingAll, setIsSubmittingAll] = useState(false);
 
-  // Now activeStore is guaranteed to exist after loading
   const userStoreId = activeStore?.id;
-  const isLoading = 
-    isFetchingInventorySummary || 
-    isFetchingProducts || 
-    storeLoading; // Include store loading state
+  const isLoading =
+    isFetchingInventorySummary || isFetchingProducts || storeLoading;
 
   const handleAddCategory = async (
     newCategoryName: string
   ): Promise<boolean> => {
     if (!newCategoryName) return false;
-    
-    // Guard: Ensure we have a store ID
+
     if (!userStoreId) {
       toast.error("No active store selected");
       return false;
@@ -76,8 +81,7 @@ export function InventoryManagement() {
   const categoryNames =
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
 
-  const handleSubmit = async (data: Record<string, string>) => {
-    // Guard: Ensure we have a store ID
+  const handleAddToQueue = async (data: Record<string, string>) => {
     if (!userStoreId) {
       toast.error("No active store selected");
       return;
@@ -98,24 +102,19 @@ export function InventoryManagement() {
         return;
       }
 
-      const productPayload = {
-        storeId: userStoreId,
-        categoryId: selectedCategory.id,
+        const newProduct: PendingProduct = {
+        id: `temp-${Date.now()}-${Math.random()}`,
         name: data.name,
-        description: data.description || "",
+        category: capitalizeFirstLetter(selectedCategory.name),
+        categoryId: selectedCategory.id,
         price: parseFloat(data.price),
-        quantity: parseInt(data.stock),
-        images: {
-          main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image",
-          thumbnail:
-            "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb",
-        },
+        stock: parseInt(data.stock),
+        description: data.description || "",
       };
 
-      await addProduct(productPayload);
-      toast.success("Product added successfully");
+      setPendingProducts((prev) => [...prev, newProduct]);
+      toast.success("Product added to queue");
       setShouldClearForm(true);
-      setIsOpen(false);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         const errors: Record<string, string> = {};
@@ -131,9 +130,78 @@ export function InventoryManagement() {
           toast.error(firstError);
         }
       } else {
-        console.error("Error adding product:", error);
+        console.error("Error validating product:", error);
         toast.error("Failed to add product. Please try again.");
       }
+    }
+  };
+
+  const handleRemoveFromQueue = (productId: string) => {
+    setPendingProducts((prev) => prev.filter((p) => p.id !== productId));
+    toast.success("Product removed from queue");
+  };
+
+  const handleSubmitAll = async () => {
+    if (!userStoreId) {
+      toast.error("No active store selected");
+      return;
+    }
+
+    if (pendingProducts.length === 0) {
+      toast.error("No products to submit");
+      return;
+    }
+
+    setIsSubmittingAll(true);
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const product of pendingProducts) {
+        try {
+          const productPayload = {
+            storeId: userStoreId,
+            categoryId: product.categoryId,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            quantity: product.stock,
+            images: {
+              main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image",
+              thumbnail:
+                "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb",
+            },
+          };
+
+          await addProduct(productPayload);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to add product ${product.name}:`, error);
+          failCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} product(s) added successfully`);
+      }
+
+      if (failCount > 0) {
+        toast.error(`${failCount} product(s) failed to add`);
+      }
+
+      if (successCount === pendingProducts.length) {
+        setPendingProducts([]);
+        setIsOpen(false);
+      } else {
+        // Remove only successful products
+        setPendingProducts((prev) => prev.slice(successCount));
+      }
+    } catch (error) {
+      console.error("Error submitting products:", error);
+      toast.error("Failed to submit products");
+    } finally {
+      setIsSubmittingAll(false);
     }
   };
 
@@ -142,21 +210,30 @@ export function InventoryManagement() {
       toast.error("Please register your business to carry out this action");
       return;
     }
-    
+
     if (!activeStore) {
       toast.error("Please select a store first");
       return;
     }
-    
+
     setIsOpen(true);
   };
 
-  // Show loading while fetching store data
+  const handleModalClose = (open: boolean) => {
+    if (!open && pendingProducts.length > 0) {
+      const confirmed = window.confirm(
+        `You have ${pendingProducts.length} product(s) pending. Are you sure you want to close?`
+      );
+      if (!confirmed) return;
+      setPendingProducts([]);
+    }
+    setIsOpen(open);
+  };
+
   if (isLoading) {
     return <PageHeaderSkeleton />;
   }
 
-  // Show message if no active store (shouldn't happen after loading)
   if (!activeStore) {
     return (
       <div className="p-6">
@@ -179,15 +256,19 @@ export function InventoryManagement() {
       />
       <ModalForm
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        title="Add New Product"
+        onOpenChange={handleModalClose}
+        title="Add To Store"
         submitLabel={isAddingProduct ? "Adding..." : "Add Product"}
         onAddCategory={handleAddCategory}
-        onSubmit={handleSubmit}
+        onSubmit={handleAddToQueue}
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
         isAddingCategory={isAddingCategory}
+        pendingProducts={pendingProducts}
+        onRemoveProduct={handleRemoveFromQueue}
+        onSubmitAll={handleSubmitAll}
+        isSubmittingAll={isSubmittingAll}
         fields={[
           {
             id: "name",

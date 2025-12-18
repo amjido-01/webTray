@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, Check, X, Loader2 } from "lucide-react";
+import { Plus, Check, X, Loader2, Trash2 } from "lucide-react";
 
 interface Field {
   id: string;
@@ -20,6 +20,16 @@ interface Field {
   placeholder?: string;
   required?: boolean;
   allowCustom?: boolean;
+}
+
+interface PendingProduct {
+  id: string;
+  name: string;
+  category: string;
+  categoryId: number;
+  price: number;
+  stock: number;
+  description: string;
 }
 
 interface ModalFormProps {
@@ -35,6 +45,10 @@ interface ModalFormProps {
   onFormCleared?: () => void;
   validationErrors?: Record<string, string>;
   initialData?: Record<string, string>;
+   pendingProducts?: PendingProduct[];
+  onRemoveProduct?: (id: string) => void;
+  onSubmitAll?: () => void;
+  isSubmittingAll?: boolean;
 }
 
 export function ModalForm({
@@ -50,6 +64,10 @@ export function ModalForm({
   isAddingCategory = false,
   onFormCleared,
   initialData = {},
+   pendingProducts = [],
+  onRemoveProduct,
+  onSubmitAll,
+  isSubmittingAll = false,
 }: ModalFormProps) {
   const initialState = Object.fromEntries(
     fields.map((f) => [f.id, initialData[f.id] || ""])
@@ -58,6 +76,7 @@ export function ModalForm({
   const [formData, setFormData] = useState(initialState);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const [showProductList, setShowProductList] = useState(true);
 
   // Add useEffect to update form when initialData changes
   useEffect(() => {
@@ -112,7 +131,7 @@ export function ModalForm({
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 overflow-y-auto">
+      <SheetContent className="p-0 overflow-y-auto w-[400px] sm:w-[900px]">
         <SheetHeader className="p-6 border-b">
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
@@ -253,6 +272,83 @@ export function ModalForm({
             {submitLabel}
           </Button>
         </form>
+          {pendingProducts.length > 0 && (
+          <div className="px-6 pb-6">
+            <div className="border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-sm">
+                    Products to Submit ({pendingProducts.length})
+                  </h3>
+                  {showProductList && (
+                    <p className="text-xs text-muted-foreground">
+                      {pendingProducts.length} product(s) added
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowProductList(!showProductList)}
+                  className="text-xs"
+                >
+                  {showProductList ? "Hide" : "Review"}
+                </Button>
+              </div>
+
+              {showProductList && (
+                <div className="mb-4">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-2 bg-muted/30 rounded-t-lg border border-b-0 text-xs font-medium text-muted-foreground">
+                    <div>Product</div>
+                    <div>Category</div>
+                    <div>Price ₦</div>
+                    <div>Stock</div>
+                    <div>Action</div>
+                  </div>
+                  
+                  {/* Table Body */}
+                  <div className="max-h-[300px] overflow-y-auto border rounded-b-lg">
+                    {pendingProducts.map((product, index) => (
+                      <div
+                        key={product.id}
+                        className={`grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-3 items-center text-sm ${
+                          index !== pendingProducts.length - 1 ? 'border-b' : ''
+                        }`}
+                      >
+                        <div className="truncate font-medium">{product.name}</div>
+                        <div className="truncate text-muted-foreground">{product.category}</div>
+                        <div>{product.price.toLocaleString()}</div>
+                        <div>{product.stock}</div>
+                        <div className="flex justify-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onRemoveProduct?.(product.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={onSubmitAll}
+                disabled={isSubmittingAll}
+                className="w-full bg-black hover:bg-black/90 text-white rounded-full py-3"
+              >
+                {isSubmittingAll ? "Submitting..." : "Submit Products"}
+              </Button>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
