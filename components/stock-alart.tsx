@@ -1,4 +1,5 @@
 "use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { StockAlertsModal } from "./view-all-alert-modal";
 import { useCategory } from "@/hooks/use-category";
 import { useProduct } from "@/hooks/use-product";
 import { useState } from "react";
+import { TableSkeleton } from "./table-skeleton";
 
 const getStockLevel = (quantity: number) => {
   if (quantity === 0) return "Out of Stock";
@@ -16,32 +18,58 @@ const getStockLevel = (quantity: number) => {
 
 const getStockBadgeColor = (quantity: number) => {
   if (quantity === 0) return "bg-red-500 text-white";
-  if (quantity <= 3) return "bg-[#EF4444] text-[#FFFFFF]";
+  if (quantity <= 3) return "bg-[#EF4444] text-white";
   if (quantity <= 10) return "bg-yellow-100 text-yellow-800";
   return "bg-green-100 text-green-800";
 };
 
 export function StockAlertTable() {
-  const {} = useCategory();
-  const { products } = useProduct();
+  useCategory();
+
+  const {
+    products,
+    isFetchingProducts,
+    productsError,
+  } = useProduct();
+
   const [viewAllModal, setViewAllModal] = useState(false);
+
+  /** Loading state → show skeleton */
+  if (isFetchingProducts) {
+    return (
+      <div className="md:w-full">
+        <TableSkeleton />
+      </div>
+    )
+  }
+
+  /** Error state */
+  if (productsError) {
+    return (
+      <Card>
+        <CardContent className="py-6 text-center text-sm text-red-500">
+          Error loading stock alerts
+        </CardContent>
+      </Card>
+    );
+  }
 
   const lowProducts = products?.filter((item) => item.quantity < 10);
 
-  // Transform lowProducts into the format expected by StockAlertsModal
-  const stockAlerts =
-    lowProducts?.map((product) => ({
-      name: product.name,
-      units: product.quantity,
-      level: getStockLevel(product.quantity) as
-        | "Critical"
-        | "Low Stock"
-        | "Medium Stock",
-    })) || [];
-
+  /** 3️⃣ No low-stock products → render nothing */
   if (!lowProducts || lowProducts.length === 0) {
     return null;
   }
+
+  /** 4️⃣ Modal data */
+  const stockAlerts = lowProducts.map((product) => ({
+    name: product.name,
+    units: product.quantity,
+    level: getStockLevel(product.quantity) as
+      | "Critical"
+      | "Low Stock"
+      | "Medium Stock",
+  }));
 
   return (
     <Card>
@@ -62,9 +90,10 @@ export function StockAlertTable() {
           </Button>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="space-y-4">
-          {lowProducts?.slice(0, 5).map((item, index) => (
+          {lowProducts.slice(0, 5).map((item, index) => (
             <div
               key={index}
               className="flex items-center justify-between border-b pb-3"
@@ -75,11 +104,12 @@ export function StockAlertTable() {
                   {item.quantity} units remaining
                 </p>
               </div>
+
               <Badge
                 variant="secondary"
                 className={`${getStockBadgeColor(
                   item.quantity
-                )} px-[12px] py-[4px] rounded-full`}
+                )} px-3 py-1 rounded-full`}
               >
                 {getStockLevel(item.quantity)}
               </Badge>
@@ -88,9 +118,8 @@ export function StockAlertTable() {
         </div>
       </CardContent>
 
-      {/* Pass the required props */}
-      <StockAlertsModal 
-        isOpen={viewAllModal} 
+      <StockAlertsModal
+        isOpen={viewAllModal}
         onOpenChange={setViewAllModal}
         stockAlerts={stockAlerts}
       />

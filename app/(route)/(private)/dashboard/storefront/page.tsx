@@ -32,10 +32,14 @@ export default function Page() {
     Record<string, string>
   >({});
 
+  const [pendingOnlineStatus, setPendingOnlineStatus] = useState<
+    boolean | null
+  >(null);
+
   const { storeInfo, changeStoreStatus, isUpdatingStoreStatus } =
     useStoreFront();
 
-    console.log(storeInfo)
+  console.log(storeInfo);
 
   // Show loading state while store is being fetched
   if (storeLoading) {
@@ -71,12 +75,25 @@ export default function Page() {
   const storeId = storeInfo?.store?.id ?? activeStore.id;
   const isStoreOnline = storeInfo?.store?.online ?? false;
 
+  const displayOnlineStatus =
+    isUpdatingStoreStatus && pendingOnlineStatus !== null
+      ? pendingOnlineStatus
+      : isStoreOnline;
+
   const handleToggleStoreOnline = async (checked: boolean) => {
     if (!storeId || isUpdatingStoreStatus) return;
+
+    // ✅ Set pending status immediately
+    setPendingOnlineStatus(checked);
+
     try {
       await changeStoreStatus({ storeId, onlineStatus: checked });
+      // ✅ Clear pending status on success
+      setPendingOnlineStatus(null);
     } catch (err) {
       console.error("Failed to change store status:", err);
+      // ✅ Clear pending status on error (will revert to actual status)
+      setPendingOnlineStatus(null);
     }
   };
 
@@ -129,9 +146,18 @@ export default function Page() {
                 </p>
 
                 <div className="flex items-center gap-[8px]">
-                  <p className="text-[16px] leading-[24px] font-normal">
-                    Store online
-                  </p>
+                  {isUpdatingStoreStatus ? (
+                    <div className="flex items-center gap-2">
+                      <p className="text-[16px] leading-[24px] font-normal">
+                        Updating...
+                      </p>
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
+                    </div>
+                  ) : (
+                    <p className="text-[16px] leading-[24px] font-normal">
+                      {isStoreOnline ? "Store online" : "Store offline"}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={isStoreOnline}
@@ -139,9 +165,6 @@ export default function Page() {
                       disabled={isUpdatingStoreStatus}
                       aria-label="Toggle store online"
                     />
-                    {isUpdatingStoreStatus && (
-                      <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
-                    )}
                   </div>
                 </div>
               </CardTitle>

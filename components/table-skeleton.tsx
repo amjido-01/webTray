@@ -15,8 +15,8 @@ export const TableSkeleton = () => {
                   <Skeleton className="h-10 w-64 bg-gray-200" />
                 </div>
                 <div className="flex gap-2">
-                  <Skeleton className="h-10 w-32 bg-gray-200" />
-                  <Skeleton className="h-10 w-24 bg-gray-200" />
+                  <Skeleton className="h-10 w-[5rem] bg-gray-200" />
+                  <Skeleton className="h-10 w-[5rem] bg-gray-200" />
                 </div>
               </div>
             </div>
