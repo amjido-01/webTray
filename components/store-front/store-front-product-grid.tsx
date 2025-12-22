@@ -1,13 +1,19 @@
 import React from 'react'
-import ProductCard from './store-front-prod-card';
-import { Product } from '@/hooks/use-customer-store-front'; 
+// import ProductCard from './store-front-prod-card';
+import { Product } from '@/hooks/use-customer-store'; 
+import ProductCard from '../product-card';
 
 interface ProductsGridProps {
   products: Product[]; 
   isLoading?: boolean;
+  onAddToCart?: (product: Product) => void;
 }
 
-const ProductsGrid: React.FC<ProductsGridProps> = ({ products, isLoading = false }) => {
+const ProductsGrid: React.FC<ProductsGridProps> = ({ 
+  products, 
+  isLoading = false,
+  onAddToCart 
+}) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -42,7 +48,11 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({ products, isLoading = false
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard 
+          key={product.id} 
+          product={product}
+          onAddToCart={onAddToCart}
+        />
       ))}
     </div>
   );
