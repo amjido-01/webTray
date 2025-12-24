@@ -1,21 +1,24 @@
 import React from 'react';
-import { ShoppingCart, ArrowRight } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/hooks/use-customer-store';
 
 interface ProductCardProps {
   product: Product;
   onAddToCart?: (product: Product) => void;
+  onViewDetails?: (product: Product) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewDetails }) => {
   const isOutOfStock = product.quantity === 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-      {/* Product Image */}
+    <div 
+      className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onViewDetails?.(product)}
+    >
       <div className="relative h-48 bg-gray-100">
         <img
-          src={product.images.main || '/cups.jpg'}
+          src={product.images.main}
           alt={product.name}
           className="w-full h-full object-cover"
         />
@@ -33,7 +36,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
         )}
       </div>
 
-      {/* Product Details */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-1 truncate">
           {product.name}
@@ -54,10 +56,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex gap-2">
           <button
-            onClick={() => onAddToCart?.(product)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart?.(product);
+            }}
             disabled={isOutOfStock}
             className={`flex-1 py-2 rounded-md text-sm font-medium transition ${
               isOutOfStock
@@ -65,10 +69,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
                 : 'bg-gray-900 text-white hover:bg-gray-800'
             }`}
           >
-            {isOutOfStock ? 'Out of Stock' : 'Buy No'}
+            {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
           </button>
           <button
-            onClick={() => onAddToCart?.(product)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart?.(product);
+            }}
             disabled={isOutOfStock}
             className={`p-2 border rounded-md transition ${
               isOutOfStock

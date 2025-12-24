@@ -1,5 +1,4 @@
 import React from 'react'
-// import ProductCard from './store-front-prod-card';
 import { Product } from '@/hooks/use-customer-store'; 
 import ProductCard from '../product-card';
 
@@ -7,12 +6,14 @@ interface ProductsGridProps {
   products: Product[]; 
   isLoading?: boolean;
   onAddToCart?: (product: Product) => void;
+  onViewDetails?: (product: Product) => void; // Add this line
 }
 
 const ProductsGrid: React.FC<ProductsGridProps> = ({ 
   products, 
   isLoading = false,
-  onAddToCart 
+  onAddToCart,
+  onViewDetails // Add this
 }) => {
   if (isLoading) {
     return (
@@ -30,7 +31,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       </div>
     );
   }
-
+  
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -44,7 +45,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       </div>
     );
   }
-
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
@@ -52,6 +53,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
           key={product.id} 
           product={product}
           onAddToCart={onAddToCart}
+          onViewDetails={onViewDetails} // Pass it to ProductCard
         />
       ))}
     </div>
