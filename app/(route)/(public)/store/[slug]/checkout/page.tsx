@@ -1,12 +1,22 @@
+// ============================================
+// FILE: app/store/[slug]/checkout/page.tsx
+// ============================================
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Truck, MapPin, Phone, Mail, User, Check } from 'lucide-react';
-import Image from 'next/image';
+import { ShoppingCart } from 'lucide-react';
 
-export default function CheckoutPage({ params }: { params: { slug: string } }) {
+interface CheckoutPageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default function CheckoutPage({ params }: CheckoutPageProps) {
   const router = useRouter();
+  const { slug } = use(params);
+
+  const [step, setStep] = useState<'address' | 'review'>('address');
   
   // Mock cart items - Replace with actual cart from context/state
   const cartItems = [
@@ -15,344 +25,419 @@ export default function CheckoutPage({ params }: { params: { slug: string } }) {
       name: 'Premium Coffee Beans',
       price: '2000',
       quantity: 2,
-      image: 'https://via.placeholder.com/80',
-    },
-    {
-      id: 2,
-      name: 'Coffee Grinder',
-      price: '4500',
-      quantity: 1,
-      image: 'https://via.placeholder.com/80',
     },
   ];
 
   const subtotal = cartItems.reduce((sum, item) => 
     sum + parseFloat(item.price) * item.quantity, 0
   );
-  const shippingCost = 1000;
-  const total = subtotal + shippingCost;
+  const deliveryFee = 2000;
+  const total = subtotal + deliveryFee;
 
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
-    address: '',
-    city: '',
     state: '',
-    zipCode: '',
+    city: '',
+    address: '',
+    phone: '',
+    whatsapp: '',
   });
 
-  const [shippingMethod, setShippingMethod] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer'>('card');
+  const [shippingMethod, setShippingMethod] = useState('normal');
+  const [paymentMethod, setPaymentMethod] = useState('card');
 
   const handleInputChange = (field: string, value: string) => {
     setShippingInfo({ ...shippingInfo, [field]: value });
   };
 
-  const handleSubmitOrder = () => {
-    // Handle order submission
-    console.log('Order submitted', { shippingInfo, shippingMethod, paymentMethod, cartItems });
-    // router.push(`/store/${params.slug}/order-confirmation`);
+  const handleContinue = () => {
+    setStep('review');
   };
 
+  const handlePlaceOrder = () => {
+    console.log('Order placed', { shippingInfo, shippingMethod, paymentMethod, cartItems });
+    // Handle order placement
+  };
+
+  if (step === 'review') {
+    return (
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="bg-white border-b">
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded">
+                  Home
+                </button>
+                <button className="text-sm text-gray-600">Products</button>
+              </div>
+              <h1 className="text-lg font-bold absolute left-1/2 transform -translate-x-1/2">
+                CoffeeShop
+              </h1>
+              <div className="flex items-center gap-3">
+                <button className="relative">
+                  <ShoppingCart className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+                    2
+                  </span>
+                </button>
+                <button className="bg-gray-900 text-white px-4 py-1.5 rounded text-sm">
+                  Contact
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Breadcrumb */}
+        <div className="border-b bg-gray-50">
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span>Shopping Cart</span>
+              <span>/</span>
+              <span className="font-semibold text-gray-900">Secure Checkout</span>
+              <span>/</span>
+              <span>Order Complete</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <button
+            onClick={() => setStep('address')}
+            className="flex items-center gap-2 text-gray-700 text-sm px-3 py-1.5 border rounded hover:bg-gray-50"
+          >
+            ← Back
+          </button>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 pb-8">
+          <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Shipping Address */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold">SHIPPING ADDRESS</h2>
+                  <button className="text-sm px-3 py-1 border rounded hover:bg-gray-50">
+                    Edit
+                  </button>
+                </div>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Email:</span> {shippingInfo.email}</p>
+                  <p><span className="font-medium">Name:</span> {shippingInfo.firstName} {shippingInfo.lastName}</p>
+                  <p><span className="font-medium">Phone:</span> {shippingInfo.phone}</p>
+                  <p><span className="font-medium">Address:</span> {shippingInfo.address}</p>
+                </div>
+              </div>
+
+              {/* Shipping Method */}
+              <div className="border rounded-lg p-4">
+                <h2 className="font-bold mb-4">SHIPPING METHOD</h2>
+                <div className="space-y-2">
+                  <label className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="shipping"
+                        value="normal"
+                        checked={shippingMethod === 'normal'}
+                        onChange={(e) => setShippingMethod(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <div>
+                        <p className="font-medium text-sm">Normal Shipping: 3-7 working days</p>
+                      </div>
+                    </div>
+                    <p className="font-bold">₦ 2,000</p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="border rounded-lg p-4">
+                <h2 className="font-bold mb-4">PAYMENT METHOD</h2>
+                <div className="space-y-2">
+                  <label className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="card"
+                        checked={paymentMethod === 'card'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <div>
+                        <p className="font-medium text-sm">Pay with Cards, Bank Transfer or USSD</p>
+                        <p className="text-xs text-gray-500">100% Delivery Guarantee</p>
+                      </div>
+                    </div>
+                    <p className="font-bold">₦ 2,000</p>
+                  </label>
+                  <label className="flex items-center justify-between p-3 border rounded cursor-pointer hover:bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cash"
+                        checked={paymentMethod === 'cash'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <div>
+                        <p className="font-medium text-sm">Cash On Delivery</p>
+                        <p className="text-xs text-gray-500">100% Delivery Guarantee</p>
+                      </div>
+                    </div>
+                    <p className="font-bold">₦ 2,000</p>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Summary - Right Column */}
+            <div className="lg:col-span-1">
+              <div className="border rounded-lg p-4">
+                <h2 className="font-bold mb-4 pb-3 border-b">ORDER SUMMARY</h2>
+                <div className="space-y-3 mb-4 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal (4 Items)</span>
+                    <span className="font-bold">₦ {subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery Fee</span>
+                    <span className="font-bold">₦ {deliveryFee.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t font-bold text-base">
+                    <span>Total</span>
+                    <span>₦ {total.toLocaleString()}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handlePlaceOrder}
+                  className="w-full bg-gray-900 text-white py-3 rounded font-bold hover:bg-gray-800 transition"
+                >
+                  Place Order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <header className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <button 
-              onClick={() => router.back()} 
-              className="text-gray-600 hover:text-gray-900 font-medium"
-            >
-              ← Back
-            </button>
-            <h1 className="text-xl font-bold">Checkout</h1>
-            <div className="w-16"></div>
+            <div className="flex items-center gap-4">
+              <button className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded">
+                Home
+              </button>
+              <button className="text-sm text-gray-600">Products</button>
+            </div>
+            <h1 className="text-lg font-bold absolute left-1/2 transform -translate-x-1/2">
+              CoffeeShop
+            </h1>
+            <div className="flex items-center gap-3">
+              <button className="relative">
+                <ShoppingCart className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
+                  2
+                </span>
+              </button>
+              <button className="bg-gray-900 text-white px-4 py-1.5 rounded text-sm">
+                Contact
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content - Forms */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Step 1: Shipping Information */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                  1
-                </div>
-                <h2 className="text-2xl font-bold">Shipping Information</h2>
-              </div>
+      {/* Breadcrumb */}
+      <div className="border-b bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>Shopping Cart</span>
+            <span>/</span>
+            <span className="font-semibold text-gray-900">Secure Checkout</span>
+            <span>/</span>
+            <span>Order Complete</span>
+          </div>
+        </div>
+      </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    <User className="w-4 h-4 inline mr-1" />
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    value={shippingInfo.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="John"
-                    required
-                  />
+      {/* Back Button */}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-700 text-sm px-3 py-1.5 border rounded hover:bg-gray-50"
+        >
+          ← Back
+        </button>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 pb-8">
+        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Form */}
+          <div className="lg:col-span-2">
+            <div className="border rounded-lg p-6">
+              <h2 className="font-bold text-lg mb-6">SHIPPING INFORMATION</h2>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm mb-1.5">First Name</label>
+                    <input
+                      type="text"
+                      value={shippingInfo.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your first name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1.5">Last Name</label>
+                    <input
+                      type="text"
+                      value={shippingInfo.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your last name"
+                    />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    value={shippingInfo.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="Doe"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    <Mail className="w-4 h-4 inline mr-1" />
-                    Email Address
-                  </label>
+                  <label className="block text-sm mb-1.5">Email Address</label>
                   <input
                     type="email"
                     value={shippingInfo.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="john@example.com"
-                    required
+                    className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your email address"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm mb-1.5">State</label>
+                    <select
+                      value={shippingInfo.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select state</option>
+                      <option value="lagos">Lagos</option>
+                      <option value="abuja">Abuja</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1.5">City</label>
+                    <select
+                      value={shippingInfo.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Choose city</option>
+                      <option value="ikeja">Ikeja</option>
+                      <option value="lekki">Lekki</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    <Phone className="w-4 h-4 inline mr-1" />
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={shippingInfo.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="+234 800 000 0000"
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    <MapPin className="w-4 h-4 inline mr-1" />
-                    Street Address
-                  </label>
+                  <label className="block text-sm mb-1.5">Street Address</label>
                   <input
                     type="text"
                     value={shippingInfo.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="123 Main Street"
-                    required
+                    className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your street address"
                   />
+                  <p className="text-xs text-blue-600 mt-1">
+                    Detailed street address can help our bike find you quickly.
+                  </p>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">City</label>
+                  <label className="block text-sm mb-1.5">Phone Number</label>
                   <input
-                    type="text"
-                    value={shippingInfo.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="Lagos"
-                    required
+                    type="tel"
+                    value={shippingInfo.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Please provide your phone number"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">State</label>
+                  <label className="block text-sm mb-1.5">WhatsApp Number</label>
                   <input
-                    type="text"
-                    value={shippingInfo.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
-                    className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="Lagos State"
-                    required
+                    type="tel"
+                    value={shippingInfo.whatsapp}
+                    onChange={(e) => handleInputChange('whatsapp', e.target.value)}
+                    className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="For backup"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Step 2: Shipping Method */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-bold text-lg">
-                  2
-                </div>
-                <h2 className="text-2xl font-bold">Shipping Method</h2>
-              </div>
-
-              <div className="space-y-3">
-                <label 
-                  className={`flex items-center gap-4 p-5 border-2 rounded-xl cursor-pointer transition ${
-                    shippingMethod === 'standard' 
-                      ? 'border-blue-600 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input 
-                    type="radio" 
-                    name="shipping" 
-                    value="standard"
-                    checked={shippingMethod === 'standard'}
-                    onChange={(e) => setShippingMethod(e.target.value)}
-                    className="w-5 h-5 text-blue-600" 
-                  />
-                  <Truck className="w-6 h-6 text-gray-600" />
-                  <div className="flex-1">
-                    <p className="font-bold text-lg">Standard Delivery</p>
-                    <p className="text-sm text-gray-600">2-5 business days</p>
-                  </div>
-                  <p className="text-xl font-bold">₦1,000</p>
-                </label>
-                
-                <label 
-                  className={`flex items-center gap-4 p-5 border-2 rounded-xl cursor-pointer transition ${
-                    shippingMethod === 'express' 
-                      ? 'border-blue-600 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input 
-                    type="radio" 
-                    name="shipping" 
-                    value="express"
-                    checked={shippingMethod === 'express'}
-                    onChange={(e) => setShippingMethod(e.target.value)}
-                    className="w-5 h-5 text-blue-600" 
-                  />
-                  <Truck className="w-6 h-6 text-blue-600" />
-                  <div className="flex-1">
-                    <p className="font-bold text-lg">Express Delivery</p>
-                    <p className="text-sm text-gray-600">1-2 business days</p>
-                  </div>
-                  <p className="text-xl font-bold">₦2,500</p>
-                </label>
-              </div>
-            </div>
-
-            {/* Step 3: Payment Method */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-gray-300 text-gray-700 rounded-full flex items-center justify-center font-bold text-lg">
-                  3
-                </div>
-                <h2 className="text-2xl font-bold">Payment Method</h2>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <label 
-                  className={`flex items-center gap-4 p-5 border-2 rounded-xl cursor-pointer transition ${
-                    paymentMethod === 'card' 
-                      ? 'border-blue-600 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'card'}
-                    onChange={() => setPaymentMethod('card')}
-                    className="w-5 h-5 text-blue-600"
-                  />
-                  <CreditCard className="w-6 h-6" />
-                  <span className="font-bold text-lg flex-1">Card Payment</span>
-                  <div className="flex gap-2">
-                    <Image width={100} height={100} src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
-                      alt="Visa" className="h-6" />
-                    <Image width={100} height={100} src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
-                      alt="Mastercard" className="h-6" />
-                  </div>
-                </label>
-                
-                <label 
-                  className={`flex items-center gap-4 p-5 border-2 rounded-xl cursor-pointer transition ${
-                    paymentMethod === 'transfer' 
-                      ? 'border-blue-600 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={paymentMethod === 'transfer'}
-                    onChange={() => setPaymentMethod('transfer')}
-                    className="w-5 h-5 text-blue-600"
-                  />
-                  <CreditCard className="w-6 h-6" />
-                  <span className="font-bold text-lg">Bank Transfer</span>
-                </label>
-              </div>
-
-              <button 
-                onClick={handleSubmitOrder}
-                className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition shadow-lg">
-                Continue to Payment
+              <button
+                onClick={handleContinue}
+                className="w-full bg-gray-900 text-white py-3 rounded font-bold mt-6 hover:bg-gray-800 transition"
+              >
+                Continue
               </button>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs text-gray-600 mb-2">We accept Bank Transfer, Ussd, Debit/Credit Cards</p>
+                <div className="flex justify-center gap-3">
+                  <div className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                    VISA
+                  </div>
+                  <div className="w-10 h-6 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">
+                    P
+                  </div>
+                  <div className="w-10 h-6 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">
+                    M
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Order Summary Sidebar */}
+          {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl p-6 shadow-sm border sticky top-24">
-              <h2 className="text-xl font-bold mb-6 pb-4 border-b">Order Summary</h2>
-
-              <div className="space-y-4 mb-6">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image 
-                      width={100} height={100}
-                        src={item.image} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm mb-1 truncate">{item.name}</h4>
-                      <p className="text-xs text-gray-600 mb-2">Quantity: {item.quantity}</p>
-                      <p className="text-base font-bold">
-                        ₦{parseFloat(item.price).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t pt-4 space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">₦{subtotal.toLocaleString()}</span>
+            <div className="border rounded-lg p-4 sticky top-4">
+              <h2 className="font-bold mb-4">ORDER SUMMARY</h2>
+              
+              <div className="space-y-3 mb-4 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal (4 Items)</span>
+                  <span className="font-bold">₦ {subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-semibold">₦{shippingCost.toLocaleString()}</span>
+                <div className="flex justify-between">
+                  <span>Delivery Fee</span>
+                  <span className="font-bold">₦ {deliveryFee.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold pt-3 border-t">
+                <div className="flex justify-between pt-3 border-t font-bold text-base">
                   <span>Total</span>
-                  <span className="text-blue-600">₦{total.toLocaleString()}</span>
+                  <span>₦ {total.toLocaleString()}</span>
                 </div>
               </div>
-
-              <button 
-                onClick={handleSubmitOrder}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg flex items-center justify-center gap-2">
-                <Check className="w-5 h-5" />
-                Place Order
-              </button>
-
-              <p className="text-xs text-gray-500 text-center mt-4">
-                By placing your order, you agree to our terms and conditions
-              </p>
             </div>
           </div>
         </div>

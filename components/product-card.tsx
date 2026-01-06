@@ -1,20 +1,28 @@
+'use client';
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/hooks/use-customer-store';
 
 interface ProductCardProps {
   product: Product;
+  slug: string; // Add slug prop
   onAddToCart?: (product: Product) => void;
-  onViewDetails?: (product: Product) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onViewDetails }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, slug, onAddToCart }) => {
+  const router = useRouter();
   const isOutOfStock = product.quantity === 0;
+
+  const handleViewDetails = () => {
+    router.push(`/store/${slug}/product/${product.id}`);
+  };
 
   return (
     <div 
       className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-      onClick={() => onViewDetails?.(product)}
+      onClick={handleViewDetails}
     >
       <div className="relative h-48 bg-gray-100">
         <img

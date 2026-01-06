@@ -12,7 +12,6 @@ import { useActiveStore } from "@/hooks/use-active-store";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "./header-skeleton";
 
-
 interface PendingProduct {
   id: string;
   name: string;
@@ -102,7 +101,7 @@ export function InventoryManagement() {
         return;
       }
 
-        const newProduct: PendingProduct = {
+      const newProduct: PendingProduct = {
         id: `temp-${Date.now()}-${Math.random()}`,
         name: data.name,
         category: capitalizeFirstLetter(selectedCategory.name),
@@ -274,6 +273,7 @@ export function InventoryManagement() {
             id: "name",
             label: "Product Name",
             required: true,
+            type: "text",
             placeholder: "Enter product name",
           },
           {
@@ -287,13 +287,14 @@ export function InventoryManagement() {
           {
             id: "price",
             label: "Price",
-            type: "currency",
+            type: "currency", // ✅ Now properly set as number
             placeholder: "Enter price (e.g., 2500)",
             required: true,
           },
           {
             id: "stock",
             label: "Stock",
+            type: "number", // ✅ ADDED THIS - was missing!
             placeholder: "How many units? (e.g., 15)",
             required: true,
           },

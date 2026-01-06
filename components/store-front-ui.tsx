@@ -215,7 +215,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
                 products={displayProducts}
                 isLoading={isFetchingProducts}
                 onAddToCart={(product) => addToCart(product, 1)}
-                onViewDetails={setSelectedProduct}
+                slug={slug} // Add this line
               />
             </div>
           </div>

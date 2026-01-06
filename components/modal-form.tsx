@@ -15,7 +15,7 @@ import { Plus, Check, X, Loader2, Trash2 } from "lucide-react";
 interface Field {
   id: string;
   label: string;
-  type?: "text" | "select" | "currency" | "textarea";
+  type?: "text" | "select" | "currency" | "textarea" | "number";
   options?: string[];
   placeholder?: string;
   required?: boolean;
@@ -45,7 +45,7 @@ interface ModalFormProps {
   onFormCleared?: () => void;
   validationErrors?: Record<string, string>;
   initialData?: Record<string, string>;
-   pendingProducts?: PendingProduct[];
+  pendingProducts?: PendingProduct[];
   onRemoveProduct?: (id: string) => void;
   onSubmitAll?: () => void;
   isSubmittingAll?: boolean;
@@ -64,7 +64,7 @@ export function ModalForm({
   isAddingCategory = false,
   onFormCleared,
   initialData = {},
-   pendingProducts = [],
+  pendingProducts = [],
   onRemoveProduct,
   onSubmitAll,
   isSubmittingAll = false,
@@ -227,8 +227,23 @@ export function ModalForm({
                     className={`pl-16 ${
                       validationErrors[field.id] ? "border-red-500" : ""
                     }`}
+                    onKeyPress={(e) => {
+                      // Allow numbers and a single decimal point
+                      const isValid = /[0-9.]/.test(e.key);
+                      const currentValue = e.currentTarget.value;
+
+                      // Allow only one decimal point
+                      if (
+                        !isValid ||
+                        (e.key === "." && currentValue.includes("."))
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     placeholder={field.placeholder}
                     required={field.required}
+                    min="0"
+                    step="any"
                   />
                 </div>
               ) : field.type === "textarea" ? (
@@ -242,6 +257,23 @@ export function ModalForm({
                     validationErrors[field.id] ? "border-red-500" : ""
                   }`}
                   rows={2}
+                />
+              ) : field.type === "number" ? (
+                <Input
+                  id={field.id}
+                  type="number"
+                  value={formData[field.id]}
+                  onChange={(e) => handleChange(field.id, e.target.value)}
+                  placeholder={field.placeholder}
+                  required={field.required}
+                  className={validationErrors[field.id] ? "border-red-500" : ""}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  min="0"
+                  step="any"
                 />
               ) : (
                 <Input
@@ -272,7 +304,7 @@ export function ModalForm({
             {submitLabel}
           </Button>
         </form>
-          {pendingProducts.length > 0 && (
+        {pendingProducts.length > 0 && (
           <div className="px-6 pb-6">
             <div className="border-t pt-6">
               <div className="flex items-center justify-between mb-4">
@@ -307,18 +339,22 @@ export function ModalForm({
                     <div>Stock</div>
                     <div>Action</div>
                   </div>
-                  
+
                   {/* Table Body */}
                   <div className="max-h-[300px] overflow-y-auto border rounded-b-lg">
                     {pendingProducts.map((product, index) => (
                       <div
                         key={product.id}
                         className={`grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-3 items-center text-sm ${
-                          index !== pendingProducts.length - 1 ? 'border-b' : ''
+                          index !== pendingProducts.length - 1 ? "border-b" : ""
                         }`}
                       >
-                        <div className="truncate font-medium">{product.name}</div>
-                        <div className="truncate text-muted-foreground">{product.category}</div>
+                        <div className="truncate font-medium">
+                          {product.name}
+                        </div>
+                        <div className="truncate text-muted-foreground">
+                          {product.category}
+                        </div>
                         <div>{product.price.toLocaleString()}</div>
                         <div>{product.stock}</div>
                         <div className="flex justify-center">

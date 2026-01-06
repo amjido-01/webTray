@@ -5,15 +5,15 @@ import ProductCard from '../product-card';
 interface ProductsGridProps {
   products: Product[]; 
   isLoading?: boolean;
+  slug: string; // Add slug prop
   onAddToCart?: (product: Product) => void;
-  onViewDetails?: (product: Product) => void; // Add this line
 }
 
 const ProductsGrid: React.FC<ProductsGridProps> = ({ 
   products, 
   isLoading = false,
-  onAddToCart,
-  onViewDetails // Add this
+  slug, // Destructure slug
+  onAddToCart
 }) => {
   if (isLoading) {
     return (
@@ -52,8 +52,8 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
         <ProductCard 
           key={product.id} 
           product={product}
+          slug={slug} // Pass slug to ProductCard
           onAddToCart={onAddToCart}
-          onViewDetails={onViewDetails} // Pass it to ProductCard
         />
       ))}
     </div>
