@@ -18,6 +18,7 @@ import { useActiveStore } from "@/hooks/use-active-store";
 import { DomainSettingsSheet } from "@/components/storefront/domain-settings-sheet";
 import { ModalForm } from "@/components/modal-form";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   // Use the safe hook to get activeStore
@@ -172,12 +173,12 @@ export default function Page() {
                 Your store is live and accepting orders
               </CardDescription>
               <CardContent className="flex p-0 gap-[10px] items-center">
-                <Button size="sm" className="rounded-full">
-                  Online
-                </Button>
+                <Badge variant="default" className="rounded-full">
+                  {isStoreOnline ? "Online" : "Offline"}
+                </Badge>
                 <Button
                   variant="link"
-                  className="text-[#365BEB] hover:no-underline cursor-pointer font-normal text-[16px]"
+                  className={`text-[#365BEB] hover:no-underline cursor-pointer font-normal text-[16px] ${!isStoreOnline && "line-through text-gray-400 decoration-2 decoration-red-500"}`}
                 >
                   <Globe className="text-black" />
                   {customDomain}
