@@ -2,12 +2,21 @@
 // FILE: app/store/[slug]/product/[productId]/page.tsx
 // ============================================
 
-'use client';
+"use client";
 
-import React, { useState, useMemo, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { Minus, Plus, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useStorefront } from '@/hooks/use-customer-store';
+import React, { useState, useMemo, use } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Minus,
+  Plus,
+  ShoppingCart,
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useStorefront } from "@/hooks/use-customer-store";
+import { useCartStore } from "@/store/use-cart-store"; // Add this import
+import { toast } from "sonner";
 
 interface ProductDetailPageProps {
   params: Promise<{
@@ -55,7 +64,10 @@ const ProductDetailSkeleton = () => {
             {/* Thumbnails */}
             <div className="flex flex-col gap-2 w-16">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-200 rounded aspect-square"></div>
+                <div
+                  key={i}
+                  className="bg-gray-200 rounded aspect-square"
+                ></div>
               ))}
             </div>
           </div>
@@ -121,20 +133,20 @@ const ProductDetailSkeleton = () => {
 
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const router = useRouter();
-  
+
   // Unwrap params using React.use()
   const { slug, productId } = use(params);
-  console.log(slug, productId)
-  
+  console.log(slug, productId);
+
   const { allProducts, isFetchingAllProducts } = useStorefront(slug);
+  const addToCart = useCartStore((state) => state.addToCart);
+
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const product = useMemo(() => {
     return allProducts.find((p) => p.id === parseInt(productId));
   }, [allProducts, productId]);
-
-  console.log(allProducts)
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
@@ -149,7 +161,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }, [allProducts, product]);
 
   if (isFetchingAllProducts) {
-    return <ProductDetailSkeleton />
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {
@@ -157,7 +169,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Product Not Found
+          </h2>
           <button
             onClick={() => router.push(`/store/${slug}`)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
@@ -177,12 +191,39 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   };
 
   const handleAddToCart = () => {
-    console.log('Added to cart:', product, quantity);
+    const success = addToCart(product, quantity);
+
+    if (success) {
+      toast.success("Added to cart", {
+        description: `${product.name} (${quantity}) has been added to your cart.`,
+      });
+      // Reset quantity after successful add
+      setQuantity(1);
+    } else {
+      toast.error(`Cannot add more of ${product.name} to the cart.`);
+    }
   };
 
   const handleBuyNow = () => {
-    console.log('Buy now:', product, quantity);
-    router.push(`/store/${slug}/checkout`);
+    const success = addToCart(product, quantity);
+
+    if (success) {
+      router.push(`/store/${slug}/checkout`);
+    } else {
+      toast.error(`Cannot add more of ${product.name} to the cart.`);
+    }
+  };
+
+  const handleRelatedProductAddToCart = (relatedProduct: typeof product) => {
+    const success = addToCart(relatedProduct, 1);
+    
+    if (success) {
+      toast.success("Added to cart", {
+        description: `${relatedProduct.name} has been added to your cart.`,
+      });
+    } else {
+      toast.error(`Cannot add more of ${relatedProduct.name} to the cart.`);
+    }
   };
 
   const productImages = [
@@ -195,45 +236,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const selectedImage = productImages[selectedImageIndex];
 
   const handlePrevImage = () => {
-    setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
+    setSelectedImageIndex((prev) =>
+      prev === 0 ? productImages.length - 1 : prev - 1
+    );
   };
 
   const handleNextImage = () => {
-    setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
+    setSelectedImageIndex((prev) =>
+      prev === productImages.length - 1 ? 0 : prev + 1
+    );
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button className="text-sm px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
-                Home
-              </button>
-              <button className="text-sm text-gray-600 hover:text-gray-900">
-                Products
-              </button>
-            </div>
-            <h1 className="text-lg font-bold absolute left-1/2 transform -translate-x-1/2">
-              CoffeeShop
-            </h1>
-            <div className="flex items-center gap-3">
-              <button className="relative">
-                <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px]">
-                  2
-                </span>
-              </button>
-              <button className="bg-gray-900 text-white px-4 py-1.5 rounded text-sm">
-                Contact
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Back Button */}
       <div className="max-w-6xl mx-auto px-4 py-4">
         <button
@@ -258,7 +273,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               {/* Navigation Arrows */}
               <button
                 onClick={handlePrevImage}
@@ -282,11 +297,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   onClick={() => setSelectedImageIndex(index)}
                   className={`border rounded overflow-hidden aspect-square transition ${
                     selectedImageIndex === index
-                      ? 'border-gray-900 ring-1 ring-gray-900'
-                      : 'border-gray-200 hover:border-gray-400'
+                      ? "border-gray-900 ring-1 ring-gray-900"
+                      : "border-gray-200 hover:border-gray-400"
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={img}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -324,7 +343,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="flex items-center gap-2 mb-4">
               <div className="flex">
                 {[1, 2, 3, 4].map((star) => (
-                  <span key={star} className="text-yellow-400 text-sm">★</span>
+                  <span key={star} className="text-yellow-400 text-sm">
+                    ★
+                  </span>
                 ))}
                 <span className="text-gray-300 text-sm">★</span>
               </div>
@@ -342,9 +363,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               >
                 <Minus className="w-4 h-4" />
               </button>
-              <span className="w-8 text-center font-medium">
-                {quantity}
-              </span>
+              <span className="w-8 text-center font-medium">{quantity}</span>
               <button
                 onClick={() => handleQuantityChange(1)}
                 disabled={quantity >= product.quantity}
@@ -381,24 +400,24 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <h2 className="text-lg font-bold mb-3">Product Details</h2>
           <p className="text-sm text-gray-700 leading-relaxed">
             {product.description ||
-              'High-quality premium organic green tea leaves, carefully harvested from the lush hills of Japan, known for their vibrant color and rich flavor. These leaves are packed with antioxidants and provide a refreshing, invigorating taste that delights the senses.'}
+              "High-quality premium organic green tea leaves, carefully harvested from the lush hills of Japan, known for their vibrant color and rich flavor. These leaves are packed with antioxidants and provide a refreshing, invigorating taste that delights the senses."}
           </p>
         </div>
 
         {/* You Might Also Like Section */}
-        {relatedProducts.length > 0 && (
+         {relatedProducts.length > 0 && (
           <div>
             <h2 className="text-lg font-bold mb-4">You might also like</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {relatedProducts.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition cursor-pointer"
-                  onClick={() =>
-                    router.push(`/store/${slug}/product/${item.id}`)
-                  }
+                  className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition"
                 >
-                  <div className="aspect-square bg-gray-50">
+                  <div 
+                    className="aspect-square bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/store/${slug}/product/${item.id}`)}
+                  >
                     <img
                       src={item.images.main}
                       alt={item.name}
@@ -406,7 +425,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     />
                   </div>
                   <div className="p-3">
-                    <h4 className="font-semibold text-sm text-gray-900 mb-1 truncate">
+                    <h4 
+                      className="font-semibold text-sm text-gray-900 mb-1 truncate cursor-pointer"
+                      onClick={() => router.push(`/store/${slug}/product/${item.id}`)}
+                    >
                       {item.name}
                     </h4>
                     <span className="inline-block text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded mb-1">
@@ -419,11 +441,27 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       ₦ {parseFloat(item.price).toLocaleString()}
                     </p>
                     <div className="flex gap-1.5">
-                      <button className="flex-1 bg-gray-900 text-white py-1.5 rounded text-xs font-medium hover:bg-gray-800 flex items-center justify-center gap-1">
+                      <button 
+                        onClick={() => {
+                          const success = addToCart(item, 1);
+                          if (success) {
+                            router.push(`/store/${slug}/checkout`);
+                          } else {
+                            toast.error(`Cannot add more of ${item.name} to the cart.`);
+                          }
+                        }}
+                        className="flex-1 bg-gray-900 text-white py-1.5 rounded text-xs font-medium hover:bg-gray-800 flex items-center justify-center gap-1"
+                      >
                         Buy Now
                         <span className="text-[10px]">→</span>
                       </button>
-                      <button className="px-2 py-1.5 border border-gray-900 rounded hover:bg-gray-50">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRelatedProductAddToCart(item);
+                        }}
+                        className="px-2 py-1.5 border border-gray-900 rounded hover:bg-gray-50"
+                      >
                         <ShoppingCart className="w-3.5 h-3.5" />
                       </button>
                     </div>
