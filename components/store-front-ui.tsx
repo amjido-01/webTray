@@ -85,9 +85,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
     const success = addToCart(product, quantity);
 
     if (success) {
-      toast.success("Added to cart", {
-        description: `${product.name} has been added to your cart.`,
-      });
+      toast.success( `${product.name} has been added to your cart.`);
     } else {
       toast.error(`Cannot add more of ${product.name} to the cart.`);
     }

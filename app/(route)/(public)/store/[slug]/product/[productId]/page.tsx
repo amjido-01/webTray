@@ -194,9 +194,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     const success = addToCart(product, quantity);
 
     if (success) {
-      toast.success("Added to cart", {
-        description: `${product.name} (${quantity}) has been added to your cart.`,
-      });
+      toast.success( `${product.name} (${quantity}) has been added to your cart.`);
       // Reset quantity after successful add
       setQuantity(1);
     } else {

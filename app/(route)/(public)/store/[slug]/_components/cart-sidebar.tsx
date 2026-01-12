@@ -2,11 +2,18 @@
 "use client";
 
 import React from "react";
-import { ShoppingCart, X, Plus, Minus } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useCartStore } from "@/store/use-cart-store";
 import { toast } from "sonner";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface CartSidebarProps {
   showCart: boolean;
@@ -38,26 +45,14 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
     toast.success(`${productName} removed from cart`);
   };
 
-  if (!showCart) return null;
-
   return (
-    <div className="fixed inset-0 z-50">
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={() => setShowCart(false)}
-      ></div>
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold">
+    <Sheet open={showCart} onOpenChange={setShowCart}>
+      <SheetContent className="w-full max-w-md p-0 flex flex-col">
+        <SheetHeader className="p-4 border-b">
+          <SheetTitle className="text-xl font-bold">
             Shopping Cart ({cartCount})
-          </h2>
-          <button
-            onClick={() => setShowCart(false)}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+          </SheetTitle>
+        </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
           {cart.length === 0 ? (
@@ -100,27 +95,33 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
                           ₦{parseFloat(item.price).toLocaleString()}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
-                          <button
+                          <Button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1 bg-white border rounded hover:bg-gray-50 transition"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded hover:bg-gray-50"
                           >
                             <Minus className="w-4 h-4" />
-                          </button>
+                          </Button>
                           <span className="font-medium w-8 text-center text-sm">
                             {item.cartQuantity}
                           </span>
-                          <button
+                          <Button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="p-1 bg-white border rounded hover:bg-gray-50 transition"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded hover:bg-gray-50"
                           >
                             <Plus className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => handleRemoveFromCart(item.id, item.name)}
-                            className="ml-auto text-red-600 hover:text-red-700 p-1 transition"
+                            variant="ghost"
+                            size="icon"
+                            className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8"
                           >
-                            <X className="w-5 h-5" />
-                          </button>
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -133,24 +134,52 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
 
         {cart.length > 0 && (
           <div className="border-t p-4 bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-semibold">Total:</span>
-              <span className="text-2xl font-bold text-blue-600">
+            <div className="flex justify-between leading-[100%] items-center mb-4">
+              <span className="text-lg text-[#4D4D4D] text-[20px] font-bold">Total:</span>
+              <span className="text-[26px] font-bold text-[#1A1A1A]">
                 ₦{cartTotal.toLocaleString()}
               </span>
             </div>
-            <button
+            <Button
               onClick={() => {
                 setShowCart(false);
                 router.push(`/store/${slug}/checkout`);
               }}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg"
+              className="w-full bg-[#111827] text-white py-3 text-[16px] rounded-lg font-bold transition shadow-lg hover:bg-[#1f2937]"
             >
               Proceed to Checkout
-            </button>
+            </Button>
+            <div>
+              <p className="text-center text-[14px] font-bold text-[#4D4D4D] mt-2">
+                We accept Bank Transfer, USSD, Debit/Credit Cards
+              </p>
+              <div className="flex justify-center items-center gap-3 mt-3">
+                <Image
+                  src="/visa.png"
+                  alt="Visa"
+                  width={30}
+                  height={28}
+                  className="object-contain"
+                />  
+                <Image
+                  src="/master.png"
+                  alt="Mastercard"
+                  width={30}
+                  height={28}
+                  className="object-contain"
+                />  
+                <Image
+                  src="/paypal.png"
+                  alt="PayPal"
+                  width={40}
+                  height={28}
+                  className="object-contain"
+                />  
+              </div>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 }
