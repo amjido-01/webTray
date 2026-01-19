@@ -20,6 +20,7 @@ interface PendingProduct {
   price: number;
   stock: number;
   description: string;
+  images: File[];
 }
 
 export function InventoryManagement() {
@@ -42,7 +43,7 @@ export function InventoryManagement() {
     isFetchingInventorySummary || isFetchingProducts || storeLoading;
 
   const handleAddCategory = async (
-    newCategoryName: string
+    newCategoryName: string,
   ): Promise<boolean> => {
     if (!newCategoryName) return false;
 
@@ -53,7 +54,7 @@ export function InventoryManagement() {
 
     const alreadyExists = categories?.some(
       (category) =>
-        category.name.toLowerCase() === newCategoryName.toLowerCase()
+        category.name.toLowerCase() === newCategoryName.toLowerCase(),
     );
 
     if (alreadyExists) {
@@ -80,7 +81,7 @@ export function InventoryManagement() {
   const categoryNames =
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
 
-  const handleAddToQueue = async (data: Record<string, string>) => {
+ const handleAddToQueue = async (data: Record<string, string>, images: File[]) => {
     if (!userStoreId) {
       toast.error("No active store selected");
       return;
@@ -89,11 +90,12 @@ export function InventoryManagement() {
     try {
       setValidationErrors({});
 
+
       await productValidationSchema.validate(data, { abortEarly: false });
 
       const selectedCategoryName = data.category.toLowerCase();
       const selectedCategory = categories?.find(
-        (cat) => cat.name.toLowerCase() === selectedCategoryName
+        (cat) => cat.name.toLowerCase() === selectedCategoryName,
       );
 
       if (!selectedCategory) {
@@ -109,7 +111,10 @@ export function InventoryManagement() {
         price: parseFloat(data.price),
         stock: parseInt(data.stock),
         description: data.description || "",
+        images: images,
       };
+
+      console.log(newProduct);
 
       setPendingProducts((prev) => [...prev, newProduct]);
       toast.success("Product added to queue");
@@ -140,69 +145,72 @@ export function InventoryManagement() {
     toast.success("Product removed from queue");
   };
 
-  const handleSubmitAll = async () => {
-    if (!userStoreId) {
-      toast.error("No active store selected");
-      return;
-    }
+const handleSubmitAll = async () => {
+  if (!userStoreId) {
+    toast.error("No active store selected");
+    return;
+  }
 
-    if (pendingProducts.length === 0) {
-      toast.error("No products to submit");
-      return;
-    }
+  if (pendingProducts.length === 0) {
+    toast.error("No products to submit");
+    return;
+  }
 
-    setIsSubmittingAll(true);
+  setIsSubmittingAll(true);
 
-    try {
-      let successCount = 0;
-      let failCount = 0;
+  try {
+    let successCount = 0;
+    let failCount = 0;
 
-      for (const product of pendingProducts) {
-        try {
-          const productPayload = {
-            storeId: userStoreId,
-            categoryId: product.categoryId,
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            quantity: product.stock,
-            images: {
-              main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image",
-              thumbnail:
-                "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb",
-            },
-          };
+    for (const product of pendingProducts) {
+      try {
+        const formData = new FormData();
+        formData.append('storeId', userStoreId.toString());
+        formData.append('categoryId', product.categoryId.toString());
+        formData.append('name', product.name);
+        formData.append('description', product.description);
+        formData.append('price', product.price.toString());
+        formData.append('quantity', product.stock.toString());
 
-          await addProduct(productPayload);
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to add product ${product.name}:`, error);
-          failCount++;
+        // ✅ Only append images if they exist
+        if (product.images && product.images.length > 0) {
+          product.images.forEach((file) => {
+            formData.append('images', file);
+          });
         }
-      }
 
-      if (successCount > 0) {
-        toast.success(`${successCount} product(s) added successfully`);
-      }
+        console.log('Sending product:', product.name);
 
-      if (failCount > 0) {
-        toast.error(`${failCount} product(s) failed to add`);
+        await addProduct(formData);
+        
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to add product ${product.name}:`, error);
+        failCount++;
       }
-
-      if (successCount === pendingProducts.length) {
-        setPendingProducts([]);
-        setIsOpen(false);
-      } else {
-        // Remove only successful products
-        setPendingProducts((prev) => prev.slice(successCount));
-      }
-    } catch (error) {
-      console.error("Error submitting products:", error);
-      toast.error("Failed to submit products");
-    } finally {
-      setIsSubmittingAll(false);
     }
-  };
+
+    if (successCount > 0) {
+      toast.success(`${successCount} product(s) added successfully`);
+    }
+
+    if (failCount > 0) {
+      toast.error(`${failCount} product(s) failed to add`);
+    }
+
+    if (successCount === pendingProducts.length) {
+      setPendingProducts([]);
+      setIsOpen(false);
+    } else {
+      setPendingProducts((prev) => prev.slice(successCount));
+    }
+  } catch (error) {
+    console.error("Error submitting products:", error);
+    toast.error("Failed to submit products");
+  } finally {
+    setIsSubmittingAll(false);
+  }
+};
 
   const handleAddProductDrawer = () => {
     if (!user?.business) {
@@ -221,7 +229,7 @@ export function InventoryManagement() {
   const handleModalClose = (open: boolean) => {
     if (!open && pendingProducts.length > 0) {
       const confirmed = window.confirm(
-        `You have ${pendingProducts.length} product(s) pending. Are you sure you want to close?`
+        `You have ${pendingProducts.length} product(s) pending. Are you sure you want to close?`,
       );
       if (!confirmed) return;
       setPendingProducts([]);

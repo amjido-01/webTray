@@ -19,6 +19,7 @@ import { DomainSettingsSheet } from "@/components/storefront/domain-settings-she
 import { ModalForm } from "@/components/modal-form";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { StoreFrontSkeleton } from "@/components/storefront/store-front-skeleton";
 
 export default function Page() {
   // Use the safe hook to get activeStore
@@ -37,21 +38,13 @@ export default function Page() {
     boolean | null
   >(null);
 
-  const { storeInfo, changeStoreStatus, isUpdatingStoreStatus } =
+  const { storeInfo, isFetchingStoreInfo, changeStoreStatus, isUpdatingStoreStatus } =
     useStoreFront();
 
   console.log(storeInfo);
 
-  // Show loading state while store is being fetched
-  if (storeLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
-          <p className="text-sm text-muted-foreground">Loading store...</p>
-        </div>
-      </div>
-    );
+ if (storeLoading || isFetchingStoreInfo) {
+    return <StoreFrontSkeleton />;
   }
 
   // Guard: Ensure we have an active store

@@ -10,7 +10,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, Check, X, Loader2, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Check,
+  X,
+  Loader2,
+  Trash2,
+  Upload,
+  ImageIcon,
+} from "lucide-react";
+import Image from "next/image";
 
 interface Field {
   id: string;
@@ -30,6 +39,7 @@ interface PendingProduct {
   price: number;
   stock: number;
   description: string;
+  images: File[]; // Added images array
 }
 
 interface ModalFormProps {
@@ -39,7 +49,7 @@ interface ModalFormProps {
   submitLabel: string;
   fields: Field[];
   onAddCategory?: (category: string) => Promise<boolean>;
-  onSubmit: (data: Record<string, string>) => void;
+  onSubmit: (data: Record<string, string>, images: File[]) => void; // Updated to include images
   shouldClearForm?: boolean;
   isAddingCategory?: boolean;
   onFormCleared?: () => void;
@@ -70,7 +80,7 @@ export function ModalForm({
   isSubmittingAll = false,
 }: ModalFormProps) {
   const initialState = Object.fromEntries(
-    fields.map((f) => [f.id, initialData[f.id] || ""])
+    fields.map((f) => [f.id, initialData[f.id] || ""]),
   );
 
   const [formData, setFormData] = useState(initialState);
@@ -78,7 +88,12 @@ export function ModalForm({
   const [newCategory, setNewCategory] = useState("");
   const [showProductList, setShowProductList] = useState(true);
 
-  // Add useEffect to update form when initialData changes
+  // Image upload state
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [imageError, setImageError] = useState<string>("");
+
   useEffect(() => {
     if (Object.keys(initialData).length > 0) {
       setFormData(initialData);
@@ -90,26 +105,95 @@ export function ModalForm({
       setFormData(initialState);
       setShowAddCategory(false);
       setNewCategory("");
+
+      // Clean up preview URLs
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      setSelectedImages([]);
+      setImagePreviews([]);
+      setImageError("");
       onFormCleared?.();
     }
-  }, [shouldClearForm, onFormCleared, initialState]);
+  }, [shouldClearForm, onFormCleared, initialState, imagePreviews]);
 
   const handleChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  // Handle image file selection
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Check if adding these files would exceed the limit
+    if (selectedImages.length + files.length > 3) {
+      setImageError("Maximum 3 images allowed");
+      return;
+    }
+
+    setImageError("");
+    setIsUploadingImages(true);
+
+    try {
+      const newFiles: File[] = [];
+      const newPreviews: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          setImageError("Only image files are allowed");
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setImageError("Image size must be less than 5MB");
+          continue;
+        }
+
+        // Store the file
+        newFiles.push(file);
+
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+        newPreviews.push(previewUrl);
+      }
+
+      setSelectedImages((prev) => [...prev, ...newFiles].slice(0, 3));
+      setImagePreviews((prev) => [...prev, ...newPreviews].slice(0, 3));
+    } catch (error) {
+      console.error("Error processing images:", error);
+      setImageError("Failed to process images");
+    } finally {
+      setIsUploadingImages(false);
+      e.target.value = "";
+    }
+  };
+
+  // Remove image from selection
+  const handleRemoveImage = (index: number) => {
+    // Revoke the preview URL to free memory
+    URL.revokeObjectURL(imagePreviews[index]);
+
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setImageError("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    onSubmit(formData, selectedImages);
   };
 
   const handleAddNewCategory = async () => {
     if (newCategory.trim() && onAddCategory) {
-      const success = await onAddCategory(newCategory.trim()); // ✅ wait for response
+      const success = await onAddCategory(newCategory.trim());
       if (success) {
         setFormData((prev) => ({ ...prev, category: newCategory.trim() }));
         setNewCategory("");
-        setShowAddCategory(false); // ✅ close only when success
+        setShowAddCategory(false);
       }
     }
   };
@@ -119,12 +203,17 @@ export function ModalForm({
     setShowAddCategory(false);
   };
 
-  // Reset form when modal closes
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setFormData(initialState);
       setShowAddCategory(false);
       setNewCategory("");
+
+      // Clean up preview URLs
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+      setSelectedImages([]);
+      setImagePreviews([]);
+      setImageError("");
     }
     onOpenChange(open);
   };
@@ -135,7 +224,81 @@ export function ModalForm({
         <SheetHeader className="p-6 border-b">
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="px-6 space-y-6">
+          {/* Image Upload Section - Placed at the top for prominence */}
+          <div className="space-y-2">
+            <Label className="text-sm">
+              Product Images {/* ✅ Remove the red asterisk */}
+              <span className="text-xs text-muted-foreground ml-2">
+                (Optional, up to 3 images)
+              </span>
+            </Label>
+
+            <div className="grid grid-cols-4 gap-2">
+              {imagePreviews.map((preview, index) => (
+                <div
+                  key={index}
+                  className="relative aspect-square rounded-md border border-gray-200 overflow-hidden group"
+                >
+                  <Image
+                    src={preview}
+                    alt={`Product ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                    {index === 0 ? "Main" : index + 1}
+                  </div>
+                </div>
+              ))}
+
+              {selectedImages.length < 3 && (
+                <label
+                  htmlFor="image-upload"
+                  className="aspect-square rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50 hover:bg-gray-100"
+                >
+                  {isUploadingImages ? (
+                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                      <span className="text-[10px] text-gray-500">
+                        {selectedImages.length}/3
+                      </span>
+                    </>
+                  )}
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={isUploadingImages}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div className="text-[11px] text-muted-foreground bg-gray-50 px-2 py-1.5 rounded">
+              JPG, PNG, WebP • Max 5MB • First image is main
+            </div>
+
+            {imageError && (
+              <div className="text-red-500 text-xs bg-red-50 px-2 py-1.5 rounded">
+                {imageError}
+              </div>
+            )}
+          </div>
+
+          {/* Existing form fields */}
           {fields.map((field) => (
             <div key={field.id} className="space-y-2">
               <Label htmlFor={field.id}>{field.label}</Label>
@@ -228,11 +391,9 @@ export function ModalForm({
                       validationErrors[field.id] ? "border-red-500" : ""
                     }`}
                     onKeyPress={(e) => {
-                      // Allow numbers and a single decimal point
                       const isValid = /[0-9.]/.test(e.key);
                       const currentValue = e.currentTarget.value;
 
-                      // Allow only one decimal point
                       if (
                         !isValid ||
                         (e.key === "." && currentValue.includes("."))
@@ -287,7 +448,6 @@ export function ModalForm({
                 />
               )}
 
-              {/* Display validation error */}
               {validationErrors[field.id] && (
                 <div className="text-red-500 text-sm mt-1">
                   {validationErrors[field.id]}
@@ -304,6 +464,8 @@ export function ModalForm({
             {submitLabel}
           </Button>
         </form>
+
+        {/* Pending Products List */}
         {pendingProducts.length > 0 && (
           <div className="px-6 pb-6">
             <div className="border-t pt-6">
@@ -331,8 +493,8 @@ export function ModalForm({
 
               {showProductList && (
                 <div className="mb-4">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-2 bg-muted/30 rounded-t-lg border border-b-0 text-xs font-medium text-muted-foreground">
+                  <div className="grid grid-cols-[0.5fr_2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-2 bg-muted/30 rounded-t-lg border border-b-0 text-xs font-medium text-muted-foreground">
+                    <div>Image</div>
                     <div>Product</div>
                     <div>Category</div>
                     <div>Price ₦</div>
@@ -340,36 +502,58 @@ export function ModalForm({
                     <div>Action</div>
                   </div>
 
-                  {/* Table Body */}
                   <div className="max-h-[300px] overflow-y-auto border rounded-b-lg">
-                    {pendingProducts.map((product, index) => (
-                      <div
-                        key={product.id}
-                        className={`grid grid-cols-[2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-3 items-center text-sm ${
-                          index !== pendingProducts.length - 1 ? "border-b" : ""
-                        }`}
-                      >
-                        <div className="truncate font-medium">
-                          {product.name}
+                    {pendingProducts.map((product, index) => {
+                      // ✅ Create preview URL for the first image
+                      const imagePreview = product.images?.[0]
+                        ? URL.createObjectURL(product.images[0])
+                        : null;
+
+                      return (
+                        <div
+                          key={product.id}
+                          className={`grid grid-cols-[0.5fr_2fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-3 py-3 items-center text-sm ${
+                            index !== pendingProducts.length - 1
+                              ? "border-b"
+                              : ""
+                          }`}
+                        >
+                          <div className="relative w-10 h-10 rounded overflow-hidden bg-gray-100">
+                            {imagePreview ? (
+                              <Image
+                                src={imagePreview}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="w-4 h-4 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="truncate font-medium">
+                            {product.name}
+                          </div>
+                          <div className="truncate text-muted-foreground">
+                            {product.category}
+                          </div>
+                          <div>{product.price.toLocaleString()}</div>
+                          <div>{product.stock}</div>
+                          <div className="flex justify-center">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onRemoveProduct?.(product.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="truncate text-muted-foreground">
-                          {product.category}
-                        </div>
-                        <div>{product.price.toLocaleString()}</div>
-                        <div>{product.stock}</div>
-                        <div className="flex justify-center">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onRemoveProduct?.(product.id)}
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

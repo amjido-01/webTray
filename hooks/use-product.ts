@@ -79,28 +79,37 @@ export const useProduct = () => {
     throw new Error(data?.responseMessage || "Failed to fetch product");
   };
 
-  const addProductMutation = useMutation({
-    mutationFn: async (payload: CreateProductPayload): Promise<Product> => {
-      const { data } = await api.post<ApiResponse<{ product: Product }>>(
-        "/inventory/product",
-        payload
-      );
-      if (data?.responseSuccessful) {
-        return data.responseBody.product;
-      }
-      throw new Error(data?.responseMessage || "Failed to add product");
-    },
-    onSuccess: (newProduct) => {
-      const targetStoreId = newProduct.storeId ?? storeId;
-      if (targetStoreId !== undefined) {
-        invalidateStoreQueries(targetStoreId);
-      }
-      toast.success("Product added successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to add product");
-    },
-  });
+const addProductMutation = useMutation({
+  mutationFn: async (payload: CreateProductPayload | FormData): Promise<Product> => {
+    // Check if payload is FormData (for file uploads)
+    const isFormData = payload instanceof FormData;
+    
+    const { data } = await api.post<ApiResponse<{ product: Product }>>(
+      "/inventory/product",
+      payload,
+      isFormData ? {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      } : undefined
+    );
+    
+    if (data?.responseSuccessful) {
+      return data.responseBody.product;
+    }
+    throw new Error(data?.responseMessage || "Failed to add product");
+  },
+  onSuccess: (newProduct) => {
+    const targetStoreId = newProduct.storeId ?? storeId;
+    if (targetStoreId !== undefined) {
+      invalidateStoreQueries(targetStoreId);
+    }
+    toast.success("Product added successfully");
+  },
+  onError: (error: Error) => {
+    toast.error(error.message || "Failed to add product");
+  },
+});
 
  const updateProductMutation = useMutation({
   mutationFn: async ({

@@ -215,6 +215,10 @@ export interface ProductImages {
   thumbnail: string;
 }
 
+export interface ProductImage {
+  url: string;
+}
+
 export interface CreateProductPayload {
   storeId: number;
   categoryId: number;
@@ -222,7 +226,7 @@ export interface CreateProductPayload {
   description: string;
   price: number;
   quantity: number;
-  images: ProductImages;
+  images: string[];
 }
 export interface UpdateProductPayload {
   id: number;
@@ -291,10 +295,7 @@ export interface StoreProduct {
   description: string;
   price: string;
   quantity: number;
-  images: {
-    main: string;
-    thumbnail: string;
-  };
+   images?: ProductImage[]; 
   visible: boolean;
   feature: boolean;
   createdAt: string;
