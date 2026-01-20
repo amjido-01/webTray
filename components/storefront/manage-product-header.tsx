@@ -10,53 +10,80 @@ import * as yup from "yup";
 import { useAuthStore } from "@/store/useAuthStore";
 import { productValidationSchema } from "@/schemas/product.schema";
 import { PageHeaderSkeleton } from "../header-skeleton";
+
+interface PendingProduct {
+  id: string;
+  name: string;
+  category: string;
+  categoryId: number;
+  price: number;
+  stock: number;
+  description: string;
+  images: File[];
+}
+
 export function ManageStoreFrontHeader() {
   const { isFetchingInventorySummary } = useCategory();
-
   const { user, activeStore } = useAuthStore();
   const { addProduct, isAddingProduct, isFetchingProducts } = useProduct();
   const { categories, addCategory, isAddingCategory } = useCategory();
+
   const [isOpen, setIsOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [shouldClearForm, setShouldClearForm] = useState(false);
+  const [pendingProducts, setPendingProducts] = useState<PendingProduct[]>([]);
+  const [isSubmittingAll, setIsSubmittingAll] = useState(false);
+
   const userStoreId = activeStore?.id;
   const isLoading = isFetchingInventorySummary || isFetchingProducts;
 
- const handleAddCategory = async (newCategoryName: string): Promise<boolean> => {
-  if (!newCategoryName) return false;
+  const handleAddCategory = async (
+    newCategoryName: string
+  ): Promise<boolean> => {
+    if (!newCategoryName) return false;
 
-  const alreadyExists = categories?.some(
-    (category) =>
-      category.name.toLowerCase() === newCategoryName.toLowerCase()
-  );
+    if (!userStoreId) {
+      toast.error("No active store selected");
+      return false;
+    }
 
-  if (alreadyExists) {
-    toast.success("Category already exists");
-    return false;
-  }
+    const alreadyExists = categories?.some(
+      (category) =>
+        category.name.toLowerCase() === newCategoryName.toLowerCase()
+    );
 
-  try {
-    await addCategory({
-      name: newCategoryName,
-      description: "",
-      storeId: userStoreId!,
-    });
+    if (alreadyExists) {
+      toast.success("Category already exists");
+      return false;
+    }
 
-    toast.success("Category successfully added");
-    return true; // ✅ explicitly return boolean
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to add category");
-    return false; // ✅ explicitly return boolean
-  }
-};
+    try {
+      await addCategory({
+        name: newCategoryName,
+        description: "",
+        storeId: userStoreId,
+      });
+
+      toast.success("Category successfully added");
+      return true;
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add category");
+      return false;
+    }
+  };
 
   const categoryNames =
     categories?.map((category) => capitalizeFirstLetter(category.name)) || [];
 
-  const handleSubmit = async (data: Record<string, string>) => {
+  const handleAddToQueue = async (data: Record<string, string>, images: File[]) => {
+    if (!userStoreId) {
+      toast.error("No active store selected");
+      return;
+    }
+
     try {
       setValidationErrors({});
 
@@ -71,26 +98,23 @@ export function ManageStoreFrontHeader() {
         toast.error("Invalid category selected");
         return;
       }
-      if (typeof userStoreId !== "number") {
-        throw new Error("Store ID is not available");
-      }
-      const productPayload = {
-        storeId: userStoreId,
-        categoryId: selectedCategory.id,
+
+      const newProduct: PendingProduct = {
+        id: `temp-${Date.now()}-${Math.random()}`,
         name: data.name,
-        description: data.description || "",
+        category: capitalizeFirstLetter(selectedCategory.name),
+        categoryId: selectedCategory.id,
         price: parseFloat(data.price),
-        quantity: parseInt(data.stock),
-        images: {
-          main: "https://via.placeholder.com/400x300/e2e8f0/64748b?text=Product+Image", // Default image
-          thumbnail:
-            "https://via.placeholder.com/150x150/e2e8f0/64748b?text=Thumb", // Default thumbnail
-        },
+        stock: parseInt(data.stock),
+        description: data.description || "",
+        images: images,
       };
 
-      await addProduct(productPayload);
+      console.log(newProduct);
+
+      setPendingProducts((prev) => [...prev, newProduct]);
+      toast.success("Product added to queue");
       setShouldClearForm(true);
-      setIsOpen(false);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         const errors: Record<string, string> = {};
@@ -106,23 +130,125 @@ export function ManageStoreFrontHeader() {
           toast.error(firstError);
         }
       } else {
-        console.error("Error adding product:", error);
+        console.error("Error validating product:", error);
         toast.error("Failed to add product. Please try again.");
       }
     }
   };
 
-  const handleAddProductDrawer = () => {
-    if (!user?.business) {
-      toast("Please Register your business to carryout this action");
+  const handleRemoveFromQueue = (productId: string) => {
+    setPendingProducts((prev) => prev.filter((p) => p.id !== productId));
+    toast.success("Product removed from queue");
+  };
+
+  const handleSubmitAll = async () => {
+    if (!userStoreId) {
+      toast.error("No active store selected");
       return;
     }
+
+    if (pendingProducts.length === 0) {
+      toast.error("No products to submit");
+      return;
+    }
+
+    setIsSubmittingAll(true);
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const product of pendingProducts) {
+        try {
+          const formData = new FormData();
+          formData.append("storeId", userStoreId.toString());
+          formData.append("categoryId", product.categoryId.toString());
+          formData.append("name", product.name);
+          formData.append("description", product.description);
+          formData.append("price", product.price.toString());
+          formData.append("quantity", product.stock.toString());
+
+          // Only append images if they exist
+          if (product.images && product.images.length > 0) {
+            product.images.forEach((file) => {
+              formData.append("images", file);
+            });
+          }
+
+          console.log("Sending product:", product.name);
+
+          await addProduct(formData);
+
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to add product ${product.name}:`, error);
+          failCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} product(s) added successfully`);
+      }
+
+      if (failCount > 0) {
+        toast.error(`${failCount} product(s) failed to add`);
+      }
+
+      if (successCount === pendingProducts.length) {
+        setPendingProducts([]);
+        setIsOpen(false);
+      } else {
+        setPendingProducts((prev) => prev.slice(successCount));
+      }
+    } catch (error) {
+      console.error("Error submitting products:", error);
+      toast.error("Failed to submit products");
+    } finally {
+      setIsSubmittingAll(false);
+    }
+  };
+
+  const handleAddProductDrawer = () => {
+    if (!user?.business) {
+      toast.error("Please register your business to carry out this action");
+      return;
+    }
+
+    if (!activeStore) {
+      toast.error("Please select a store first");
+      return;
+    }
+
     setIsOpen(true);
+  };
+
+  const handleModalClose = (open: boolean) => {
+    if (!open && pendingProducts.length > 0) {
+      const confirmed = window.confirm(
+        `You have ${pendingProducts.length} product(s) pending. Are you sure you want to close?`
+      );
+      if (!confirmed) return;
+      setPendingProducts([]);
+    }
+    setIsOpen(open);
   };
 
   if (isLoading) {
     return <PageHeaderSkeleton />;
   }
+
+  if (!activeStore) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <p className="text-sm text-orange-800">
+            No active store selected. Please create or select a store.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -136,20 +262,25 @@ export function ManageStoreFrontHeader() {
       />
       <ModalForm
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        title="Add New Product"
+        onOpenChange={handleModalClose}
+        title="Add To Store"
         submitLabel={isAddingProduct ? "Adding..." : "Add Product"}
         onAddCategory={handleAddCategory}
-        onSubmit={handleSubmit}
+        onSubmit={handleAddToQueue}
         validationErrors={validationErrors}
         shouldClearForm={shouldClearForm}
         onFormCleared={() => setShouldClearForm(false)}
         isAddingCategory={isAddingCategory}
+        pendingProducts={pendingProducts}
+        onRemoveProduct={handleRemoveFromQueue}
+        onSubmitAll={handleSubmitAll}
+        isSubmittingAll={isSubmittingAll}
         fields={[
           {
             id: "name",
             label: "Product Name",
             required: true,
+            type: "text",
             placeholder: "Enter product name",
           },
           {
@@ -170,6 +301,7 @@ export function ManageStoreFrontHeader() {
           {
             id: "stock",
             label: "Stock",
+            type: "number",
             placeholder: "How many units? (e.g., 15)",
             required: true,
           },

@@ -1,7 +1,6 @@
 // ============================================
 // FILE: hooks/use-storefront.ts
 // ============================================
-
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { ApiResponse } from "@/types";
@@ -23,10 +22,7 @@ export interface Product {
   description: string;
   price: string;
   quantity: number;
-  images: {
-    main: string;
-    thumbnail: string;
-  };
+  images: string[]
   visible: boolean;
   feature: boolean;
   createdAt: string;
@@ -61,12 +57,12 @@ export const storefrontKeys = {
     [...storefrontKeys.store(slug), "categories"] as const,
   products: (slug: string) =>
     [...storefrontKeys.store(slug), "products"] as const,
-  productsByCategory: (categoryIds: number[]) =>
+  productsByCategory: (slug: string, categoryIds: number[]) =>
     [
-      ...storefrontKeys.all,
+      ...storefrontKeys.store(slug),
       "products",
       "category",
-      ...categoryIds.sort(),
+      categoryIds.sort().join(','), // Better: use joined string for stable key
     ] as const,
 };
 
@@ -78,7 +74,6 @@ export const useStorefront = (slug: string) => {
       const { data } = await api.get<ApiResponse<CategoriesResponse>>(
         `/storefront/${slug}`
       );
-
       if (data?.responseSuccessful) {
         return data.responseBody.categories || [];
       }
@@ -94,7 +89,6 @@ export const useStorefront = (slug: string) => {
       const { data } = await api.get<ApiResponse<ProductsResponse>>(
         `/storefront/products/${slug}`
       );
-
       if (data?.responseSuccessful) {
         return data.responseBody.products || [];
       }
@@ -106,17 +100,20 @@ export const useStorefront = (slug: string) => {
   // 3. Fetch products by category IDs
   const useProductsByCategory = (categoryIds: number[]) => {
     return useQuery({
-      queryKey: storefrontKeys.productsByCategory(categoryIds),
+      queryKey: storefrontKeys.productsByCategory(slug, categoryIds),
       queryFn: async (): Promise<Product[]> => {
         if (categoryIds.length === 0) {
           return [];
         }
 
-        const queryString = `categoryIds=${categoryIds.join(",")}`;
-
+        // Request a large limit to get all products (or use pagination)
+        const queryString = `categoryIds=${categoryIds.join(",")}&limit=1000`;
         const { data } = await api.get<ApiResponse<ProductsResponse>>(
           `/storefront?${queryString}`
         );
+
+        console.log('Request URL:', `/storefront?${queryString}`);
+        console.log('Response data:', data);
 
         if (data?.responseSuccessful) {
           return data.responseBody.products || [];

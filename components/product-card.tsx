@@ -26,7 +26,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, slug, onAddToCart })
     >
       <div className="relative h-48 bg-gray-100">
         <img
-          src={product.images.main}
+          src={product.images?.[0]}
           alt={product.name}
           className="w-full h-full object-cover"
         />

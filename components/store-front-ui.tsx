@@ -23,19 +23,21 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
   const addToCart = useCartStore((state) => state.addToCart);
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Auto-select first category when categories load
   useEffect(() => {
     if (categories.length > 0 && selectedCategoryIds.length === 0) {
       const firstCategoryId = categories[0].id;
       setSelectedCategoryIds([firstCategoryId]);
-      setIsFilterApplied(true);
     }
   }, [categories, selectedCategoryIds.length]);
 
+  // Fetch products based on selected categories (filter applies automatically)
   const { data: products = [], isLoading: isFetchingProducts } =
-    useProductsByCategory(isFilterApplied ? selectedCategoryIds : []);
+    useProductsByCategory(selectedCategoryIds);
+
+  console.log(products, "hello");
 
   const displayProducts = useMemo(() => {
     return products.filter((product) => product.visible);
@@ -49,6 +51,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
     );
   }, [categories, selectedCategoryIds]);
 
+  // Toggle category selection - filter applies automatically
   const handleCategoryToggle = (categoryId: number) => {
     setSelectedCategoryIds((prev) =>
       prev.includes(categoryId)
@@ -57,22 +60,22 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
     );
   };
 
+  // Apply filter button handler (if you still need a button)
   const handleApplyFilter = () => {
+    // Filter is already applied automatically when selectedCategoryIds changes
+    // This can be used for additional logic or UI feedback if needed
     if (selectedCategoryIds.length === 0) {
-      setIsFilterApplied(false);
-      return;
+      toast.info("Please select at least one category");
     }
-    setIsFilterApplied(true);
   };
 
+  // Reset to default (first category)
   const handleClearFilters = () => {
     if (categories.length > 0) {
       const firstCategoryId = categories[0].id;
       setSelectedCategoryIds([firstCategoryId]);
-      setIsFilterApplied(true);
     } else {
       setSelectedCategoryIds([]);
-      setIsFilterApplied(false);
     }
   };
 
@@ -85,7 +88,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
     const success = addToCart(product, quantity);
 
     if (success) {
-      toast.success( `${product.name} has been added to your cart.`);
+      toast.success(`${product.name} has been added to your cart.`);
     } else {
       toast.error(`Cannot add more of ${product.name} to the cart.`);
     }
@@ -116,13 +119,13 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
             <div className="w-full lg:w-[80%]">
               <div className="mb-4 flex justify-between items-center">
                 <p className="text-gray-600 font-medium">
-                  {isFilterApplied && selectedCategoryIds.length > 0
+                  {selectedCategoryIds.length > 0
                     ? `Showing products from ${
                         selectedCategoryIds.length
                       } categor${
                         selectedCategoryIds.length === 1 ? "y" : "ies"
                       }`
-                    : "Showing all products"}
+                    : "No category selected"}
                 </p>
               </div>
 
@@ -157,18 +160,18 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
                     No products found
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    {isFilterApplied
+                    {selectedCategoryIds.length > 0
                       ? `No products available in ${selectedCategoryIds
                           .map((id) => getCategoryName(id))
                           .join(", ")}`
-                      : "There are no products available at the moment."}
+                      : "Please select a category to view products."}
                   </p>
-                  {isFilterApplied && (
+                  {selectedCategoryIds.length > 0 && (
                     <button
                       onClick={handleClearFilters}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
                     >
-                      View All Products
+                      Reset to Default Category
                     </button>
                   )}
                 </div>
