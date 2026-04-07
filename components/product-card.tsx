@@ -68,7 +68,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, slug, onAddToCart })
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart?.(product);
+              sessionStorage.setItem('buyNowProduct', JSON.stringify(product));
+              router.push(`/store/${slug}/checkout?buyNow=${product.id}`);
             }}
             disabled={isOutOfStock}
             className={`flex-1 py-2 rounded-md text-sm font-medium transition ${

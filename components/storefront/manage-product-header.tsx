@@ -110,8 +110,6 @@ export function ManageStoreFrontHeader() {
         images: images,
       };
 
-      console.log(newProduct);
-
       setPendingProducts((prev) => [...prev, newProduct]);
       toast.success("Product added to queue");
       setShouldClearForm(true);

@@ -44,7 +44,7 @@ export const useProduct = () => {
     queryFn: async (): Promise<Product[]> => {
       const { data } = await api.get<ApiResponse<{ products: Product[] }>>(
         "/inventory/product",
-        { params: { storeId } }
+        { params: { storeId } },
       );
       if (data?.responseSuccessful) {
         return data.responseBody.products;
@@ -59,7 +59,7 @@ export const useProduct = () => {
       queryKey: productKeys.product(id, storeId),
       queryFn: async (): Promise<Product> => {
         const { data } = await api.get<ApiResponse<{ product: Product }>>(
-          `/inventory/product/${id}`
+          `/inventory/product/${id}`,
         );
         if (data?.responseSuccessful) {
           return data.responseBody.product;
@@ -71,7 +71,7 @@ export const useProduct = () => {
 
   const getProduct = async (id: number): Promise<Product> => {
     const { data } = await api.get<ApiResponse<{ product: Product }>>(
-      `/inventory/product/${id}`
+      `/inventory/product/${id}`,
     );
     if (data?.responseSuccessful) {
       return data.responseBody.product;
@@ -79,117 +79,222 @@ export const useProduct = () => {
     throw new Error(data?.responseMessage || "Failed to fetch product");
   };
 
-const addProductMutation = useMutation({
-  mutationFn: async (payload: CreateProductPayload | FormData): Promise<Product> => {
-    // Check if payload is FormData (for file uploads)
-    const isFormData = payload instanceof FormData;
-    
-    const { data } = await api.post<ApiResponse<{ product: Product }>>(
-      "/inventory/product",
-      payload,
-      isFormData ? {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      } : undefined
-    );
-    
-    if (data?.responseSuccessful) {
-      return data.responseBody.product;
-    }
-    throw new Error(data?.responseMessage || "Failed to add product");
-  },
-  onSuccess: (newProduct) => {
-    const targetStoreId = newProduct.storeId ?? storeId;
-    if (targetStoreId !== undefined) {
-      invalidateStoreQueries(targetStoreId);
-    }
-    toast.success("Product added successfully");
-  },
-  onError: (error: Error) => {
-    toast.error(error.message || "Failed to add product");
-  },
-});
+  const addProductMutation = useMutation({
+    mutationFn: async (
+      payload: CreateProductPayload | FormData,
+    ): Promise<Product> => {
+      const isFormData = payload instanceof FormData;
 
- const updateProductMutation = useMutation({
-  mutationFn: async ({
-    id,
-    ...payload
-  }: UpdateProductPayload): Promise<Product> => {
-    const { data } = await api.patch<ApiResponse<{ product: Product }>>(
-      `/inventory/product/${id}`,
-      payload,
-      { params: { storeId } }
-    );
-    if (data?.responseSuccessful) {
-      return data.responseBody.product;
-    }
-    throw new Error(data?.responseMessage || "Failed to update product");
-  },
-  onSuccess: (updatedProduct) => {
-    // ✅ Invalidate all queries for this store
-    if (storeId) {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
-      });
-    }
-
-    // ✅ Optimistically update the products list cache
-    queryClient.setQueryData<Product[]>(productKeys.products(storeId), (old) => {
-      if (!old) return old;
-      return old.map(product => 
-        product.id === updatedProduct.id ? updatedProduct : product
+      const { data } = await api.post<ApiResponse<{ product: Product }>>(
+        "/inventory/product",
+        payload,
+        isFormData
+          ? {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          : undefined,
       );
-    });
 
-    // ✅ Optimistically update single product cache
-    queryClient.setQueryData<Product>(
-      productKeys.product(updatedProduct.id, storeId), 
-      updatedProduct
-    );
+      if (data?.responseSuccessful) {
+        return data.responseBody.product;
+      }
+      throw new Error(data?.responseMessage || "Failed to add product");
+    },
+    onSuccess: (newProduct) => {
+      const targetStoreId = newProduct.storeId ?? storeId;
+      if (targetStoreId !== undefined) {
+        invalidateStoreQueries(targetStoreId);
+      }
+      toast.success("Product added successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to add product");
+    },
+  });
 
-    toast.success("Product updated successfully");
-  },
-  onError: (error: Error) => {
-    toast.error(error.message || "Failed to update product");
-  },
-});
+  const updateProductMutation = useMutation({
+    mutationFn: async ({
+      id,
+      ...payload
+    }: UpdateProductPayload): Promise<Product> => {
+      const { data } = await api.patch<ApiResponse<{ product: Product }>>(
+        `/inventory/product/${id}`,
+        payload,
+        { params: { storeId } },
+      );
+      if (data?.responseSuccessful) {
+        return data.responseBody.product;
+      }
+      throw new Error(data?.responseMessage || "Failed to update product");
+    },
+    onSuccess: (updatedProduct) => {
+      if (storeId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+        });
+      }
 
-const deleteProductMutation = useMutation({
-  mutationFn: async (id: number): Promise<void> => {
-    const { data } = await api.delete<ApiResponse<object>>(
-      `/inventory/product/${id}`,
-      { params: { storeId } } // <- include storeId as query param
-    );
-    if (!data?.responseSuccessful) {
-      throw new Error(data?.responseMessage || "Failed to delete product");
-    }
-  },
-  onSuccess: (_, deletedProductId) => {
-    // ✅ Invalidate all queries for this store
-    if (storeId) {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+      queryClient.setQueryData<Product[]>(
+        productKeys.products(storeId),
+        (old) => {
+          if (!old) return old;
+          return old.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product,
+          );
+        },
+      );
+
+      queryClient.setQueryData<Product>(
+        productKeys.product(updatedProduct.id, storeId),
+        updatedProduct,
+      );
+
+      toast.success("Product updated successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update product");
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: number): Promise<void> => {
+      const { data } = await api.delete<ApiResponse<object>>(
+        `/inventory/product/${id}`,
+        { params: { storeId } },
+      );
+      if (!data?.responseSuccessful) {
+        throw new Error(data?.responseMessage || "Failed to delete product");
+      }
+    },
+    onSuccess: (_, deletedProductId) => {
+      if (storeId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+        });
+      }
+
+      queryClient.setQueryData<Product[]>(
+        productKeys.products(storeId),
+        (old) => {
+          return old
+            ? old.filter((product) => product.id !== deletedProductId)
+            : [];
+        },
+      );
+
+      queryClient.removeQueries({
+        queryKey: productKeys.product(deletedProductId, storeId),
       });
-    }
 
-    // ✅ Optimistically remove from products list cache
-    queryClient.setQueryData<Product[]>(productKeys.products(storeId), (old) => {
-      return old ? old.filter(product => product.id !== deletedProductId) : [];
-    });
+      toast.success("Product deleted successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete product");
+    },
+  });
 
-    // ✅ Remove single product cache
-    queryClient.removeQueries({ queryKey: productKeys.product(deletedProductId, storeId) });
+  // ✅ NEW: Upload Product Images
+  const uploadProductImagesMutation = useMutation({
+    mutationFn: async ({
+      productId,
+      formData,
+    }: {
+      productId: number;
+      formData: FormData;
+    }): Promise<Product> => {
+      if (!storeId) {
+        throw new Error("No active store selected");
+      }
 
-    toast.success("Product deleted successfully");
-  },
-  onError: (error: Error) => {
-    toast.error(error.message || "Failed to delete product");
-  },
-});
+      const { data } = await api.patch<ApiResponse<{ product: Product }>>(
+        `/inventory/product/image/${productId}?storeId=${storeId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
 
+      if (data?.responseSuccessful) {
+        return data.responseBody.product;
+      }
+      throw new Error(data?.responseMessage || "Failed to upload images");
+    },
+    onSuccess: (updatedProduct) => {
+      if (storeId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+        });
+      }
+
+      queryClient.setQueryData<Product[]>(
+        productKeys.products(storeId),
+        (old) => {
+          if (!old) return old;
+          return old.map((product) =>
+            product.id === updatedProduct.id ? updatedProduct : product,
+          );
+        },
+      );
+
+      queryClient.setQueryData<Product>(
+        productKeys.product(updatedProduct.id, storeId),
+        updatedProduct,
+      );
+
+      toast.success("Images uploaded successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to upload images");
+    },
+  });
+
+  // ✅ NEW: Delete Product Images
+  const deleteProductImagesMutation = useMutation({
+    mutationFn: async (productId: number): Promise<void> => {
+      const { data } = await api.delete<ApiResponse<object>>(
+        `/inventory/product/image/${productId}`,
+        { params: { storeId } },
+      );
+
+      if (!data?.responseSuccessful) {
+        throw new Error(data?.responseMessage || "Failed to delete images");
+      }
+    },
+    onSuccess: (_, productId) => {
+      // Update the product in cache to have empty images
+      if (storeId) {
+        queryClient.setQueryData<Product[]>(
+          productKeys.products(storeId),
+          (old) => {
+            if (!old) return old;
+            return old.map((product) =>
+              product.id === productId
+                ? { ...product, images: [] }
+                : product
+            );
+          },
+        );
+
+        queryClient.setQueryData<Product>(
+          productKeys.product(productId, storeId),
+          (old) => {
+            if (!old) return old;
+            return { ...old, images: [] };
+          }
+        );
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete images");
+    },
+  });
 
   return {
     products: productsQuery.data,
@@ -201,17 +306,27 @@ const deleteProductMutation = useMutation({
     addProduct: addProductMutation.mutateAsync,
     updateProduct: updateProductMutation.mutateAsync,
     deleteProduct: deleteProductMutation.mutateAsync,
+    uploadProductImages: uploadProductImagesMutation.mutateAsync,
+    deleteProductImages: deleteProductImagesMutation.mutateAsync,
     isAddingProduct: addProductMutation.isPending,
     isUpdatingProduct: updateProductMutation.isPending,
     isDeletingProduct: deleteProductMutation.isPending,
+    isUploadingImages: uploadProductImagesMutation.isPending,
+    isDeletingImages: deleteProductImagesMutation.isPending,
     addProductError: addProductMutation.error,
     updateProductError: updateProductMutation.error,
     deleteProductError: deleteProductMutation.error,
+    uploadImagesError: uploadProductImagesMutation.error,
+    deleteImagesError: deleteProductImagesMutation.error,
     addProductSuccess: addProductMutation.isSuccess,
     updateProductSuccess: updateProductMutation.isSuccess,
     deleteProductSuccess: deleteProductMutation.isSuccess,
+    uploadImagesSuccess: uploadProductImagesMutation.isSuccess,
+    deleteImagesSuccess: deleteProductImagesMutation.isSuccess,
     resetAddProduct: addProductMutation.reset,
     resetUpdateProduct: updateProductMutation.reset,
     resetDeleteProduct: deleteProductMutation.reset,
+    resetUploadImages: uploadProductImagesMutation.reset,
+    resetDeleteImages: deleteProductImagesMutation.reset,
   };
 };

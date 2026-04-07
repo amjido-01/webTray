@@ -10,7 +10,6 @@ import StoreFrontSlide from "@/components/store-front/store-front-slide";
 import CategoryFilter from "@/components/store-front/store-front-cate-filter";
 import ProductsGrid from "@/components/store-front/store-front-product-grid";
 import StoreFrontSkeleton from "./store-front/store-front-skeleton";
-import ProductDetailModal from "./store-front/product-detail-modal";
 
 interface StorefrontUIProps {
   slug: string;
@@ -37,7 +36,6 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
   const { data: products = [], isLoading: isFetchingProducts } =
     useProductsByCategory(selectedCategoryIds);
 
-  console.log(products, "hello");
 
   const displayProducts = useMemo(() => {
     return products.filter((product) => product.visible);
@@ -187,16 +185,6 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
           </div>
         </div>
       </div>
-
-      <ProductDetailModal
-        product={selectedProduct}
-        isOpen={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-        onAddToCart={handleAddToCart}
-        relatedProducts={displayProducts.filter(
-          (p) => p.id !== selectedProduct?.id
-        )}
-      />
     </>
   );
 }

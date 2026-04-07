@@ -4,8 +4,8 @@
 
 'use client';
 
-import React, { useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, use, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ShoppingCart, X } from 'lucide-react';
 import { useCartStore } from '@/store/use-cart-store';
 import { toast } from 'sonner';
@@ -58,20 +58,44 @@ const shippingSchema = yup.object().shape({
 
 export default function CheckoutPage({ params }: CheckoutPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { slug } = use(params);
+  const buyNowId = searchParams.get('buyNow');
 
   const cart = useCartStore((state) => state.cart);
+  
+  // Determine the effective cart based on whether it's a "Buy Now" checkout
+  const effectiveCart = useMemo(() => {
+    if (buyNowId) {
+      try {
+        const stored = sessionStorage.getItem('buyNowProduct');
+        if (stored) {
+          const product = JSON.parse(stored);
+          if (product && product.id === parseInt(buyNowId)) {
+            return [{
+              ...product,
+              cartQuantity: 1
+            }];
+          }
+        }
+      } catch (e) {
+        // fallback to cart if sessionStorage fails
+      }
+    }
+    return cart;
+  }, [buyNowId, cart]);
+
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const [step, setStep] = useState<'address' | 'review'>('address');
   
-  const subtotal = cart.reduce(
+  const subtotal = effectiveCart.reduce(
     (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
     0
   );
-  const itemCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);
+  const itemCount = effectiveCart.reduce((sum, item) => sum + item.cartQuantity, 0);
   const deliveryFee = 2000;
   const total = subtotal + deliveryFee;
 
@@ -128,7 +152,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
       shippingInfo, 
       shippingMethod, 
       paymentMethod, 
-      items: cart,
+      items: effectiveCart,
       subtotal,
       deliveryFee,
       total
@@ -137,13 +161,19 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     // TODO: Send order to your backend API
     
     toast.success('Order placed successfully!');
-    clearCart();
+    if (!buyNowId) {
+      clearCart();
+    }
     
     // Redirect to success page
     router.push(`/store/${slug}/order-success`);
   };
 
   const handleRemoveItem = (productId: number, productName: string) => {
+    if (buyNowId) {
+      router.push(`/store/${slug}`);
+      return;
+    }
     removeFromCart(productId);
     toast.success(`${productName} removed from cart`);
     
@@ -152,7 +182,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     }
   };
 
-  if (cart.length === 0) {
+  if (effectiveCart.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-8">
@@ -228,11 +258,13 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               <div className="border rounded-lg p-4">
                 <h2 className="font-bold mb-4">ORDER ITEMS ({itemCount})</h2>
                 <div className="space-y-3">
-                  {cart.map((item) => (
+                  {effectiveCart.map((item) => (
                     <div key={item.id} className="flex gap-3 p-3 bg-gray-50 rounded border">
                       <Image 
-                        src={item.images.thumbnail || item.images.main} 
-                        alt={item.name}
+                        src={item.images?.[0]} 
+                        alt={item.name || "product image"}
+                        width={100}
+                        height={100}
                         className="w-20 h-20 object-cover rounded"
                       />
                       <div className="flex-1">
@@ -603,8 +635,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               <h2 className="font-bold text-[#4D4D4D] leading-[100%] text-[16px] mb-4 pb-3 border-b">ORDER SUMMARY</h2>
               
               <div className="mb-4 max-h-64 overflow-y-auto">
-               {cart.map((item) => {
-  const imageUrl = item.images?.thumbnail || item.images?.main || '';
+               {effectiveCart.map((item) => {
+  const imageUrl = item.images?.[0];
   const hasValidImage = imageUrl && imageUrl.trim() !== '';
   
   return (

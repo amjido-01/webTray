@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Search, Edit, Trash2, Upload } from "lucide-react";
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
+import { Search, Edit, Trash2, Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 /* UI components */
 import { Input } from "@/components/ui/input";
@@ -26,7 +33,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -66,6 +72,8 @@ const ProductCard = React.memo<{
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   isUpdating: boolean;
+  onImageUpload: (productId: number, files: FileList) => void;
+  isUploadingImage: boolean;
 }>(
   ({
     product,
@@ -75,22 +83,39 @@ const ProductCard = React.memo<{
     onEdit,
     onDelete,
     isUpdating,
+    onImageUpload,
+    isUploadingImage,
   }) => {
-    const imgSrc = product.images?.[0] ?? '';
+    const imgSrc = product.images?.[0] ?? "";
     const [imgError, setImgError] = useState(false);
-     const [isHovering, setIsHovering] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const hasNoImage = !imgSrc || imgError;
+    const hasImages = product.images && product.images.length > 0;
 
-    console.log("Rendering ProductCard for:", product?.images);
+    // Handle image area click
+    const handleImageClick = () => {
+      fileInputRef.current?.click();
+    };
+
+    // Handle file selection
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        onImageUpload(product.id, files);
+      }
+      // Reset input to allow re-uploading same file
+      e.target.value = "";
+    };
+
     return (
-          <article
+      <article
         className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden relative"
         aria-label={`Product: ${product.name}`}
       >
         {/* Loading overlay */}
-        {isUpdating && (
+        {(isUpdating || isUploadingImage) && (
           <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-800 rounded-full animate-spin" />
           </div>
@@ -101,7 +126,7 @@ const ProductCard = React.memo<{
           className="relative h-40 w-full overflow-hidden bg-gray-50 group cursor-pointer"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          // onClick={handleImageClick}
+          onClick={handleImageClick}
         >
           {hasNoImage ? (
             <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 transition-all">
@@ -170,25 +195,29 @@ const ProductCard = React.memo<{
                 onError={() => setImgError(true)}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
-              
+
               {/* Hover overlay for existing image */}
               {isHovering && (
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity">
-                  <div className="bg-white rounded-full p-2 shadow-lg">
-                    <Upload className="w-5 h-5 text-gray-700" />
+                <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center transition-opacity">
+                  <div className="bg-white rounded-full p-3 shadow-lg mb-2">
+                    <Upload className="w-6 h-6 text-gray-700" />
                   </div>
+                  <p className="text-white text-xs font-medium bg-black/50 px-3 py-1 rounded-full">
+                    {hasImages ? "Update images" : "Upload images"}
+                  </p>
                 </div>
               )}
             </>
           )}
 
-          {/* Hidden file input */}
+          {/* Hidden file input - allows multiple selection */}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
+            onChange={handleFileChange}
             className="hidden"
-            // onChange={handleFileChange}
             aria-label={`Upload image for ${product.name}`}
           />
 
@@ -214,7 +243,6 @@ const ProductCard = React.memo<{
           </div>
         </div>
 
-        {/* Rest of the card content stays the same */}
         <div className="p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -243,7 +271,6 @@ const ProductCard = React.memo<{
             </div>
           </div>
 
-          {/* Toggles */}
           <div className="mt-4 flex items-center gap-4">
             <label className="flex items-center gap-2 text-xs cursor-pointer">
               <Switch
@@ -270,7 +297,6 @@ const ProductCard = React.memo<{
             </label>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2 mt-4">
             <Button
               size="sm"
@@ -298,7 +324,7 @@ const ProductCard = React.memo<{
         </div>
       </article>
     );
-  }
+  },
 );
 
 ProductCard.displayName = "ProductCard";
@@ -313,24 +339,23 @@ export default function ManageProductTable() {
     isFetchingStoreProducts,
     storeProductsError,
     changeProductVisibility,
-    isUpdatingProductVisibility,
     changeProductFeatured,
-    isUpdatingProductFeatured,
   } = useStoreFront();
+
   const {
     deleteProduct,
-    deleteProductError,
     isDeletingProduct,
-    deleteProductSuccess,
     updateProduct,
     isUpdatingProduct,
-    updateProductError,
-    updateProductSuccess,
+    uploadProductImages,
+    deleteProductImages,
+    isUploadingImages,
   } = useProduct();
 
   const { categories } = useCategory();
 
-  console.log(storeProducts)
+  // Track which product is uploading images
+  const [uploadingImageProductId, setUploadingImageProductId] = useState<number | null>(null);
 
   // Table controls
   const [globalFilter, setGlobalFilter] = useState("");
@@ -341,10 +366,10 @@ export default function ManageProductTable() {
   });
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<StoreProduct | null>(
-    null
+    null,
   );
 
-  // Form state for editing
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     categoryId: "",
@@ -353,13 +378,38 @@ export default function ManageProductTable() {
     description: "",
   });
 
+  // Image management state
+  const [selectedImages, setSelectedImages] = useState<(string | File)[]>([]);
+  const [originalImages, setOriginalImages] = useState<string[]>([]);
+  const [hasImageChanges, setHasImageChanges] = useState(false);
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
-
-  // Track which product is being updated
   const [updatingProductId, setUpdatingProductId] = useState<number | null>(
-    null
+    null,
   );
+
+  const pendingOperations = useRef<Set<number>>(new Set());
+
+  // Load images when editing product
+  useEffect(() => {
+    if (editingProduct?.images) {
+      setSelectedImages(editingProduct.images);
+      setOriginalImages(editingProduct.images);
+      setHasImageChanges(false);
+    }
+  }, [editingProduct]);
+
+  // Check if images have changed
+  useEffect(() => {
+    const changed =
+      selectedImages.length !== originalImages.length ||
+      selectedImages.some((img, idx) => {
+        if (img instanceof File) return true;
+        return img !== originalImages[idx];
+      });
+    setHasImageChanges(changed);
+  }, [selectedImages, originalImages]);
 
   // Categories map
   const categoriesMap = useMemo(() => {
@@ -374,7 +424,6 @@ export default function ManageProductTable() {
   const filteredProducts = useMemo(() => {
     if (!Array.isArray(storeProducts)) return [];
     if (selectedCategory === "all") return storeProducts;
-
     const categoryId = Number(selectedCategory);
     return storeProducts.filter((p) => p.categoryId === categoryId);
   }, [storeProducts, selectedCategory]);
@@ -386,7 +435,7 @@ export default function ManageProductTable() {
       { id: "price", accessorKey: "price" },
       { id: "description", accessorKey: "description" },
     ],
-    []
+    [],
   );
 
   // Table instance
@@ -409,18 +458,154 @@ export default function ManageProductTable() {
     },
   });
 
-  const pendingOperations = useRef<Set<number>>(new Set());
+  // Handle image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  // Handler for visibility toggle
+    if (selectedImages.length + files.length > 3) {
+      toast.error("Maximum 3 images allowed");
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files are allowed");
+        continue;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size must be less than 5MB");
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedImages((prev) => [...prev, ...validFiles].slice(0, 3));
+    }
+
+    e.target.value = "";
+  };
+
+  // Remove image
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Get image preview URL
+  const getImagePreview = (img: string | File): string => {
+    if (typeof img === "string") return img;
+    return URL.createObjectURL(img);
+  };
+
+  // Save images
+  const handleSaveImages = async (productId: number) => {
+    if (!hasImageChanges) return;
+
+    try {
+      // Delete all existing images if there are changes
+      if (originalImages.length > 0) {
+        await deleteProductImages(productId);
+      }
+
+      // Upload new images if any
+      if (selectedImages.length > 0) {
+        const formData = new FormData();
+
+        for (const img of selectedImages) {
+          if (img instanceof File) {
+            formData.append("images", img);
+          } else {
+            // For existing URLs, send as imageUrls
+            formData.append("imageUrls", img);
+          }
+        }
+
+        await uploadProductImages({ productId, formData });
+      }
+
+      setOriginalImages(
+        selectedImages.filter((img) => typeof img === "string") as string[],
+      );
+      setHasImageChanges(false);
+    } catch (error) {
+      console.error("Failed to save images:", error);
+      throw error;
+    }
+  };
+
+  // Handle inline image upload from product card
+  const handleCardImageUpload = useCallback(
+    async (productId: number, files: FileList) => {
+      if (!storeId) {
+        toast.error("No active store selected");
+        return;
+      }
+
+      // Validate files
+      const validFiles: File[] = [];
+      for (let i = 0; i < files.length && validFiles.length < 3; i++) {
+        const file = files[i];
+
+        if (!file.type.startsWith("image/")) {
+          toast.error("Only image files are allowed");
+          continue;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error("Image size must be less than 5MB");
+          continue;
+        }
+
+        validFiles.push(file);
+      }
+
+      if (validFiles.length === 0) return;
+
+      // Check if product already has images
+      const product = storeProducts?.find((p) => p.id === productId);
+      const hasExistingImages = product?.images && product.images.length > 0;
+
+      setUploadingImageProductId(productId);
+
+      try {
+        // Step 1: Delete existing images if any
+        if (hasExistingImages) {
+          await deleteProductImages(productId);
+        }
+
+        // Step 2: Upload new images
+        const formData = new FormData();
+        validFiles.forEach((file) => {
+          formData.append("images", file);
+        });
+
+        await uploadProductImages({ productId, formData });
+
+        toast.success(
+          hasExistingImages
+            ? `${validFiles.length} image(s) updated successfully`
+            : `${validFiles.length} image(s) uploaded successfully`
+        );
+      } catch (error) {
+        console.error("Failed to upload images:", error);
+        toast.error("Failed to upload images");
+      } finally {
+        setUploadingImageProductId(null);
+      }
+    },
+    [storeId, storeProducts, uploadProductImages, deleteProductImages]
+  );
+
   const handleToggleVisible = useCallback(
     async (productId: number, currentVisibility: boolean) => {
       if (!storeId) return;
-
-      // Prevent concurrent operations on same product
-      if (pendingOperations.current.has(productId)) {
-        console.log("Operation already in progress for product:", productId);
-        return;
-      }
+      if (pendingOperations.current.has(productId)) return;
 
       pendingOperations.current.add(productId);
       setUpdatingProductId(productId);
@@ -438,19 +623,13 @@ export default function ManageProductTable() {
         setUpdatingProductId(null);
       }
     },
-    [storeId, changeProductVisibility]
+    [storeId, changeProductVisibility],
   );
 
-  // Handler for feature toggle
   const handleToggleFeature = useCallback(
     async (productId: number, currentFeature: boolean) => {
       if (!storeId) return;
-
-      // Prevent concurrent operations on same product
-      if (pendingOperations.current.has(productId)) {
-        console.log("Operation already in progress for product:", productId);
-        return;
-      }
+      if (pendingOperations.current.has(productId)) return;
 
       pendingOperations.current.add(productId);
       setUpdatingProductId(productId);
@@ -468,7 +647,7 @@ export default function ManageProductTable() {
         setUpdatingProductId(null);
       }
     },
-    [storeId, changeProductFeatured]
+    [storeId, changeProductFeatured],
   );
 
   const handleEdit = useCallback(
@@ -486,7 +665,7 @@ export default function ManageProductTable() {
       });
       setIsEditSheetOpen(true);
     },
-    [storeProducts]
+    [storeProducts],
   );
 
   const handleDeleteClick = useCallback((productId: number) => {
@@ -496,15 +675,12 @@ export default function ManageProductTable() {
   const handleDeleteConfirm = useCallback(async () => {
     if (!deleteConfirm || !storeId || isDeletingProduct) return;
 
-    // Capture id locally to avoid clearing state before the API call
     const productId = deleteConfirm;
 
     try {
       await deleteProduct(productId);
-      // clear the confirmation only after a successful request
       setDeleteConfirm(null);
     } catch (error) {
-      // Error already handled by the hook with toast
       console.error("Failed to delete product:", error);
     }
   }, [deleteConfirm, storeId, isDeletingProduct, deleteProduct]);
@@ -514,8 +690,41 @@ export default function ManageProductTable() {
       setSelectedCategory(value);
       table.setPageIndex(0);
     },
-    [table]
+    [table],
   );
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingProduct || !storeId) return;
+
+    try {
+      // Update product details first
+      await updateProduct({
+        id: editingProduct.id,
+        name: formData.name,
+        price: Number(formData.price),
+        quantity: Number(formData.quantity),
+        description: formData.description,
+      });
+
+      // Then save images if changed
+      if (hasImageChanges) {
+        await handleSaveImages(editingProduct.id);
+      }
+
+      setIsEditSheetOpen(false);
+      setEditingProduct(null);
+      setSelectedImages([]);
+      setOriginalImages([]);
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    }
+  };
+
+  const handleFormChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   // Pagination helpers
   const currentPage = table.getState().pagination.pageIndex + 1;
@@ -545,32 +754,6 @@ export default function ManageProductTable() {
 
   const pageRows = table.getPaginationRowModel().rows;
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!editingProduct || !storeId) return;
-
-    try {
-      await updateProduct({
-        id: editingProduct.id,
-        name: formData.name,
-        price: Number(formData.price),
-        quantity: Number(formData.quantity),
-        description: formData.description,
-      });
-
-      setIsEditSheetOpen(false);
-      setEditingProduct(null);
-    } catch (error) {
-      console.error("Failed to update product:", error);
-    }
-  };
-
-  const handleFormChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  // Error state
   if (storeProductsError) {
     return (
       <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm p-6">
@@ -584,7 +767,6 @@ export default function ManageProductTable() {
     );
   }
 
-  // Loading state
   if (isFetchingStoreProducts) return <TableSkeleton />;
 
   return (
@@ -593,7 +775,6 @@ export default function ManageProductTable() {
         <div className="p-6">
           <h1 className="text-xl font-medium text-gray-800 mb-6">Products</h1>
 
-          {/* Controls */}
           <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
             <div className="relative w-full sm:w-96">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -629,7 +810,6 @@ export default function ManageProductTable() {
             </div>
           </div>
 
-          {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pageRows.length === 0 ? (
               <div className="col-span-full text-center text-gray-500 py-10">
@@ -641,8 +821,8 @@ export default function ManageProductTable() {
               pageRows.map((row) => {
                 const product = row.original;
                 const categoryName = product.categoryId
-                  ? categoriesMap.get(Number(product.categoryId)) ??
-                    `Category ${product.categoryId}`
+                  ? (categoriesMap.get(Number(product.categoryId)) ??
+                    `Category ${product.categoryId}`)
                   : "Uncategorized";
 
                 return (
@@ -655,13 +835,14 @@ export default function ManageProductTable() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                     isUpdating={updatingProductId === product.id}
+                    onImageUpload={handleCardImageUpload}
+                    isUploadingImage={uploadingImageProductId === product.id}
                   />
                 );
               })
             )}
           </div>
 
-          {/* Pagination */}
           {totalPages > 0 && (
             <nav
               className="flex items-center justify-center gap-4 py-6"
@@ -721,7 +902,6 @@ export default function ManageProductTable() {
       <AlertDialog
         open={deleteConfirm !== null}
         onOpenChange={(open) => {
-          // Prevent closing while deletion is in progress
           if (!open && !isDeletingProduct) {
             setDeleteConfirm(null);
           }
@@ -729,7 +909,7 @@ export default function ManageProductTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="borde">
+            <AlertDialogTitle>
               <div className="flex justify-center mb-4">
                 <div className="bg-red-100 dark:bg-red-950 rounded-full p-2">
                   <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
@@ -775,8 +955,7 @@ export default function ManageProductTable() {
           <SheetHeader>
             <SheetTitle>Edit Product</SheetTitle>
             <SheetDescription>
-              Make changes to your product here. Click save when you&apos;re
-              done.
+              Make changes to your product here. Click save when you're done.
             </SheetDescription>
           </SheetHeader>
 
@@ -784,50 +963,90 @@ export default function ManageProductTable() {
             onSubmit={handleEditSubmit}
             className="flex flex-col px-6 h-full"
           >
-            <div className="flex-1 space-y-6 py-6">
-              {/* Product Image Preview */}
-              {editingProduct && (
-                <div className="flex items-center gap-4">
-                  {/* Avatar */}
-                  <div className="relative h-20 w-20">
-                    <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-gray-200">
-                      <Image
-                        src={
-                          editingProduct.images?.[0] ?? ""
-                        }
-                        alt={editingProduct.name}
-                        fill
-                        className="object-cover"
+            <div className="flex-1 space-y-4 py-6">
+              {/* Image Upload Section */}
+              <div className="space-y-2">
+                <Label className="text-sm">
+                  Product Images
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ({selectedImages.length}/3)
+                  </span>
+                </Label>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {selectedImages.map((image, index) => {
+                    const previewUrl = getImagePreview(image);
+                    const isNew = image instanceof File;
+
+                    return (
+                      <div
+                        key={index}
+                        className="relative aspect-square rounded-md border border-gray-200 overflow-hidden group"
+                      >
+                        <Image
+                          src={previewUrl}
+                          alt={`Product ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                          {index === 0 ? "Main" : index + 1}
+                        </div>
+                        {isNew && (
+                          <div className="absolute top-1 left-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded">
+                            New
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Upload Button */}
+                  {selectedImages.length < 3 && (
+                    <label
+                      htmlFor="product-image-upload"
+                      className="aspect-square rounded-md border-2 border-dashed border-gray-300 hover:border-gray-400 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50 hover:bg-gray-100"
+                    >
+                      {isUploadingImages ? (
+                        <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                          <span className="text-[10px] text-gray-500">
+                            {selectedImages.length}/3
+                          </span>
+                        </>
+                      )}
+                      <input
+                        id="product-image-upload"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={isUploadingImages}
                       />
-                    </div>
-                  </div>
-
-                  {/* Upload button */}
-                  <label
-                    htmlFor="product-image"
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                  >
-                    {/* Upload icon */}
-                    <Upload className="w-4 h-4" />
-                    Update photo
-                  </label>
-
-                  {/* Hidden file input */}
-                  <Input
-                    id="product-image"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      // handle preview or upload here
-                      console.log("Selected file:", file);
-                    }}
-                  />
+                    </label>
+                  )}
                 </div>
-              )}
+
+                <div className="text-[11px] text-muted-foreground bg-gray-50 px-2 py-1.5 rounded">
+                  JPG, PNG, WebP • Max 5MB • First image is main
+                </div>
+
+                {hasImageChanges && (
+                  <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-1.5 rounded">
+                    Images have been modified. Click Save to apply changes.
+                  </div>
+                )}
+              </div>
 
               {/* Product Name */}
               <div className="grid gap-2">
@@ -835,12 +1054,7 @@ export default function ManageProductTable() {
                 <Input
                   id="product-name"
                   value={formData.name}
-                  className="
-    border-gray-300
-    focus-visible:ring-0
-    focus-visible:ring-offset-0
-    focus-visible:border-gray-400
-  "
+                  className="border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-400"
                   onChange={(e) => handleFormChange("name", e.target.value)}
                   placeholder="Premium Coffee Beans"
                   required
@@ -870,7 +1084,7 @@ export default function ManageProductTable() {
               </div>
 
               {/* Price */}
-              <div className="grid gap-2">
+             <div className="grid gap-2">
                 <Label htmlFor="product-price">Price</Label>
                 <div className="relative">
                   <span className="absolute left3 h-full rounded-l pt-1 px-1 top-1/2 border-2 -translate-y-1/2 text-[#676767] bg-[#EBEBEB]">
@@ -881,6 +1095,16 @@ export default function ManageProductTable() {
                     type="number"
                     value={formData.price}
                     onChange={(e) => handleFormChange("price", e.target.value)}
+                     onKeyPress={(e) => {
+                    const isValid = /[0-9.]/.test(e.key);
+                    const currentValue = e.currentTarget.value;
+                    if (
+                      !isValid ||
+                      (e.key === "." && currentValue.includes("."))
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
                     placeholder="3000"
                     className="pl-14 
     focus-visible:ring-0
@@ -900,13 +1124,13 @@ export default function ManageProductTable() {
                   type="number"
                   value={formData.quantity}
                   onChange={(e) => handleFormChange("quantity", e.target.value)}
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   placeholder="300"
-                  className="
-    border-gray-300
-    focus-visible:ring-0
-    focus-visible:ring-offset-0
-    focus-visible:border-gray-400
-  "
+                  className="border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-gray-400"
                   required
                   min="0"
                 />
@@ -932,9 +1156,9 @@ export default function ManageProductTable() {
               <Button
                 type="submit"
                 className="flex-1 bg-[#111827] w-1/2 mx-auto rounded-full hover:bg-slate-800"
-                disabled={isUpdatingProduct}
+                disabled={isUpdatingProduct || isUploadingImages}
               >
-                {isUpdatingProduct ? (
+                {isUpdatingProduct || isUploadingImages ? (
                   <div className="flex items-center justify-center gap-2">
                     <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Saving...

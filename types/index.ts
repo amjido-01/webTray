@@ -244,7 +244,7 @@ export interface Product {
   description: string;
   price: string;
   quantity: number;
-  images: ProductImages;
+  images: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -295,7 +295,7 @@ export interface StoreProduct {
   description: string;
   price: string;
   quantity: number;
-   images?: ProductImage[]; 
+   images?:  string[];
   visible: boolean;
   feature: boolean;
   createdAt: string;

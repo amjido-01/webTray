@@ -112,9 +112,6 @@ export const useStorefront = (slug: string) => {
           `/storefront?${queryString}`
         );
 
-        console.log('Request URL:', `/storefront?${queryString}`);
-        console.log('Response data:', data);
-
         if (data?.responseSuccessful) {
           return data.responseBody.products || [];
         }

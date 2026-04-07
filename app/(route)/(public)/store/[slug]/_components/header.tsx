@@ -4,6 +4,7 @@
 import { ShoppingCart } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useCartStore } from "@/store/use-cart-store";
 import CartSidebar from "./cart-sidebar";
 
@@ -64,6 +65,12 @@ export default function StoreHeader() {
             </div>
             {/* Right section */}
             <div className="flex items-center gap-4">
+              <Link
+                href={`/store/${slug}/orders`}
+                className="text-sm text-gray-600 hover:text-gray-900 font-medium hidden md:block"
+              >
+                Orders
+              </Link>
               <button
                 onClick={() => setShowCart(true)}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition"

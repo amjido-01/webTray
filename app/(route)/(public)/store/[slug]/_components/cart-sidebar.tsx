@@ -66,7 +66,7 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
           ) : (
             <div className="space-y-4">
               {cart.map((item) => {
-                const imageUrl = item.images?.thumbnail || item.images?.main || '';
+                const imageUrl = item.images?.[0];
                 const hasValidImage = imageUrl && imageUrl.trim() !== '';
                 
                 return (

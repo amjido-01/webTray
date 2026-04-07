@@ -127,6 +127,7 @@ export function ModalForm({
     // Check if adding these files would exceed the limit
     if (selectedImages.length + files.length > 3) {
       setImageError("Maximum 3 images allowed");
+      e.target.value = "";
       return;
     }
 
@@ -136,6 +137,7 @@ export function ModalForm({
     try {
       const newFiles: File[] = [];
       const newPreviews: string[] = [];
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -143,13 +145,20 @@ export function ModalForm({
         // Validate file type
         if (!file.type.startsWith("image/")) {
           setImageError("Only image files are allowed");
-          continue;
+          setIsUploadingImages(false);
+          e.target.value = "";
+          return;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          setImageError("Image size must be less than 5MB");
-          continue;
+        // Validate file size (max 2MB) - reject immediately
+        if (file.size > MAX_SIZE) {
+          const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+          setImageError(
+            `Image "${file.name}" is ${fileSizeMB}MB. Maximum size is 2MB. Please compress or resize the image.`,
+          );
+          setIsUploadingImages(false);
+          e.target.value = "";
+          return;
         }
 
         // Store the file
@@ -160,8 +169,11 @@ export function ModalForm({
         newPreviews.push(previewUrl);
       }
 
-      setSelectedImages((prev) => [...prev, ...newFiles].slice(0, 3));
-      setImagePreviews((prev) => [...prev, ...newPreviews].slice(0, 3));
+      // Only add images if all passed validation
+      if (newFiles.length > 0) {
+        setSelectedImages((prev) => [...prev, ...newFiles].slice(0, 3));
+        setImagePreviews((prev) => [...prev, ...newPreviews].slice(0, 3));
+      }
     } catch (error) {
       console.error("Error processing images:", error);
       setImageError("Failed to process images");
@@ -228,7 +240,7 @@ export function ModalForm({
           {/* Image Upload Section - Placed at the top for prominence */}
           <div className="space-y-2">
             <Label className="text-sm">
-              Product Images {/* ✅ Remove the red asterisk */}
+             {title === "Add new store" ? "Store Logo" : "Product Images"}
               <span className="text-xs text-muted-foreground ml-2">
                 (Optional, up to 3 images)
               </span>
@@ -288,7 +300,7 @@ export function ModalForm({
             </div>
 
             <div className="text-[11px] text-muted-foreground bg-gray-50 px-2 py-1.5 rounded">
-              JPG, PNG, WebP • Max 5MB • First image is main
+              JPG, PNG, WebP • Max 2MB • First image is main
             </div>
 
             {imageError && (

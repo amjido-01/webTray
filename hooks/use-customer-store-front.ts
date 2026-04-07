@@ -21,10 +21,7 @@ export interface Product {
   description: string;
   price: string;
   quantity: number;
-  images: {
-    main: string;
-    thumbnail: string;
-  };
+  images: string[];
   visible: boolean;
   feature: boolean;
   createdAt: string;

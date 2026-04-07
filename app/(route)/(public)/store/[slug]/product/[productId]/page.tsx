@@ -141,6 +141,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { allProducts, isFetchingAllProducts } = useStorefront(slug);
   const addToCart = useCartStore((state) => state.addToCart);
 
+  console.log(allProducts, "all")
+
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -225,10 +227,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   };
 
   const productImages = [
-    product.images.main,
-    product.images.thumbnail,
-    product.images.main,
-    product.images.thumbnail,
+    product.images?.[0],
   ];
 
   const selectedImage = productImages[selectedImageIndex];
@@ -417,7 +416,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     onClick={() => router.push(`/store/${slug}/product/${item.id}`)}
                   >
                     <img
-                      src={item.images.main}
+                      src={item.images?.[0]}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />
