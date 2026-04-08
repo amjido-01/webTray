@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,7 @@ export function ModalForm({
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [showProductList, setShowProductList] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   // Image upload state
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -99,6 +100,13 @@ export function ModalForm({
       setFormData(initialData);
     }
   }, [initialData]);
+
+  // Smooth-scroll to bottom whenever a product is added to the queue
+  useEffect(() => {
+    if (pendingProducts.length > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [pendingProducts.length]);
 
   useEffect(() => {
     if (shouldClearForm) {
@@ -581,6 +589,9 @@ export function ModalForm({
             </div>
           </div>
         )}
+
+        {/* Scroll sentinel – always rendered so the ref is available */}
+        <div ref={bottomRef} />
       </SheetContent>
     </Sheet>
   );
