@@ -448,6 +448,7 @@ export default function ManageProductTable() {
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: false,
     globalFilterFn: (row, _columnId, filterValue: unknown) => {
       const name = String(row.getValue("name") ?? "").toLowerCase();
       const desc = String(row.getValue("description") ?? "").toLowerCase();

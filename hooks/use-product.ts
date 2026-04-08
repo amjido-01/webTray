@@ -205,7 +205,7 @@ export const useProduct = () => {
     }: {
       productId: number;
       formData: FormData;
-    }): Promise<Product> => {
+    }): Promise<Product | null> => {
       if (!storeId) {
         throw new Error("No active store selected");
       }
@@ -221,11 +221,23 @@ export const useProduct = () => {
       );
 
       if (data?.responseSuccessful) {
-        return data.responseBody.product;
+        return data.responseBody?.product || null;
       }
       throw new Error(data?.responseMessage || "Failed to upload images");
     },
     onSuccess: (updatedProduct) => {
+      // Guard: if the backend didn't return a product, just invalidate to refetch
+      if (!updatedProduct) {
+        if (storeId) {
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
+          });
+        }
+        toast.success("Images uploaded successfully");
+        return;
+      }
+
       if (storeId) {
         queryClient.invalidateQueries({
           predicate: (query) =>
