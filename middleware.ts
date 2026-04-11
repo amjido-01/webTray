@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as jose from "jose";
 
-// Protected routes
-const protectedPatterns = ["/dashboard", "/welcome"];
+// Protected routes - requires authentication to access
+const protectedPatterns = ["/dashboard", "/welcome", "/register-business"];
 
-// Auth routes (should redirect to dashboard if logged in)
-const authPages = ["/signin", "/signup", "/welcome", "/register-business", "/"];
+// Auth pages only (redirect to dashboard if already logged in)
+const authPages = ["/signin", "/signup"];
 
-// Public routes (should redirect to dashboard if logged in)
+// Public/marketing routes (redirect to dashboard if logged in)
 const publicRoutes = ["/about", "/contact", "/pricing", "/features", "/"];
 
 export default async function middleware(req: NextRequest) {
@@ -71,6 +71,15 @@ export default async function middleware(req: NextRequest) {
     console.log("Middleware - Access token is valid", secret);
 
     // ✅ Access token is valid - user is authenticated
+
+    // 🚫 BLOCK ACCESS to onboarding if business is already registered
+    const businessRegistered = req.cookies.get("businessRegistered")?.value === "true";
+    const isOnboardingPath = path === "/welcome" || path === "/register-business";
+
+    if (businessRegistered && isOnboardingPath) {
+      console.log("Middleware - User already has business, redirecting to dashboard");
+      return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    }
 
     // Redirect authenticated users away from auth/public pages
     if (isAuthPage || isPublicRoute) {

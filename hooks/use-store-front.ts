@@ -14,21 +14,24 @@ interface StoreFrontInfo {
     id: number;
     businessId: number;
     storeName: string;
+    description?: string;
     slogan: string;
+    slug?: string;
     customDomain: string;
     paymentMethods: {
-      paystack: boolean;
-      bankTransfer: boolean;
+      card: boolean;
+      cash: boolean;
     };
     deliveryOptions: {
-      inHouse: boolean;
-      thirdParty: string[];
+      pickup: boolean;
+      delivery: boolean;
     };
     status: string;
+    online: boolean;
     currency: string;
     createdAt: string;
     updatedAt: string;
-    online?: boolean;
+    isDeleted?: boolean;
   };
   productCount: number;
 }
@@ -48,6 +51,21 @@ interface ChangeProductFeaturedPayload {
 interface ChangeStoreStatusPayload {
   storeId: number | string;
   onlineStatus: boolean;
+}
+
+export interface CreateStorePayload {
+  storeName: string;
+  description: string;
+  slogan: string;
+  customDomain?: string;
+  paymentMethods: { cash: boolean; card: boolean };
+  deliveryOptions: { pickup: boolean; delivery: boolean };
+  status: "active" | "inactive";
+  currency: string;
+}
+
+export interface UpdateStorePayload extends Partial<CreateStorePayload> {
+  storeId: number | string;
 }
 
 // Query Keys
@@ -294,6 +312,57 @@ export const useStoreFront = () => {
   },
 });
 
+  // Create a new store
+  const createStoreMutation = useMutation({
+    mutationFn: async (payload: CreateStorePayload) => {
+      const { data } = await api.post<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
+        `/storefront`,
+        payload
+      );
+      console.log("Create Store Payload:", payload);
+      if (data?.responseSuccessful) return data.responseBody.store;
+      console.log("Create Store Response:", data);
+      throw new Error(data?.responseMessage || 'Failed to create store');
+    },
+    onSuccess: (newStore) => {
+      toast.success('Store created successfully!');
+      
+      // Automatically set the new store as active in the global state
+      const { stores } = useAuthStore.getState();
+      useAuthStore.setState({
+        stores: [...stores, newStore],
+        activeStore: newStore,
+        lastActiveStoreId: newStore.id
+      });
+
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.all });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error creating store');
+    },
+  });
+
+  // Update existing store info
+  const updateStoreMutation = useMutation({
+    mutationFn: async ({ storeId, ...payload }: UpdateStorePayload) => {
+      const { data } = await api.put<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
+        `/storefront/info`,
+        payload,
+        { params: { storeId } }
+      );
+      if (data?.responseSuccessful) return data.responseBody.store;
+      throw new Error(data?.responseMessage || 'Failed to update store');
+    },
+    onSuccess: (updatedStore) => {
+      toast.success('Store updated successfully!');
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.info(updatedStore.id) });
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(updatedStore.id) });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error updating store');
+    },
+  });
+
   const changeProductVisibility = async (
     payload: ChangeProductVisibilityPayload
   ) => {
@@ -307,6 +376,12 @@ export const useStoreFront = () => {
 
   const changeStoreStatus = async (payload: ChangeStoreStatusPayload) =>
     changeStoreStatusMutation.mutateAsync(payload);
+
+  const createStore = async (payload: CreateStorePayload) =>
+    createStoreMutation.mutateAsync(payload);
+
+  const updateStore = async (payload: UpdateStorePayload) =>
+    updateStoreMutation.mutateAsync(payload);
 
   return {
     storefrontSummary: storeFrontSummaryQuery.data,
@@ -335,5 +410,11 @@ export const useStoreFront = () => {
     // ✅ Store Status Mutations
     changeStoreStatus,
     isUpdatingStoreStatus: changeStoreStatusMutation.isPending,
+
+    // ✅ Create / Update Store
+    createStore,
+    isCreatingStore: createStoreMutation.isPending,
+    updateStore,
+    isUpdatingStore: updateStoreMutation.isPending,
   };
 };

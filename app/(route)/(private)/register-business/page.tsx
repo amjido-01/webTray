@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as yup from "yup";
 import {
   ArrowLeft,
@@ -35,6 +35,7 @@ import Image from "next/image";
 import { useUser } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Yup validation schemas
 const step1Schema = yup.object().shape({
@@ -148,6 +149,14 @@ export default function WebTrayOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const { registerBusiness, isRegisteringBusiness } = useUser();
   const router = useRouter();
+  const { user } = useAuthStore();
+
+  // Guard: Redirect if business is already registered
+  useEffect(() => {
+    if (user?.business) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
@@ -461,12 +470,12 @@ export default function WebTrayOnboarding() {
         customeDomain: formData.customeDomain || "",
         currency: formData.currency,
         paymentMethods: {
-          paystack: formData.paymentMethods.paystack,
-          bankTransfer: formData.paymentMethods.bankTransfer,
+          card: formData.paymentMethods.paystack,
+          cash: formData.paymentMethods.bankTransfer || formData.paymentMethods.cashOnDelivery,
         },
         deliveryOptions: {
-          inHouse: formData.deliveryOptions.inHouse,
-          thirdParty: formData.deliveryOptions.thirdParty,
+          pickup: formData.deliveryOptions.inHouse,
+          delivery: formData.deliveryOptions.thirdParty.length > 0,
         },
       };
       await registerBusiness(payload);

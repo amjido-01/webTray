@@ -1,29 +1,33 @@
 "use client";
 import { PageHeader } from "../page-header";
-import { ModalForm } from "../modal-form";
+import { CreateStoreSheet, CreateStoreFormData } from "./create-store-sheet";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useStoreFront } from "@/hooks/use-store-front";
 import { toast } from "sonner";
 import { useState } from "react";
 
 export default function StoreFrontHeader() {
-  const { user } = useAuthStore();
+  const { user, refreshStores } = useAuthStore();
+  const { createStore, isCreatingStore } = useStoreFront();
   const [isOpen, setIsOpen] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-  const [shouldClearForm, setShouldClearForm] = useState(false);
 
-  const handleSubmit = () => {
-    console.log("submitted");
-    setValidationErrors({});
-  };
   const handleAddStoreDrawer = () => {
     if (!user?.business) {
-      toast("Please Register your business to carryout this action");
+      toast("Please register your business to carry out this action.");
       return;
     }
     setIsOpen(true);
   };
+
+  const handleCreate = async (data: CreateStoreFormData) => {
+    try {
+      await createStore(data);
+      setIsOpen(false);
+    } catch {
+      // Error toast is already shown by the mutation
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -33,36 +37,12 @@ export default function StoreFrontHeader() {
         addLabel="New Store"
       />
 
-      <ModalForm
+      <CreateStoreSheet
         isOpen={isOpen}
         onOpenChange={setIsOpen}
-        title="Add new store"
-        submitLabel="Add store"
-        onSubmit={handleSubmit}
-        validationErrors={validationErrors}
-        shouldClearForm={shouldClearForm}
-        onFormCleared={() => setShouldClearForm(false)}
-        fields={[
-          {
-            id: "name",
-            label: "Store Name",
-            required: true,
-            placeholder: "Enter store name",
-          },
-          {
-            id: "description",
-            label: "Description",
-            type: "textarea",
-            placeholder: "Enter store description",
-            required: false,
-          },
-          {
-            id: "domain",
-            label: "Domain",
-            placeholder: "Enter domain name",
-            required: true,
-          },
-        ]}
+        isEditMode={false}
+        onSubmit={handleCreate}
+        isSubmitting={isCreatingStore}
       />
     </div>
   );

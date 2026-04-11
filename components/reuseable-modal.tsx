@@ -61,7 +61,7 @@ export function ReusableModal({
               ))
             ) : (
               <p className="text-center text-gray-500 py-10">
-                No results found.
+                No products found.
               </p>
             )}
           </div>

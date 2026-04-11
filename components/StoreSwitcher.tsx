@@ -69,7 +69,7 @@ export function StoreSwitcher() {
 
   const handleAddNewStore = () => {
     setOpen(false)
-    router.push("/createstore") // 👈 Change this route if needed
+    router.push("/dashboard/storefront") // 👈 "New Store" button is in the storefront page header
   }
 
   return (

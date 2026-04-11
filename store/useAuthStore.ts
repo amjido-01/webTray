@@ -166,6 +166,13 @@ export const useAuthStore = create<AuthState>()(
             lastActiveStoreId: activeStore?.id || null,
           });
 
+          // Set business_status cookie for middleware
+          if (business) {
+            Cookies.set("businessRegistered", "true", { expires: 365, secure: isProduction, sameSite: isProduction ? "None" : "Lax" });
+          } else {
+            Cookies.remove("businessRegistered");
+          }
+
           return responseBody.user;
         } catch (err) {
           const error = err as AxiosError<{ responseMessage: string }>;
@@ -278,6 +285,9 @@ export const useAuthStore = create<AuthState>()(
               activeStore,
               lastActiveStoreId: activeStore?.id || null,
             });
+
+            // Set business_status cookie for middleware
+            Cookies.set("businessRegistered", "true", { expires: 365, secure: isProduction, sameSite: isProduction ? "None" : "Lax" });
           } else {
             set({
               user: { ...user, business: null },
@@ -285,6 +295,7 @@ export const useAuthStore = create<AuthState>()(
               activeStore: null,
               lastActiveStoreId: null,
             });
+            Cookies.remove("businessRegistered");
           }
 
           return true;
@@ -309,7 +320,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (business) {
             const storesResp = await api.get("/user/stores");
-            const stores = storesResp.data.responseBody.stores ?? [];
+            const stores = storesResp.data.responseBody ?? [];
 
             // FIXED: Use persisted lastActiveStoreId
             const lastStoreId = get().lastActiveStoreId;
@@ -325,6 +336,8 @@ export const useAuthStore = create<AuthState>()(
               activeStore, // FIXED: Set activeStore
               lastActiveStoreId: activeStore?.id || null,
             });
+
+            Cookies.set("businessRegistered", "true", { expires: 365, secure: isProduction, sameSite: isProduction ? "None" : "Lax" });
           } else {
             set({
               user: { ...user, business: null },
@@ -332,6 +345,7 @@ export const useAuthStore = create<AuthState>()(
               activeStore: null,
               lastActiveStoreId: null,
             });
+            Cookies.remove("businessRegistered");
           }
         } catch (err) {
           console.error("Failed to refresh stores", err);
@@ -351,6 +365,8 @@ export const useAuthStore = create<AuthState>()(
             activeStore: null,
             lastActiveStoreId: null,
           });
+
+          Cookies.remove("businessRegistered");
 
           await new Promise((resolve) => setTimeout(resolve, 50));
         } catch (error) {

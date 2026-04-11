@@ -19,6 +19,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
   const router = useRouter();
   const { categories, isFetchingCategories, useProductsByCategory } =
     useStorefront(slug);
+    console.log(categories, slug, "categories")
   const addToCart = useCartStore((state) => state.addToCart);
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);

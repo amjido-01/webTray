@@ -54,12 +54,7 @@ export function StockAlertTable() {
     );
   }
 
-  const lowProducts = products?.filter((item) => item.quantity < 10);
-
-  /** 3️⃣ No low-stock products → render nothing */
-  if (!lowProducts || lowProducts.length === 0) {
-    return null;
-  }
+  const lowProducts = products?.filter((item) => item.quantity < 10) || [];
 
   /** 4️⃣ Modal data */
   const stockAlerts = lowProducts.map((product) => ({
@@ -70,6 +65,8 @@ export function StockAlertTable() {
       | "Low Stock"
       | "Medium Stock",
   }));
+
+  const hasLowProducts = lowProducts.length > 0;
 
   return (
     <Card>
@@ -85,6 +82,7 @@ export function StockAlertTable() {
             variant="outline"
             size="sm"
             onClick={() => setViewAllModal(true)}
+            disabled={!hasLowProducts}
           >
             View All
           </Button>
@@ -92,30 +90,36 @@ export function StockAlertTable() {
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-4">
-          {lowProducts.slice(0, 5).map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between border-b pb-3"
-            >
-              <div>
-                <p className="font-medium text-gray-900">{item.name}</p>
-                <p className="text-sm text-gray-500">
-                  {item.quantity} units remaining
-                </p>
-              </div>
-
-              <Badge
-                variant="secondary"
-                className={`${getStockBadgeColor(
-                  item.quantity
-                )} px-3 py-1 rounded-full`}
+        {hasLowProducts ? (
+          <div className="space-y-4">
+            {lowProducts.slice(0, 5).map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between border-b pb-3"
               >
-                {getStockLevel(item.quantity)}
-              </Badge>
-            </div>
-          ))}
-        </div>
+                <div>
+                  <p className="font-medium text-gray-900">{item.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {item.quantity} units remaining
+                  </p>
+                </div>
+
+                <Badge
+                  variant="secondary"
+                  className={`${getStockBadgeColor(
+                    item.quantity
+                  )} px-3 py-1 rounded-full`}
+                >
+                  {getStockLevel(item.quantity)}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-10 text-center">
+             <p className="text-muted-foreground text-sm">No low stock products yet</p>
+          </div>
+        )}
       </CardContent>
 
       <StockAlertsModal

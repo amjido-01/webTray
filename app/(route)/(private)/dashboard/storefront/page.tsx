@@ -16,30 +16,37 @@ import { Button } from "@/components/ui/button";
 import { useStoreFront } from "@/hooks/use-store-front";
 import { useActiveStore } from "@/hooks/use-active-store";
 import { DomainSettingsSheet } from "@/components/storefront/domain-settings-sheet";
-import { ModalForm } from "@/components/modal-form";
+import { CreateStoreSheet, CreateStoreFormData } from "@/components/storefront/create-store-sheet";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { StoreFrontSkeleton } from "@/components/storefront/store-front-skeleton";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
+  console.log(activeStore)
+  const { refreshStores } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-  const [shouldClearForm, setShouldClearForm] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [initialFormData, setInitialFormData] = useState<
-    Record<string, string>
-  >({});
+    Partial<CreateStoreFormData>
+  >();
 
   const [pendingOnlineStatus, setPendingOnlineStatus] = useState<
     boolean | null
   >(null);
 
-  const { storeInfo, isFetchingStoreInfo, changeStoreStatus, isUpdatingStoreStatus } =
-    useStoreFront();
+  const {
+    storeInfo,
+    isFetchingStoreInfo,
+    changeStoreStatus,
+    isUpdatingStoreStatus,
+    createStore,
+    isCreatingStore,
+    updateStore,
+    isUpdatingStore,
+  } = useStoreFront();
 
   console.log(storeInfo);
 
@@ -98,17 +105,45 @@ export default function Page() {
 
   const customDomain = storeInfo?.store?.customDomain || defaultDomain;
 
-  const handleUpdate = async () => {};
+  const handleUpdate = async (data: CreateStoreFormData) => {
+    try {
+      await updateStore({ storeId, ...data });
+      setIsOpen(false);
+      setIsEditMode(false);
+    } catch {
+      // Error toast is already shown by the mutation
+    }
+  };
+
+  const handleCreate = async (data: CreateStoreFormData) => {
+    try {
+      await createStore(data);
+      setIsOpen(false);
+    } catch {
+      // Error toast is already shown by the mutation
+    }
+  };
 
   const handleEditStoreClick = () => {
     setIsEditMode(true);
-    // Populate initial data from store info
+    // Map stored store info back to form shape
+    const pm = storeInfo?.store?.paymentMethods as Record<string, boolean> | null | undefined;
+    const dl = storeInfo?.store?.deliveryOptions as Record<string, unknown> | null | undefined;
     setInitialFormData({
-      name: storeInfo?.store?.storeName || activeStore.storeName || "",
-      description:
-        storeInfo?.store?.slogan ||
-        "Premium coffee and fresh pastries delivered to your door",
-      domain: defaultDomain,
+      storeName: storeInfo?.store?.storeName || activeStore.storeName || "",
+      description: (storeInfo?.store as { description?: string })?.description || "",
+      slogan: storeInfo?.store?.slogan || "",
+      customDomain: storeInfo?.store?.customDomain || "",
+      currency: storeInfo?.store?.currency || "NGN",
+      status: (storeInfo?.store?.status as "active" | "inactive") || "active",
+      paymentMethods: {
+        cash: pm?.cash ?? pm?.paystack ?? false,
+        card: pm?.card ?? pm?.bankTransfer ?? false,
+      },
+      deliveryOptions: {
+        pickup: !!(dl?.pickup ?? dl?.inHouse),
+        delivery: !!(dl?.delivery ?? (Array.isArray(dl?.thirdParty) && dl.thirdParty.length > 0)),
+      },
     });
     setIsOpen(true);
   };
@@ -124,8 +159,11 @@ export default function Page() {
                 No Storefronts Yet
               </CardTitle>
               <CardDescription>
-                You don't have an active stores yet.
-                <button className="text-[#365BEB] ml-1 cursor-pointer font-normal text-[16px]">
+                You don&apos;t have an active store yet.{" "}
+                <button
+                  className="text-[#365BEB] ml-1 cursor-pointer font-normal text-[16px]"
+                  onClick={() => { setIsEditMode(false); setIsOpen(true); }}
+                >
                   Create new store
                 </button>
               </CardDescription>
@@ -288,43 +326,19 @@ export default function Page() {
         </div>
       </div>
 
-      <ModalForm
+      <CreateStoreSheet
         isOpen={isOpen}
         onOpenChange={(open) => {
           setIsOpen(open);
           if (!open) {
             setIsEditMode(false);
-            setInitialFormData({});
+            setInitialFormData(undefined);
           }
         }}
-        title={isEditMode ? "Edit Store Info" : "Add new store"}
-        submitLabel={isEditMode ? "Update Store" : "Add store"}
-        onSubmit={handleUpdate}
-        validationErrors={validationErrors}
-        shouldClearForm={shouldClearForm}
-        onFormCleared={() => setShouldClearForm(false)}
-        initialData={initialFormData} // Add this prop
-        fields={[
-          {
-            id: "name",
-            label: "Store Name",
-            required: true,
-            placeholder: "Enter store name",
-          },
-          {
-            id: "description",
-            label: "Description",
-            type: "textarea",
-            placeholder: "Enter store description",
-            required: false,
-          },
-          {
-            id: "domain",
-            label: "Domain",
-            placeholder: "Enter domain name",
-            required: true,
-          },
-        ]}
+        isEditMode={isEditMode}
+        initialData={initialFormData}
+        onSubmit={isEditMode ? handleUpdate : handleCreate}
+        isSubmitting={isEditMode ? isUpdatingStore : isCreatingStore}
       />
     </div>
   );

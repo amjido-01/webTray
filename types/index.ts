@@ -65,17 +65,17 @@ export interface Store {
   slug?: string | null;
   customDomain: string | null;
   paymentMethods: {
-    paystack?: boolean;
-    bankTransfer?: boolean;
+    card: boolean;
+    cash: boolean;
     [key: string]: unknown;
   } | null;
   deliveryOptions: {
-    inHouse?: boolean;
-    thirdParty?: string[];
+    pickup: boolean;
+    delivery: boolean;
     [key: string]: unknown;
   } | null;
-  status?: string | null; // keep for backward compatibility if used
-  online?: boolean; // <-- add this
+  status?: string | null;
+  online?: boolean;
   currency?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -193,12 +193,12 @@ export interface CreateRegistrationPayload {
   customeDomain: string;
   currency: string;
   paymentMethods: {
-    paystack: boolean;
-    bankTransfer: boolean;
+    card: boolean;
+    cash: boolean;
   };
   deliveryOptions: {
-    inHouse: boolean;
-    thirdParty: string[];
+    pickup: boolean;
+    delivery: boolean;
   };
 }
 

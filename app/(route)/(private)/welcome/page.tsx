@@ -7,10 +7,19 @@ import confetti from "canvas-confetti";
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import { capitalizeFirstLetter } from "@/lib/capitalize";
+import { useRouter } from "next/navigation";
 
 export default function WelcomePage() {
+  const router = useRouter();
   const { user } = useAuthStore()
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Guard: Redirect if business is already registered
+  useEffect(() => {
+    if (user?.business) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
   // const duration = 10 * 1000; // 5 seconds
   // const animationEnd = Date.now() + duration;
 

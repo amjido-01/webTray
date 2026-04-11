@@ -89,6 +89,10 @@ export const useUser = () => {
 
       // Save the store ID as last active
       localStorage.setItem("lastActiveStoreId", registerResponse.store.id.toString());
+      
+      // Set cookie for middleware to block onboarding routes
+      const isProduction = process.env.NODE_ENV === "production";
+      document.cookie = `businessRegistered=true; path=/; max-age=31536000; ${isProduction ? "Secure; SameSite=None" : "SameSite=Lax"}`;
     }
 
     // Invalidate relevant queries
