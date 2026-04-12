@@ -1,12 +1,10 @@
-// ============================================
-// FILE: app/store/[slug]/order-success/page.tsx
-// ============================================
-
 'use client';
 
-import React, { use } from 'react';
-import { useRouter } from 'next/navigation';
-import { CheckCircle, Package, Mail, Phone } from 'lucide-react';
+import React, { use, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckCircle, Package, Mail, Phone, Loader2, XCircle, ArrowLeft } from 'lucide-react';
+import { verifyPaystackPayment, PaystackVerifyResponse } from '@/lib/api/storefront';
+import { toast } from 'sonner';
 
 interface OrderSuccessPageProps {
   params: Promise<{ slug: string }>;
@@ -14,10 +12,71 @@ interface OrderSuccessPageProps {
 
 export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { slug } = use(params);
+  
+  const reference = searchParams.get('reference') || searchParams.get('trxref');
+  
+  const [isVerifying, setIsVerifying] = useState(!!reference);
+  const [verificationResult, setVerificationResult] = useState<PaystackVerifyResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate a random order number (in production, this would come from your backend)
-  const orderNumber = `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  useEffect(() => {
+    if (!reference) return;
+
+    const verify = async () => {
+      try {
+        const result = await verifyPaystackPayment(slug, reference);
+        setVerificationResult(result);
+      } catch (err: any) {
+        console.error('Verification failed:', err);
+        setError(err.message || 'Failed to verify payment');
+        toast.error('Payment verification failed');
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+
+    verify();
+  }, [reference, slug]);
+
+  // Generate a placeholder order number if NOT verifying (e.g. for COD)
+  const displayOrderNumber = verificationResult?.order?.id 
+    ? `ORD-${verificationResult.order.id}` 
+    : `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Verifying Payment</h1>
+          <p className="text-gray-600">Please wait while we confirm your transaction with Paystack...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+            <XCircle className="w-12 h-12 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Verification Failed</h1>
+          <p className="text-gray-600 mb-8">{error}</p>
+          <button
+            onClick={() => router.push(`/store/${slug}/checkout`)}
+            className="flex items-center justify-center gap-2 w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Checkout
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
@@ -31,16 +90,18 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
 
           {/* Main Message */}
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-            Order Placed Successfully!
+            {reference ? 'Payment Confirmed!' : 'Order Placed Successfully!'}
           </h1>
           <p className="text-gray-600 text-lg mb-8">
-            Thank you for your purchase. Your order has been received and is being processed.
+            {reference 
+              ? 'Your payment was successful and your order is being processed.'
+              : 'Thank you for your purchase. Your order has been received and is being processed.'}
           </p>
 
           {/* Order Number */}
           <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-8 inline-block">
             <p className="text-sm text-gray-600 mb-1">Order Number</p>
-            <p className="text-2xl font-bold text-gray-900">{orderNumber}</p>
+            <p className="text-2xl font-bold text-gray-900">{displayOrderNumber}</p>
           </div>
 
           {/* Info Cards */}

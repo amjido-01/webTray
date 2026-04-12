@@ -87,7 +87,7 @@ export const useStorefront = (slug: string) => {
     queryKey: storefrontKeys.products(slug),
     queryFn: async (): Promise<Product[]> => {
       const { data } = await api.get<ApiResponse<ProductsResponse>>(
-        `/storefront/products/${slug}`
+        `/storefront/products/${slug}?limit=1000`
       );
       if (data?.responseSuccessful) {
         return data.responseBody.products || [];

@@ -138,7 +138,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug, productId } = use(params);
   console.log(slug, productId);
 
-  const { allProducts, isFetchingAllProducts } = useStorefront(slug);
+  const { allProducts, isFetchingAllProducts, categories } = useStorefront(slug);
   const addToCart = useCartStore((state) => state.addToCart);
 
   console.log(allProducts, "all")
@@ -158,9 +158,15 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           p.categoryId === product.categoryId &&
           p.id !== product.id &&
           p.visible
-      )
-      .slice(0, 4);
+      );
   }, [allProducts, product]);
+
+  console.log(relatedProducts, "related")
+
+  const getCategoryName = (categoryId: number) => {
+    const category = categories?.find((c) => c.id === categoryId);
+    return category?.name || "Category";
+  };
 
   if (isFetchingAllProducts) {
     return <ProductDetailSkeleton />;
@@ -312,7 +318,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <div>
             {/* Category Badge */}
             <span className="inline-block text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded mb-2">
-              Beverages
+              {getCategoryName(product.categoryId)}
             </span>
 
             {/* Product Name & Wishlist */}
@@ -429,7 +435,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                       {item.name}
                     </h4>
                     <span className="inline-block text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded mb-1">
-                      Beverages
+                      {getCategoryName(item.categoryId)}
                     </span>
                     <p className="text-xs text-gray-600 mb-2 line-clamp-1">
                       {item.description || 'High-quality product'}

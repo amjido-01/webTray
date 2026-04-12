@@ -1,9 +1,9 @@
 "use client";
 
 import StoreFrontHeader from "@/components/storefront/store-front-header";
-import { Edit, Globe } from "lucide-react";
+import { Edit, Globe, Copy, Check, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -36,6 +36,8 @@ export default function Page() {
   const [pendingOnlineStatus, setPendingOnlineStatus] = useState<
     boolean | null
   >(null);
+  
+  const [isCopied, setIsCopied] = useState(false);
 
   const {
     storeInfo,
@@ -98,12 +100,21 @@ export default function Page() {
     }
   };
 
-  // Generate store domain safely
   const defaultDomain = `${activeStore.storeName
     ?.replace(/\s+/g, "")
     .toLowerCase()}@webtry.com`;
 
   const customDomain = storeInfo?.store?.customDomain || defaultDomain;
+  const storeSlug = storeInfo?.store?.slug || activeStore.slug;
+  const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/store/${storeSlug}` : "";
+
+  const handleCopyUrl = () => {
+    if (!storeUrl) return;
+    navigator.clipboard.writeText(storeUrl);
+    setIsCopied(true);
+    toast.success("Store link copied to clipboard!");
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const handleUpdate = async (data: CreateStoreFormData) => {
     try {
@@ -207,13 +218,27 @@ export default function Page() {
                 <Badge variant="default" className="rounded-full">
                   {isStoreOnline ? "Online" : "Offline"}
                 </Badge>
-                <Button
-                  variant="link"
-                  className={`text-[#365BEB] hover:no-underline cursor-pointer font-normal text-[16px] ${!isStoreOnline && "line-through text-gray-400 decoration-2 decoration-red-500"}`}
-                >
-                  <Globe className="text-black" />
-                  {customDomain}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="link"
+                    className={`p-0 h-auto text-[#365BEB] hover:no-underline font-normal text-[16px] flex items-center gap-1.5 ${!isStoreOnline && "line-through text-gray-400 decoration-2 decoration-red-500"}`}
+                    asChild
+                  >
+                    <Link href={`/store/${storeSlug}`} target="_blank" rel="noopener noreferrer">
+                      <Globe className="w-4 h-4 text-black" />
+                      {storeUrl}
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-gray-500 hover:text-black transition-colors"
+                    onClick={handleCopyUrl}
+                    title="Copy store link"
+                  >
+                    {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
               </CardContent>
             </CardHeader>
           </Card>

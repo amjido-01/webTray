@@ -96,6 +96,10 @@ const ProductCard = React.memo<{
 
     // Handle image area click
     const handleImageClick = () => {
+      if (product.images && product.images.length >= 3) {
+        toast.info("Image limit reached. Click 'Edit' to manage or replace images.");
+        return;
+      }
       fileInputRef.current?.click();
     };
 
@@ -548,9 +552,18 @@ export default function ManageProductTable() {
         return;
       }
 
+      const product = storeProducts?.find((p) => p.id === productId);
+      const existingImagesCount = product?.images?.length || 0;
+      const remainingSlots = 3 - existingImagesCount;
+
+      if (remainingSlots <= 0) {
+        toast.info("Image limit reached. Click 'Edit' to manage or replace images.");
+        return;
+      }
+
       // Validate files
       const validFiles: File[] = [];
-      for (let i = 0; i < files.length && validFiles.length < 3; i++) {
+      for (let i = 0; i < files.length && validFiles.length < remainingSlots; i++) {
         const file = files[i];
 
         if (!file.type.startsWith("image/")) {
@@ -568,20 +581,26 @@ export default function ManageProductTable() {
 
       if (validFiles.length === 0) return;
 
-      // Check if product already has images
-      const product = storeProducts?.find((p) => p.id === productId);
-      const hasExistingImages = product?.images && product.images.length > 0;
+      if (files.length > remainingSlots) {
+        toast.warning(`Only ${remainingSlots} slot(s) remaining. Added first ${remainingSlots} image(s).`);
+      }
 
       setUploadingImageProductId(productId);
 
       try {
         // Step 1: Delete existing images if any
-        if (hasExistingImages) {
+        if (existingImagesCount > 0) {
           await deleteProductImages(productId);
         }
 
-        // Step 2: Upload new images
+        // Step 2: Upload existing + new images
         const formData = new FormData();
+        if (product?.images) {
+          product.images.forEach((url) => {
+            formData.append("imageUrls", url);
+          });
+        }
+        
         validFiles.forEach((file) => {
           formData.append("images", file);
         });
@@ -589,9 +608,7 @@ export default function ManageProductTable() {
         await uploadProductImages({ productId, formData });
 
         toast.success(
-          hasExistingImages
-            ? `${validFiles.length} image(s) updated successfully`
-            : `${validFiles.length} image(s) uploaded successfully`
+          `${validFiles.length} image(s) uploaded successfully`
         );
       } catch (error) {
         console.error("Failed to upload images:", error);

@@ -50,7 +50,7 @@ export const useCountryCode = () => {
         name: country.name,
         code: country.code,
         iso: country.iso,
-        flag: country.flag,
+        flag: country.iso ? `https://flagcdn.com/w40/${country.iso.toLowerCase()}.png` : country.flag,
       }));
     },
     staleTime: 1000 * 60 * 60 * 24, // Cache for 24 hours since country codes don't change often

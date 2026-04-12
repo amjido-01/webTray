@@ -7,6 +7,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// A separate instance for public storefront requests (no 401 redirect to signin)
+export const publicApi = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
+
 // Request interceptor - attach access token
 api.interceptors.request.use(
   (config) => {
@@ -36,13 +42,15 @@ api.interceptors.response.use(
         // No refresh token - logout
         Cookies.remove("accessToken");
         Cookies.remove("refreshToken");
-        window.location.href = "/signin";
+        
+        // Only redirect if on a private route (not the storefront)
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/store/")) {
+          window.location.href = "/signin";
+        }
         return Promise.reject(error);
       }
 
       try {
-        // I have to talk to the backend guy to make sure this endpoint is correct
-        // Call refresh endpoint with refresh token 
         const response = await axios.post(
           `${BASE_URL}/auth/refresh`,
           { refreshToken },
@@ -70,7 +78,10 @@ api.interceptors.response.use(
         // Refresh failed - logout
         Cookies.remove("accessToken");
         Cookies.remove("refreshToken");
-        window.location.href = "/signin";
+        
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/store/")) {
+          window.location.href = "/signin";
+        }
         return Promise.reject(refreshError);
       }
     }
