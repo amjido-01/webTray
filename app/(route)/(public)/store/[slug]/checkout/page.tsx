@@ -13,6 +13,7 @@ import * as yup from 'yup';
 import Image from 'next/image';
 import { initializePaystackOrder } from '@/lib/api/storefront';
 import { Loader2 } from 'lucide-react';
+import { useNigeriaLocations } from '@/hooks/use-nigeria-locations';
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
@@ -101,6 +102,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const deliveryFee = 2000;
   const total = subtotal + deliveryFee;
 
+  const { states, cities, isLoadingCities, fetchCities } = useNigeriaLocations();
+
   const [shippingInfo, setShippingInfo] = useState({
     firstName: '',
     lastName: '',
@@ -119,7 +122,15 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const [paymentMethod, setPaymentMethod] = useState('card');
 
   const handleInputChange = (field: string, value: string) => {
-    setShippingInfo({ ...shippingInfo, [field]: value });
+    const newInfo = { ...shippingInfo, [field]: value };
+    
+    // If state changes, fetch cities and reset city selection
+    if (field === 'state') {
+      newInfo.city = '';
+      fetchCities(value);
+    }
+    
+    setShippingInfo(newInfo);
     
     // Clear error for this field when user starts typing
     if (errors[field]) {
@@ -549,10 +560,11 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                       }`}
                     >
                       <option value="">Select state</option>
-                      <option value="lagos">Lagos</option>
-                      <option value="abuja">Abuja</option>
-                      <option value="kano">Kano</option>
-                      <option value="rivers">Rivers</option>
+                      {states.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
                     </select>
                     {errors.state && (
                       <p className="text-xs text-red-600 mt-1">{errors.state}</p>
@@ -571,10 +583,14 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                           : 'focus:ring-blue-500'
                       }`}
                     >
-                      <option value="">Choose city</option>
-                      <option value="ikeja">Ikeja</option>
-                      <option value="lekki">Lekki</option>
-                      <option value="victoria-island">Victoria Island</option>
+                      <option value="">
+                        {isLoadingCities ? "Loading cities..." : "Choose city"}
+                      </option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
                     </select>
                     {errors.city && (
                       <p className="text-xs text-red-600 mt-1">{errors.city}</p>
