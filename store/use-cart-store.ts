@@ -9,7 +9,7 @@ export interface CartItem extends Product {
 
 interface CartStore {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => boolean;
+  addToCart: (product: Product, quantity?: number) => "added" | "incremented" | "no_stock";
   updateQuantity: (productId: number, delta: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
@@ -35,16 +35,16 @@ export const useCartStore = create<CartStore>()(
                   : item
               ),
             });
-            return true;
+            return "incremented";
           }
-          return false;
+          return "no_stock";
         }
 
         // New item
         set({
           cart: [...state.cart, { ...product, cartQuantity: quantity }],
         });
-        return true;
+        return "added";
       },
 
       updateQuantity: (productId, delta) => {

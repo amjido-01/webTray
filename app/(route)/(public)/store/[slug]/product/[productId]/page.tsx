@@ -199,21 +199,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   };
 
   const handleAddToCart = () => {
-    const success = addToCart(product, quantity);
+    const result = addToCart(product, quantity);
 
-    if (success) {
-      toast.success( `${product.name} (${quantity}) has been added to your cart.`);
-      // Reset quantity after successful add
+    if (result === "added") {
+      toast.success(`${product.name} (${quantity}) added to your cart.`);
+      setQuantity(1);
+    } else if (result === "incremented") {
+      toast(`${product.name} is already in your cart.`, {
+        description: `We've added ${quantity} more to your cart!`,
+        icon: <ShoppingCart className="h-4 w-4" />,
+      });
       setQuantity(1);
     } else {
-      toast.error(`Cannot add more of ${product.name} to the cart.`);
+      toast.error(`Cannot add more of ${product.name} to the cart.`, {
+        description: "Stock limit reached.",
+      });
     }
   };
 
   const handleBuyNow = () => {
-    const success = addToCart(product, quantity);
+    const result = addToCart(product, quantity);
 
-    if (success) {
+    if (result !== "no_stock") {
       router.push(`/store/${slug}/checkout`);
     } else {
       toast.error(`Cannot add more of ${product.name} to the cart.`);
@@ -221,11 +228,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   };
 
   const handleRelatedProductAddToCart = (relatedProduct: typeof product) => {
-    const success = addToCart(relatedProduct, 1);
+    const result = addToCart(relatedProduct, 1);
     
-    if (success) {
-      toast.success("Added to cart", {
-        description: `${relatedProduct.name} has been added to your cart.`,
+    if (result === "added") {
+      toast.success(`${relatedProduct.name} added to cart.`);
+    } else if (result === "incremented") {
+      toast(`${relatedProduct.name} updated in cart.`, {
+        description: "Quantity incremented!",
+        icon: <ShoppingCart className="h-4 w-4" />,
       });
     } else {
       toast.error(`Cannot add more of ${relatedProduct.name} to the cart.`);
@@ -446,8 +456,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     <div className="flex gap-1.5">
                       <button 
                         onClick={() => {
-                          const success = addToCart(item, 1);
-                          if (success) {
+                          const result = addToCart(item, 1);
+                          if (result !== "no_stock") {
                             router.push(`/store/${slug}/checkout`);
                           } else {
                             toast.error(`Cannot add more of ${item.name} to the cart.`);

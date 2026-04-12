@@ -10,7 +10,7 @@ import StoreFrontSlide from "@/components/store-front/store-front-slide";
 import CategoryFilter from "@/components/store-front/store-front-cate-filter";
 import ProductsGrid from "@/components/store-front/store-front-product-grid";
 import StoreFrontSkeleton from "./store-front/store-front-skeleton";
-import { Search } from "lucide-react";
+import { Search, ShoppingCart } from "lucide-react";
 
 interface StorefrontUIProps {
   slug: string;
@@ -150,12 +150,18 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
   };
 
   const handleAddToCart = (product: Product, quantity: number = 1) => {
-    const success = addToCart(product, quantity);
+    const result = addToCart(product, quantity);
 
-    if (success) {
-      toast.success(`${product.name} has been added to your cart.`);
+    if (result === "added") {
+      toast.success(`${product.name} added to your cart.`);
+    } else if (result === "incremented") {
+      toast(`${product.name} is already in your cart, ${quantity} more added to your cart!`, {
+        icon: <ShoppingCart className="h-4 w-4" />,
+      });
     } else {
-      toast.error(`Cannot add more of ${product.name} to the cart.`);
+      toast.error(`Cannot add more of ${product.name} to the cart.`, {
+        description: "You've reached the maximum available stock.",
+      });
     }
   };
 

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "./ui/button";
 import { ModalForm } from "./modal-form";
 import { useState } from "react";
+import Link from "next/link";
 import { useCategory } from "@/hooks/use-category";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
@@ -147,6 +148,15 @@ export function StatCard({
             {action && <div className="ml-2">{action}</div>}
             {title === "Category" && !action && (
               <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  className="rounded-full"
+                  asChild
+                >
+                  <Link href="/dashboard/storefront/manage-categories">
+                    View
+                  </Link>
+                </Button>
                 <Button
                   size="sm"
                   className="text-white hover:bg-[#5f70b4] bg-[#365BEB] rounded-full"

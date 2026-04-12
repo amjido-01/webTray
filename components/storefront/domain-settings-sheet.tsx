@@ -29,7 +29,7 @@ interface CopyPayload {
 }
 
 export function DomainSettingsSheet({
-  currentDomain = "johncoffee@webtray.com",
+  storeUrl = "",
 }) {
   const [customDomain, setCustomDomain] = useState("");
   const [copiedField, setCopiedField] = useState("");
@@ -41,7 +41,7 @@ export function DomainSettingsSheet({
   };
 
   const handleVisitDomain = () => {
-    window.open(`https://${currentDomain}`, "_blank");
+    if (storeUrl) window.open(storeUrl, "_blank");
   };
 
   return (
@@ -80,8 +80,8 @@ export function DomainSettingsSheet({
                 <Badge className="bg-[#1A1A1A] text-[14px] font-normal rounded-[10px] text-white hover:bg-black text-xs px-3 py-1">
                   Active
                 </Badge>
-                <span className="text-sm font-normal text-[#365BEB]">
-                  {currentDomain}
+                <span className="text-sm font-normal text-[#365BEB] truncate block max-w-[250px]">
+                  {storeUrl || "Store URL not available"}
                 </span>
               </div>
 
@@ -91,7 +91,7 @@ export function DomainSettingsSheet({
                   size="sm"
                   className="rounded-[10px] text-[#1A1A1A] text-[14px] font-normal"
                   onClick={() =>
-                    handleCopy({ text: currentDomain, field: "current" })
+                    handleCopy({ text: storeUrl, field: "current" })
                   }
                 >
                   <Copy className="h-3 w-3 mr-1 text-[#1A1A1A]" />
@@ -210,7 +210,7 @@ export function DomainSettingsSheet({
                       Value
                     </p>
                     <p className="font-medium text-blue-600 truncate">
-                      {currentDomain}
+                      {storeUrl || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -299,8 +299,8 @@ export function DomainSettingsSheet({
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
-                  <p className="text-[12px] text-[#1A1A1A] font-semobold">
-                    yourstore.webtray.com
+                  <p className="text-[12px] text-[#1A1A1A] font-semobold truncate max-w-[200px]">
+                    {storeUrl}
                   </p>
                   <p className="text-[10px] font-normal text-[#4D4D4D]">
                     Default domain • Active Nov 10, 2024
@@ -313,8 +313,8 @@ export function DomainSettingsSheet({
 
               <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                 <div>
-                  <p className="text-[12px] text-[#1A1A1A] font-semobold">
-                    yourstore.webtray.com
+                  <p className="text-[12px] text-[#1A1A1A] font-semobold truncate max-w-[200px]">
+                    {storeUrl}
                   </p>
                   <p className="text-[10px] font-normal text-[#4D4D4D]">
                     Default domain • Parked Nov 10, 2024

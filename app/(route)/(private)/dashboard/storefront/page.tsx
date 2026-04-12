@@ -333,7 +333,7 @@ export default function Page() {
                   </p>
                 </div>
 
-                <DomainSettingsSheet />
+                <DomainSettingsSheet storeUrl={storeUrl} />
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="space-y-4">

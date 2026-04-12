@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -152,8 +152,8 @@ export default function ProductsTable() {
         return matchesSearch && matchesCategory;
       }) || [];
 
-  // Create columns with all the handlers
-  const columns = createColumns(columnHandlers, categories);
+  // Create stable columns definition
+  const columns = useMemo(() => createColumns(categories), [categories]);
 
   if (isFetchingProducts) return <TableSkeleton />;
   if (productsError) return <div>Error loading products</div>;
@@ -193,7 +193,7 @@ export default function ProductsTable() {
             </Select>
           </div>
 
-          <DataTable columns={columns} data={formattedProducts} />
+          <DataTable columns={columns} data={formattedProducts} meta={columnHandlers} />
         </div>
       </div>
 

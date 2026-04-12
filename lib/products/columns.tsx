@@ -37,7 +37,6 @@ export interface ColumnHandlers {
 }
 
 export const createColumns = (
-  handlers: ColumnHandlers,
   categories?: Category[]
 ): ColumnDef<Product>[] => [
   {
@@ -53,7 +52,8 @@ export const createColumns = (
   {
     accessorKey: "name",
     header: "Products",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
 
@@ -96,7 +96,8 @@ export const createColumns = (
   {
     accessorKey: "categoryId",
     header: "Category",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
       const categoryName =
@@ -136,7 +137,8 @@ export const createColumns = (
   {
     accessorKey: "quantity",
     header: "Stock",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
 
@@ -167,7 +169,8 @@ export const createColumns = (
   {
     accessorKey: "formattedPrice",
     header: "Price ₦",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
 
@@ -195,7 +198,8 @@ export const createColumns = (
   },
   {
     header: "Status",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const status = getStockStatus(product.quantity);
 
@@ -214,7 +218,8 @@ export const createColumns = (
   },
   {
     header: "Actions",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
+      const handlers = table.options.meta as ColumnHandlers;
       const product = row.original;
       const isEditing = handlers.editingProduct === product.id;
 
