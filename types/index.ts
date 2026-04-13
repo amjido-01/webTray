@@ -188,17 +188,23 @@ export interface CreateRegistrationPayload {
     main: string;
   };
   address: string;
+  contactInfo: {
+    phone: string;
+    email: string;
+  };
+  status: string;
   storeName: string;
   slogan: string;
   customeDomain: string;
   currency: string;
   paymentMethods: {
-    card: boolean;
-    cash: boolean;
+    paystack: boolean;
+    bankTransfer: boolean;
+    cashOnDelivery?: boolean;
   };
   deliveryOptions: {
-    pickup: boolean;
-    delivery: boolean;
+    inHouse: boolean;
+    thirdParty: string[];
   };
 }
 

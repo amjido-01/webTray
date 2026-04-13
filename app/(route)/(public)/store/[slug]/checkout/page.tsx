@@ -670,7 +670,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               >
                 Continue to checkout
               </button>
-
+                  <p className="text-center text-sm text-muted-foreground mt-3">or</p>
               <a
                 href={`https://wa.me/?text=${encodeURIComponent('Hello, I need help with my order on ' + slug)}`}
                 target="_blank"

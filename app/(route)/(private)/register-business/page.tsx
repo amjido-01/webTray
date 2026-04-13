@@ -65,7 +65,7 @@ const step1Schema = yup.object().shape({
   contactInfo: yup.object().shape({
     phone: yup
       .string()
-      .matches(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+      .matches(/^(0|(\+234))\d{10}$/, "Please enter a valid Nigerian phone number (e.g., 07038172430 or +2347038172430)")
       .required("Phone number is required"),
     email: yup
       .string()
@@ -234,7 +234,7 @@ export default function WebTrayOnboarding() {
       } else if (fieldPath === "contactInfo.phone") {
         await yup
           .string()
-          .matches(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+          .matches(/^(0|(\+234))\d{10}$/, "Please enter a valid Nigerian phone number (e.g., 07038172430 or +2347038172430)")
           .required("Phone number is required")
           .validate(value as string);
       } else if (fieldPath === "contactInfo.email") {
@@ -456,6 +456,12 @@ export default function WebTrayOnboarding() {
     }
 
     try {
+      // Format phone number: replace leading 0 with +234
+      let formattedPhone = formData.contactInfo.phone;
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+234' + formattedPhone.slice(1);
+      }
+
       // Prepare the payload according to the API requirements
       const payload = {
         businessName: formData.businessName,
@@ -465,17 +471,23 @@ export default function WebTrayOnboarding() {
           main: formData.category.main.join(", "),
         },
         address: formData.address,
+        contactInfo: {
+          phone: formattedPhone,
+          email: formData.contactInfo.email,
+        },
+        status: "active",
         storeName: formData.storeName,
         slogan: formData.slogan || "",
         customeDomain: formData.customeDomain || "",
         currency: formData.currency,
         paymentMethods: {
-          card: formData.paymentMethods.paystack,
-          cash: formData.paymentMethods.bankTransfer || formData.paymentMethods.cashOnDelivery,
+          paystack: formData.paymentMethods.paystack,
+          bankTransfer: formData.paymentMethods.bankTransfer,
+          cashOnDelivery: formData.paymentMethods.cashOnDelivery,
         },
         deliveryOptions: {
-          pickup: formData.deliveryOptions.inHouse,
-          delivery: formData.deliveryOptions.thirdParty.length > 0,
+          inHouse: formData.deliveryOptions.inHouse,
+          thirdParty: formData.deliveryOptions.thirdParty,
         },
       };
       await registerBusiness(payload);
@@ -727,7 +739,7 @@ export default function WebTrayOnboarding() {
                     <Label htmlFor="phone">Phone Number*</Label>
                     <Input
                       id="phone"
-                      placeholder="+2348001234567"
+                      placeholder="07038172430"
                       value={formData.contactInfo.phone}
                       onChange={(e) =>
                         handleInputChange("contactInfo.phone", e.target.value)
