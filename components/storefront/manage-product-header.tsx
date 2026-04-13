@@ -173,8 +173,6 @@ export function ManageStoreFrontHeader() {
             });
           }
 
-          console.log("Sending product:", product.name);
-
           await addProduct(formData);
 
           successCount++;

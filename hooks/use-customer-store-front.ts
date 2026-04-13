@@ -106,14 +106,12 @@ export const useStorefront = (storeId: string = "ala-store") => {
         // Format: /storefront?categoryIds=49,50
         const queryString = `categoryIds=${categoryIds.join(',')}`;
         
-        console.log(`Fetching filtered products: /storefront?${queryString}`);
         
         const { data } = await api.get<ApiResponse<ProductsResponse>>(
           `/storefront?${queryString}`
         );
         
         if (data?.responseSuccessful) {
-          console.log(`Received ${data.responseBody.products?.length || 0} filtered products`);
           return data.responseBody.products || [];
         }
         throw new Error(data?.responseMessage || "Failed to fetch filtered products");

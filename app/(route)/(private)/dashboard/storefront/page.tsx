@@ -25,7 +25,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
-  console.log(activeStore)
+  console.log(activeStore, "activeStore")
   const { refreshStores } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -50,7 +50,6 @@ export default function Page() {
     isUpdatingStore,
   } = useStoreFront();
 
-  console.log(storeInfo);
 
  if (storeLoading || isFetchingStoreInfo) {
     return <StoreFrontSkeleton />;
@@ -73,7 +72,6 @@ export default function Page() {
       </div>
     );
   }
-  console.log("Active Store:", storeInfo);
 
   const storeId = storeInfo?.store?.id ?? activeStore.id;
   const isStoreOnline = storeInfo?.store?.online ?? false;

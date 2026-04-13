@@ -2,7 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Order } from "@/types";
 import { capitalizeFirstLetter } from "../capitalize";
-import { getOrderStatus, getStatusColor } from "../orders/get-status";
+import { getOrderStatus, getStatusColor, getTypeColor } from "../orders/get-status";
 import { formatCurrency } from "../format-currency";
 
 export const createRecentOrdersColumns = (): ColumnDef<Order>[] => [
@@ -33,8 +33,13 @@ export const createRecentOrdersColumns = (): ColumnDef<Order>[] => [
     header: "Type",
     cell: ({ row }) => {
       const order = row.original;
-      const type = order.date
-      return <div className="py-3 text-sm text-gray-600">{type && "Online"}</div>;
+      return (
+        <div className="py-3">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(order.isOnline)}`}>
+            {order.isOnline ? "Online" : "Offline"}
+          </span>
+        </div>
+      );
     },
   },
   {

@@ -140,12 +140,13 @@ export type Order = {
   id: number;
   storeId: number;
   customerId: number;
-  status: "pending" | "shipped" | "cancel" | "completed";
+  status: "pending" | "shipped" | "cancel" | "completed" | "paid" | string;
   totalAmount: number;
   createdAt: string;
   updatedAt: string;
   customer: Customer | null;
   orderItems: OrderItem[];
+  isOnline: boolean;
 
   // Formatted fields for UI compatibility
   orderId?: number;

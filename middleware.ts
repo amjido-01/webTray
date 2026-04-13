@@ -24,8 +24,6 @@ export default async function middleware(req: NextRequest) {
   // Get access token from cookies
   const accessToken = req.cookies.get("accessToken")?.value;
   const refreshToken = req.cookies.get("refreshToken")?.value;
-  console.log("Middleware - Access Token:", accessToken);
-  console.log("Middleware - Refresh Token:", refreshToken);
 
   // Determine if user has any valid session (either token exists)
   const hasSession = !!(accessToken || refreshToken);
@@ -68,7 +66,6 @@ export default async function middleware(req: NextRequest) {
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET as string);
     await jose.jwtVerify(accessToken, secret);
-    console.log("Middleware - Access token is valid", secret);
 
     // ✅ Access token is valid - user is authenticated
 
@@ -77,7 +74,6 @@ export default async function middleware(req: NextRequest) {
     const isOnboardingPath = path === "/welcome" || path === "/register-business";
 
     if (businessRegistered && isOnboardingPath) {
-      console.log("Middleware - User already has business, redirecting to dashboard");
       return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
     }
 

@@ -51,16 +51,14 @@ export default function OrdersTable() {
     const matchesStatus = selectedStatus === "all" || 
       order.status.toLowerCase() === selectedStatus.toLowerCase();
     
-    // Type filter (you may need to adjust this based on your actual data structure)
-    // const matchesType = selectedType === "all" || 
-    //   (order.type && order.type.toLowerCase() === selectedType.toLowerCase());
+    const matchesType = selectedType === "all" || 
+      (selectedType === "online" ? order.isOnline : !order.isOnline);
     
-    return matchesSearch && matchesStatus 
-    // && matchesType;
+    return matchesSearch && matchesStatus && matchesType;
   }) || [];
 
   const columns = createColumns();
-  const status = ["Pending", "Processing", "Shipped", "Completed"];
+  const status = ["Pending", "Paid", "Processing", "Shipped", "Completed"];
   const type = ["Online", "Offline"];
 
   if (isFetchingOrders) return <TableSkeleton />;

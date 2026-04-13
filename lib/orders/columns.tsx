@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Order } from "@/types";
 import { capitalizeFirstLetter } from "../capitalize";
-import { getOrderStatus, getStatusColor } from "./get-status";
+import { getOrderStatus, getStatusColor, getTypeColor } from "./get-status";
 import { formatCurrency } from "../format-currency";
 
 
@@ -45,6 +45,19 @@ export const createColumns = (): ColumnDef<Order>[] => [
         day: 'numeric'
       });
       return <div className="py-5 text-[#1A1A1A] font-normal text-sm leading-[100%] ">{date}</div>;
+    },
+  },
+  {
+    header: "Type",
+    cell: ({ row }) => {
+      const order = row.original;
+      return (
+        <div className="py-5">
+           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(order.isOnline)}`}>
+            {order.isOnline ? "Online" : "Offline"}
+          </span>
+        </div>
+      );
     },
   },
   {

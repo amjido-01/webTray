@@ -138,8 +138,6 @@ export const useAuthStore = create<AuthState>()(
           const { user, business, accessToken, refreshToken } = responseBody;
           const fetchedStores = business?.store ?? [];
 
-          console.log("login - fetched stores:", fetchedStores);
-
           Cookies.set("accessToken", accessToken, cookieOptions);
           Cookies.set("refreshToken", refreshToken, refreshCookieOptions);
 
@@ -150,11 +148,6 @@ export const useAuthStore = create<AuthState>()(
             fetchedStores[0] ||
             null;
 
-          console.log("login - setting state:", {
-            storesCount: fetchedStores.length,
-            activeStoreId: activeStore?.id,
-            lastStoreId
-          });
 
           set({
             user: {
@@ -254,16 +247,13 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const response = await api.get("/user/profile");
-          console.log("checkAuth - profile response:", response.data);
           const { user, business } = response.data.responseBody;
 
           if (business) {
             // Fetch stores from API
             const storesResp = await api.get("/user/stores");
-            console.log("checkAuth - stores response:", storesResp.data);
             const fetchedStores = storesResp.data.responseBody ?? [];
             
-            console.log("checkAuth - fetched stores:", fetchedStores);
 
             // FIXED: Use persisted lastActiveStoreId to restore active store
             const lastStoreId = get().lastActiveStoreId;
@@ -272,12 +262,6 @@ export const useAuthStore = create<AuthState>()(
                 fetchedStores.find((s: Store) => s.id === lastStoreId)) ||
               fetchedStores[0] ||
               null;
-
-            console.log("checkAuth - setting state:", {
-              storesCount: fetchedStores.length,
-              activeStoreId: activeStore?.id,
-              lastStoreId
-            });
 
             set({
               user: { ...user, business },
@@ -363,7 +347,6 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             stores: [],
             activeStore: null,
-            lastActiveStoreId: null,
           });
 
           Cookies.remove("businessRegistered");

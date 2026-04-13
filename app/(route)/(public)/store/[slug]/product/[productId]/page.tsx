@@ -136,12 +136,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   // Unwrap params using React.use()
   const { slug, productId } = use(params);
-  console.log(slug, productId);
 
   const { allProducts, isFetchingAllProducts, categories } = useStorefront(slug);
   const addToCart = useCartStore((state) => state.addToCart);
 
-  console.log(allProducts, "all")
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -161,7 +159,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       );
   }, [allProducts, product]);
 
-  console.log(relatedProducts, "related")
 
   const getCategoryName = (categoryId: number) => {
     const category = categories?.find((c) => c.id === categoryId);

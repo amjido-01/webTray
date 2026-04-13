@@ -64,8 +64,6 @@ export default function SignUpPage() {
         password: data.password,
       };
 
-      console.log(signupData, "sign up data to send");
-
       const email = await signup(signupData);
       setSubmitSuccess(true);
       reset();

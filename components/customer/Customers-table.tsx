@@ -30,13 +30,11 @@ export default function CustomerTable() {
 
   // PRIORITY 1: Show loading state
   if (isLoading) {
-    console.log("🔄 Loading customers...");
     return <TableSkeleton />;
   }
 
   // PRIORITY 2: Show error state
   if (isError) {
-    console.log("❌ Error loading customers:", error);
     return (
       <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm p-6">
         <div className="text-center text-red-500 py-10">
@@ -51,13 +49,11 @@ export default function CustomerTable() {
 
   // PRIORITY 3: Check if we have valid data
   if (!isSuccess || !customers || !Array.isArray(customers)) {
-    console.log("⏳ Waiting for valid data...", { isSuccess, customers });
     return <TableSkeleton />;
   }
 
   // PRIORITY 4: Handle empty state
   if (customers.length === 0) {
-    console.log("📭 No customers found");
     return (
       <div className="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-sm p-6">
         <div className="text-center text-gray-500 py-10">

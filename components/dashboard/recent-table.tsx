@@ -19,6 +19,7 @@ import Link from "next/link";
 export default function RecentOrdersTable() {
   const { categories } = useCategory();
   const { orders, ordersError, isFetchingOrders } = useOrder();
+  console.log(orders)
   
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -53,8 +54,6 @@ export default function RecentOrdersTable() {
 //   })
   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) // Sort by newest first
   .slice(0, 5) || []; // Get only the recent 5 orders
-
-  console.log(formattedOrders)
 
   const columns = createRecentOrdersColumns();
 

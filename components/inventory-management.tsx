@@ -114,7 +114,6 @@ export function InventoryManagement() {
         images: images,
       };
 
-      console.log(newProduct);
 
       setPendingProducts((prev) => [...prev, newProduct]);
       toast.success("Product added to queue");
@@ -178,8 +177,6 @@ const handleSubmitAll = async () => {
             formData.append('images', file);
           });
         }
-
-        console.log('Sending product:', product.name);
 
         await addProduct(formData);
         

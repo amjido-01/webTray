@@ -596,8 +596,9 @@ export default function AddOrderPage() {
                       disabled={isAddingOrder}
                     >
                       <option value="">Select payment method</option>
-                      <option value="offline">Offline (Cash)</option>
-                      <option value="online">Online</option>
+                      <option value="offline">Cash</option>
+                      <option value="offline">Transfer</option>
+                      <option value="online">POS</option>
                     </select>
                     {errors.paymentMethod && (
                       <p className="text-red-500 text-sm mt-1">
@@ -606,45 +607,7 @@ export default function AddOrderPage() {
                     )}
                   </div>
 
-                  {paymentMethod === "online" && (
-                    <div>
-                      <Label
-                        htmlFor="onlinePaymentType"
-                        className="text-sm font-medium text-gray-700 mb-2 block"
-                      >
-                        Online Payment Type
-                      </Label>
-                      <select
-                        id="onlinePaymentType"
-                        value={onlinePaymentType}
-                        onChange={(e) => {
-                          setOnlinePaymentType(e.target.value);
-                          if (errors.onlinePaymentType) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              onlinePaymentType: undefined,
-                            }));
-                          }
-                        }}
-                        className={`w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 ${
-                          errors.onlinePaymentType
-                            ? "border-red-500 focus:ring-red-500"
-                            : ""
-                        }`}
-                        disabled={isAddingOrder}
-                      >
-                        <option value="">Select payment type</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="bank">Bank</option>
-                        <option value="card_payment">Card Payment</option>
-                      </select>
-                      {errors.onlinePaymentType && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.onlinePaymentType}
-                        </p>
-                      )}
-                    </div>
-                  )}
+
                 </div>
               </div>
             </div>

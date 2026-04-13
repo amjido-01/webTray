@@ -13,7 +13,6 @@ export default function StoreHeader() {
   const [storeName, setStoreName] = useState("Store");
   const params = useParams();
   const slug = params.slug as string;
-  console.log("Store slug in header:", slug);
 
   const cart = useCartStore((state) => state.cart);
   const cartCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);

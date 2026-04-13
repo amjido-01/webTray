@@ -276,7 +276,6 @@ export const useStoreFront = () => {
       { onlineStatus },
       { params: { storeId } }
     );
-    console.log("Change Store Status Response:", data);
 
     if (data?.responseSuccessful) return data.responseBody.store;
     throw new Error(data?.responseMessage || 'Failed to update store status');
@@ -319,9 +318,7 @@ export const useStoreFront = () => {
         `/storefront`,
         payload
       );
-      console.log("Create Store Payload:", payload);
       if (data?.responseSuccessful) return data.responseBody.store;
-      console.log("Create Store Response:", data);
       throw new Error(data?.responseMessage || 'Failed to create store');
     },
     onSuccess: (newStore) => {

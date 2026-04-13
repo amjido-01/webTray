@@ -37,7 +37,6 @@ export const useCustomer = () => {
         }
       );
 
-      console.log("✅ API Response:", data);
 
       if (!data?.responseSuccessful) {
         throw new Error(data?.responseMessage || "Failed to fetch customers");
@@ -65,7 +64,6 @@ export const useCustomer = () => {
         status: "active" as const, // Default status
       }));
 
-      console.log("✅ Validated customers:", validatedCustomers);
       return validatedCustomers;
     },
     enabled: !!storeId,
