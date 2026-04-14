@@ -13,8 +13,19 @@ import { toast } from 'sonner';
 import * as yup from 'yup';
 import Image from 'next/image';
 import { initializePaystackOrder } from '@/lib/api/storefront';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Plus, Minus } from 'lucide-react';
 import { useNigeriaLocations } from '@/hooks/use-nigeria-locations';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CheckoutPageProps {
   params: Promise<{ slug: string }>;
@@ -340,9 +351,36 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                             <X className="w-4 h-4" />
                           </button>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          ₦{parseFloat(item.price).toLocaleString()} × {item.cartQuantity}
-                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs text-gray-600">
+                            ₦{parseFloat(item.price).toLocaleString()}
+                          </p>
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-2">
+                              {!buyNowId && (
+                                <button 
+                                  onClick={() => updateQuantity(item.id, -1)}
+                                  className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-gray-600"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                              )}
+                              <span className="text-sm font-bold w-4 text-center">{item.cartQuantity}</span>
+                              {!buyNowId && (
+                                <button 
+                                  onClick={() => updateQuantity(item.id, 1)}
+                                  disabled={item.cartQuantity >= item.quantity}
+                                  className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-gray-500 font-medium">
+                              Stock: {item.quantity}
+                            </p>
+                          </div>
+                        </div>
                         <p className="text-sm font-bold mt-2">
                           ₦ {(parseFloat(item.price) * item.cartQuantity).toLocaleString()}
                         </p>
@@ -415,11 +453,46 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
             </div>
 
             <div className="lg:col-span-1">
-              <div className="border rounded-lg p-4 sticky top-4">
-                <h2 className="font-bold text-[#4D4D4D] leading-[100%] text-[16px] mb-4 pb-3 border-b">ORDER SUMMARY</h2>
+              <div className="border rounded-lg p-4 sticky top-4 animate-in fade-in duration-500">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                  <h2 className="font-bold text-[#4D4D4D] leading-[100%] text-[16px]">ORDER SUMMARY</h2>
+                  {!buyNowId && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button 
+                          className="text-red-500 hover:text-red-600 p-1"
+                          title="Clear Cart"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Clear Shopping Cart?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will remove all items from your current store cart. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => clearCart(storeId)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Clear Cart
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
                 <div className="space-y-3 mb-4 text-sm">
                   <div className="flex justify-between">
-                    <span>Subtotal ({itemCount} Items)</span>
+                    <span>Total Quantity</span>
+                    <span className="font-bold">{itemCount} Items</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
                     <span className="font-bold">₦ {subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
@@ -720,8 +793,39 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="border rounded-lg p-4 sticky top-4">
-              <h2 className="font-bold text-[#4D4D4D] leading-[100%] text-[16px] mb-4 pb-3 border-b">ORDER SUMMARY</h2>
+            <div className="border rounded-lg p-4 sticky top-4 animate-in fade-in duration-500">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b">
+                <h2 className="font-bold text-[#4D4D4D] leading-[100%] text-[16px]">ORDER SUMMARY</h2>
+                {!buyNowId && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button 
+                        className="text-red-500 hover:text-red-600 p-1"
+                        title="Clear Cart"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear Shopping Cart?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove all items from your current store cart. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => clearCart(storeId)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Clear Cart
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
               
               <div className="mb-4 max-h-64 overflow-y-auto">
                {effectiveCart.map((item) => {
@@ -744,10 +848,48 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium truncate">{item.name}</p>
-        <p className="text-xs text-gray-600">
-          Qty: {item.cartQuantity} × ₦{parseFloat(item.price).toLocaleString()}
-        </p>
+        <div className="flex justify-between items-start gap-2">
+          <p className="text-xs font-medium truncate">{item.name}</p>
+          {!buyNowId && (
+            <button 
+              onClick={() => handleRemoveItem(item.id, item.name)}
+              className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+              title="Remove Item"
+            >
+              <Trash2 className="w-3 h-3 text-red-500" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-xs text-gray-600">
+            ₦{parseFloat(item.price).toLocaleString()}
+          </p>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2">
+              {!buyNowId && (
+                <button 
+                  onClick={() => updateQuantity(item.id, -1)}
+                  className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-gray-600"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+              )}
+              <span className="text-xs font-bold w-4 text-center">{item.cartQuantity}</span>
+              {!buyNowId && (
+                <button 
+                  onClick={() => updateQuantity(item.id, 1)}
+                  disabled={item.cartQuantity >= item.quantity}
+                  className="w-5 h-5 flex items-center justify-center border rounded hover:bg-gray-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-500 font-medium">
+              Stock: {item.quantity}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -756,7 +898,11 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
               <div className="space-y-3 mb-4 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal ({itemCount} Items)</span>
+                  <span>Total Quantity</span>
+                  <span className="font-bold">{itemCount} Items</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
                   <span className="font-bold">₦ {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">

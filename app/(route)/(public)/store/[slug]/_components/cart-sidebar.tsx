@@ -115,9 +115,10 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
                           </span>
                           <Button
                             onClick={() => updateQuantity(item.id, 1)}
+                            disabled={item.cartQuantity >= item.quantity}
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 rounded hover:bg-gray-50"
+                            className="h-8 w-8 rounded hover:bg-gray-50 disabled:opacity-50"
                           >
                             <Plus className="w-4 h-4" />
                           </Button>
@@ -130,6 +131,9 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
                             <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
+                        <p className="text-[10px] text-gray-500 font-medium mt-1 uppercase">
+                          Stock: {item.quantity} available
+                        </p>
                       </div>
                     </div>
                   </div>

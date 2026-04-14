@@ -362,21 +362,26 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
             {/* Quantity Selector */}
             <div className="flex items-center gap-3 mb-4">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
-                className="w-8 h-8 border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="w-8 text-center font-medium">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= product.quantity}
-                className="w-8 h-8 border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1}
+                  className="w-8 h-8 border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <span className="w-8 text-center font-medium">{quantity}</span>
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={quantity >= product.quantity}
+                  className="w-8 h-8 border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <span className="text-sm font-semibold text-gray-500">
+                Stock Available: {product.quantity}
+              </span>
             </div>
 
             {/* Action Buttons */}
