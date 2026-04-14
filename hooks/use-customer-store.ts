@@ -74,6 +74,7 @@ export const useStorefront = (slug: string) => {
       const { data } = await api.get<ApiResponse<CategoriesResponse>>(
         `/storefront/${slug}`
       );
+      console.log(data?.responseBody, "llll")
       if (data?.responseSuccessful) {
         return data.responseBody.categories || [];
       }

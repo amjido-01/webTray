@@ -12,9 +12,9 @@ interface CartStore {
   addToCart: (product: Product, quantity?: number) => "added" | "incremented" | "no_stock";
   updateQuantity: (productId: number, delta: number) => void;
   removeFromCart: (productId: number) => void;
-  clearCart: () => void;
-  getCartTotal: () => number;
-  getCartCount: () => number;
+  clearCart: (storeId?: number) => void;
+  getCartTotal: (storeId?: number) => number;
+  getCartCount: (storeId?: number) => number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -69,19 +69,31 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
-      clearCart: () => {
-        set({ cart: [] });
+      clearCart: (storeId) => {
+        if (storeId) {
+          set((state) => ({
+            cart: state.cart.filter((item) => item.storeId !== storeId),
+          }));
+        } else {
+          set({ cart: [] });
+        }
       },
 
-      getCartTotal: () => {
-        return get().cart.reduce(
+      getCartTotal: (storeId) => {
+        const cart = storeId 
+          ? get().cart.filter(item => item.storeId === storeId)
+          : get().cart;
+        return cart.reduce(
           (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
           0
         );
       },
 
-      getCartCount: () => {
-        return get().cart.reduce((sum, item) => sum + item.cartQuantity, 0);
+      getCartCount: (storeId) => {
+        const cart = storeId 
+          ? get().cart.filter(item => item.storeId === storeId)
+          : get().cart;
+        return cart.reduce((sum, item) => sum + item.cartQuantity, 0);
       },
     }),
     {

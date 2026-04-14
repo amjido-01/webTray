@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/store/use-cart-store";
+import { useStorefront } from "@/hooks/use-customer-store";
 import CartSidebar from "./cart-sidebar";
 
 export default function StoreHeader() {
@@ -14,8 +15,15 @@ export default function StoreHeader() {
   const params = useParams();
   const slug = params.slug as string;
 
+  const { allProducts, categories } = useStorefront(slug);
+  
+  // Resolve storeId from fetched data
+  const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
+
   const cart = useCartStore((state) => state.cart);
-  const cartCount = cart.reduce((sum, item) => sum + item.cartQuantity, 0);
+  // Filter cart by current store
+  const storeCart = cart.filter(item => item.storeId === storeId);
+  const cartCount = storeCart.reduce((sum, item) => sum + item.cartQuantity, 0);
 
   useEffect(() => {
     // Option 1: Format the slug to a readable name

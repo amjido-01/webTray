@@ -5,6 +5,7 @@ import React from "react";
 import { ShoppingCart, X, Plus, Minus, Trash2 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useCartStore } from "@/store/use-cart-store";
+import { useStorefront } from "@/hooks/use-customer-store";
 import { toast } from "sonner";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -25,17 +26,23 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
   const params = useParams();
   const slug = params.slug as string;
   
+  const { allProducts, categories } = useStorefront(slug);
+  const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
+
   const cart = useCartStore((state) => state.cart);
+  // Filter cart by current store
+  const storeCart = cart.filter(item => item.storeId === storeId);
+  
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   
-  // Calculate totals directly from cart
-  const cartTotal = cart.reduce(
+  // Calculate totals from filtered cart
+  const cartTotal = storeCart.reduce(
     (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
     0
   );
   
-  const cartCount = cart.reduce(
+  const cartCount = storeCart.reduce(
     (sum, item) => sum + item.cartQuantity,
     0
   );
@@ -55,7 +62,7 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
-          {cart.length === 0 ? (
+          {storeCart.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 font-medium">Your cart is empty</p>
@@ -65,7 +72,7 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.map((item) => {
+              {storeCart.map((item) => {
                 const imageUrl = item.images?.[0];
                 const hasValidImage = imageUrl && imageUrl.trim() !== '';
                 
@@ -132,7 +139,7 @@ export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps)
           )}
         </div>
 
-        {cart.length > 0 && (
+        {storeCart.length > 0 && (
           <div className="border-t p-4 bg-white">
             <div className="flex justify-between leading-[100%] items-center mb-4">
               <span className="text-lg text-[#4D4D4D] text-[20px] font-bold">Total:</span>

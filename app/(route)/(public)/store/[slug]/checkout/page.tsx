@@ -8,6 +8,7 @@ import React, { useState, use, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShoppingCart, X } from 'lucide-react';
 import { useCartStore } from '@/store/use-cart-store';
+import { useStorefront } from '@/hooks/use-customer-store';
 import { toast } from 'sonner';
 import * as yup from 'yup';
 import Image from 'next/image';
@@ -65,6 +66,9 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const { slug } = use(params);
   const buyNowId = searchParams.get('buyNow');
 
+  const { allProducts, categories } = useStorefront(slug);
+  const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
+
   const cart = useCartStore((state) => state.cart);
   
   // Determine the effective cart based on whether it's a "Buy Now" checkout
@@ -85,8 +89,9 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         // fallback to cart if sessionStorage fails
       }
     }
-    return cart;
-  }, [buyNowId, cart]);
+    // Filter cart by current store for normal checkouts
+    return cart.filter((item) => item.storeId === storeId);
+  }, [buyNowId, cart, storeId]);
 
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -181,8 +186,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         const response = await initializePaystackOrder(slug, payload);
         
         // Clear cart if successful (unless it's a Buy Now)
-        if (!buyNowId) {
-          clearCart();
+        if (!buyNowId && storeId) {
+          clearCart(storeId);
         }
 
         // Redirect to Paystack's authorization URL
@@ -209,8 +214,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     
     // TODO: Implement actual COD order creation endpoint if available
     toast.success('Order placed successfully!');
-    if (!buyNowId) {
-      clearCart();
+    if (!buyNowId && storeId) {
+      clearCart(storeId);
     }
     
     // Redirect to success page for simple completion

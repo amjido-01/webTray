@@ -1,7 +1,3 @@
-// ============================================
-// FILE: app/store/[slug]/product/[productId]/page.tsx
-// ============================================
-
 "use client";
 
 import React, { useState, useMemo, use } from "react";
@@ -139,8 +135,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   const { allProducts, isFetchingAllProducts, categories } = useStorefront(slug);
   const addToCart = useCartStore((state) => state.addToCart);
-
-
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -158,7 +152,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           p.visible
       );
   }, [allProducts, product]);
-
 
   const getCategoryName = (categoryId: number) => {
     const category = categories?.find((c) => c.id === categoryId);
@@ -239,11 +232,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   };
 
-  const productImages = [
-    product.images?.[0],
-  ];
-
-  const selectedImage = productImages[selectedImageIndex];
+  const productImages = product.images || [];
+  const selectedImage = productImages[selectedImageIndex] || productImages[0];
 
   const handlePrevImage = () => {
     setSelectedImageIndex((prev) =>
@@ -285,40 +275,46 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </div>
 
               {/* Navigation Arrows */}
-              <button
-                onClick={handlePrevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleNextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              {productImages.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleNextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 rounded-full shadow"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Thumbnail Column on RIGHT */}
-            <div className="flex flex-col gap-2 w-16">
-              {productImages.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={`border rounded overflow-hidden aspect-square transition ${
-                    selectedImageIndex === index
-                      ? "border-gray-900 ring-1 ring-gray-900"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {productImages.length > 1 && (
+              <div className="flex flex-col gap-2 w-16">
+                {productImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`border rounded overflow-hidden aspect-square transition ${
+                      selectedImageIndex === index
+                        ? "border-gray-900 ring-1 ring-gray-900"
+                        : "border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Details Section */}
