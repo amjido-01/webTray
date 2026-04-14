@@ -2,7 +2,7 @@
 
 import React, { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle, Package, Mail, Phone, Loader2, XCircle, ArrowLeft } from 'lucide-react';
+import { Check, Package, Mail, Bell, Loader2, XCircle, ArrowLeft } from 'lucide-react';
 import { verifyPaystackPayment, PaystackVerifyResponse } from '@/lib/api/storefront';
 import { toast } from 'sonner';
 
@@ -79,97 +79,99 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-gray-50/50 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full">
         {/* Success Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+        <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 md:p-12 text-center">
           {/* Success Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-            <CheckCircle className="w-12 h-12 text-green-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-full mb-6">
+            <div className="w-14 h-14 bg-[#E6F9F0] rounded-full flex items-center justify-center">
+              <Check className="w-8 h-8 text-[#00BA71]" strokeWidth={3} />
+            </div>
           </div>
 
           {/* Main Message */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-            {reference ? 'Payment Confirmed!' : 'Order Placed Successfully!'}
+          <h1 className="text-[16px] md:text-[32px] font-bold text-[#343434] mb-2 leading-tight">
+            {reference ? 'Payment Confirmed' : 'Order Placed'}
           </h1>
-          <p className="text-gray-600 text-lg mb-8">
+          <p className="text-[#343434] font-medium text-[16px] md:text-lg mb-10 max-w-md mx-auto">
             {reference 
               ? 'Your payment was successful and your order is being processed.'
               : 'Thank you for your purchase. Your order has been received and is being processed.'}
           </p>
 
           {/* Order Number */}
-          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-8 inline-block">
-            <p className="text-sm text-gray-600 mb-1">Order Number</p>
-            <p className="text-2xl font-bold text-gray-900">{displayOrderNumber}</p>
+          <div className="bg-[#F8F9FA] rounded-[16px] p-6 mb-8 w-full">
+            <p className="text-sm text-[#343434] mb-2 font-medium">Order Number</p>
+            <p className="text-3xl font-bold text-[#343434] tracking-tight">{displayOrderNumber}</p>
           </div>
 
           {/* Info Cards */}
           <div className="grid md:grid-cols-3 gap-4 mb-8 text-left">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-blue-600" />
+            <div className="bg-white border border-[#E9ECEF] rounded-[12px] p-5 hover:border-blue-100 transition-colors">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#EDF2F7]">
+                  <Mail className="w-4 h-4 text-[#3366FF]" />
                 </div>
-                <h3 className="font-semibold text-gray-900">Email Confirmation</h3>
+                <h3 className="font-semibold text-[#343434] text-sm mt-1">Email Confirmation</h3>
               </div>
-              <p className="text-sm text-gray-600">
-                A confirmation email has been sent to your email address
+              <p className="text-sm text-[#808080] leading-relaxed">
+                A confirmation email has been sent to your registered email address
               </p>
             </div>
 
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Package className="w-5 h-5 text-purple-600" />
+            <div className="bg-white border border-[#E9ECEF] rounded-[12px] p-5 hover:border-blue-100 transition-colors">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#EDF2F7]">
+                  <Package className="w-4 h-4 text-[#3366FF]" />
                 </div>
-                <h3 className="font-semibold text-gray-900">Processing</h3>
+                <h3 className="font-semibold text-[#343434] text-sm mt-1">Processing</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[#808080] leading-relaxed">
                 We're preparing your order for shipment
               </p>
             </div>
 
-            <div className="bg-orange-50 rounded-lg p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-orange-600" />
+            <div className="bg-white border border-[#E9ECEF] rounded-[12px] p-5 hover:border-blue-100 transition-colors">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#EDF2F7]">
+                  <Bell className="w-4 h-4 text-[#3366FF]" />
                 </div>
-                <h3 className="font-semibold text-gray-900">Stay Updated</h3>
+                <h3 className="font-semibold text-[#343434] text-sm mt-1">Stay Updated</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[#808080] leading-relaxed">
                 We'll keep you informed via SMS and email
               </p>
             </div>
           </div>
 
           {/* Expected Delivery */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-5 mb-8">
-            <p className="text-sm font-medium mb-1">Expected Delivery</p>
-            <p className="text-2xl font-bold">3-7 Working Days</p>
+          <div className="bg-[#365BEB] text-white rounded-[16px] p-6 mb-10 shadow-lg shadow-blue-100">
+            <p className="text-xs uppercase tracking-[0.1em] font-bold opacity-80 mb-2">Expected Delivery</p>
+            <p className="text-3xl font-bold tracking-tight">3-7 Working Days</p>
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => router.push(`/store/${slug}`)}
-              className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+              className="bg-[#111827] text-white px-10 py-4 rounded-full font-bold hover:bg-[#1E293B] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             >
               Continue Shopping
             </button>
             <button
               onClick={() => router.push(`/store/${slug}/orders`)}
-              className="bg-white border-2 border-gray-300 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              className="bg-white border-2 border-[#111827] text-[#0F172A] px-10 py-3.5 rounded-full font-bold hover:bg-gray-50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
               View Order History
             </button>
           </div>
 
           {/* Support Text */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+          <div className="mt-10 pt-8 border-t border-[#F1F5F9]">
+            <p className="text-sm text-[#64748B]">
               Need help with your order?{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+              <a href="#" className="text-[#3366FF] hover:underline font-bold">
                 Contact Support
               </a>
             </p>
