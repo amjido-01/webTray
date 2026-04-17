@@ -69,7 +69,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
       sessionStorage.setItem(SEARCH_KEY, searchQuery);
       sessionStorage.setItem(PAGE_KEY, currentPage.toString());
     }
-  }, [selectedCategoryIds, searchQuery, currentPage]);
+  }, [selectedCategoryIds, searchQuery, currentPage, CATEGORY_KEY, SEARCH_KEY, PAGE_KEY]);
 
   // Reset pagination when categories or search change ONLY if called manually
   const handleCategoryToggle = (categoryId: number) => {

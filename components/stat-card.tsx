@@ -24,11 +24,7 @@ export function StatCard({
   const { addCategory, isAddingCategory, categories } = useCategory();
   const [isOpen, setIsOpen] = useState(false);
   const [shouldClearForm, setShouldClearForm] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const storeId = activeStore?.id;
   
   if (!storeId) {
@@ -74,7 +70,6 @@ export function StatCard({
 
       setIsOpen(false);
       setShouldClearForm(true);
-      setFormData({});
     } catch (error) {
       console.error("Failed to create category:", error);
       toast.error("Failed to create category. Please try again.");
@@ -118,7 +113,6 @@ export function StatCard({
     setIsOpen(true);
 
     setValidationErrors({});
-    setFormData({});
     setShouldClearForm(false);
     setIsOpen(true);
   };
@@ -126,7 +120,6 @@ export function StatCard({
   const handleModalClose = () => {
     setIsOpen(false);
     setValidationErrors({});
-    setFormData({});
     setShouldClearForm(false);
   };
 

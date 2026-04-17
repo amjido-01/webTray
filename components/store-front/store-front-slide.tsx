@@ -57,9 +57,9 @@ const StoreFrontSlide = ({
 
   const slides = customSlides || defaultSlides
 
-  const nextSlide = () => {
+  const nextSlide = React.useCallback(() => {
     setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1))
-  }
+  }, [slides.length]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))
@@ -72,7 +72,7 @@ const StoreFrontSlide = ({
   useEffect(() => {
     const interval = setInterval(nextSlide, autoPlayInterval)
     return () => clearInterval(interval)
-  }, [currentSlide, autoPlayInterval])
+  }, [nextSlide, autoPlayInterval]);
 
   return (
     <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden rounded-lg">

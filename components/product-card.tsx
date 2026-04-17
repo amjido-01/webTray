@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
+import { ShoppingCart, Package } from 'lucide-react';
 import { Product } from '@/hooks/use-customer-store';
 
 interface ProductCardProps {
@@ -24,12 +25,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, slug, onAddToCart })
       className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
       onClick={handleViewDetails}
     >
-      <div className="relative h-48 bg-gray-100">
-        <img
-          src={product.images?.[0]}
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-48 bg-gray-100 flex items-center justify-center">
+        {product.images?.[0] ? (
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <Package className="w-12 h-12 text-gray-300" />
+        )}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">

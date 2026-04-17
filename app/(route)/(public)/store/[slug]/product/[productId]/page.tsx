@@ -9,7 +9,9 @@ import {
   Heart,
   ChevronLeft,
   ChevronRight,
+  Package
 } from "lucide-react";
+import Image from "next/image";
 import { useStorefront } from "@/hooks/use-customer-store";
 import { useCartStore } from "@/store/use-cart-store"; // Add this import
 import { toast } from "sonner";
@@ -267,11 +269,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             {/* Main Image with Navigation */}
             <div className="flex-1 relative">
               <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
-                <img
-                  src={selectedImage}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                {selectedImage ? (
+                  <Image
+                    src={selectedImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <Package className="w-12 h-12" />
+                  </div>
+                )}
               </div>
 
               {/* Navigation Arrows */}
@@ -300,16 +310,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`border rounded overflow-hidden aspect-square transition ${
+                    className={`relative border rounded overflow-hidden aspect-square transition ${
                       selectedImageIndex === index
                         ? "border-gray-900 ring-1 ring-gray-900"
                         : "border-gray-200 hover:border-gray-400"
                     }`}
                   >
-                    <img
+                    <Image
                       src={img}
-                      alt=""
-                      className="w-full h-full object-cover"
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
                     />
                   </button>
                 ))}
@@ -426,14 +437,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition"
                 >
                   <div 
-                    className="aspect-square bg-gray-50 cursor-pointer"
+                    className="aspect-square bg-gray-50 cursor-pointer relative flex items-center justify-center"
                     onClick={() => router.push(`/store/${slug}/product/${item.id}`)}
                   >
-                    <img
-                      src={item.images?.[0]}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {item.images?.[0] ? (
+                      <Image
+                        src={item.images[0]}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <Package className="w-8 h-8 text-gray-300" />
+                    )}
                   </div>
                   <div className="p-3">
                     <h4 
