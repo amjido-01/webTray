@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Package, Mail, Bell, Loader2, XCircle, ArrowLeft } from 'lucide-react';
 import { verifyPaystackPayment, PaystackVerifyResponse } from '@/lib/api/storefront';
 import { useStorefront } from '@/hooks/use-customer-store';
+import { useCartStore } from '@/store/use-cart-store';
 import { toast } from 'sonner';
 
 interface OrderSuccessPageProps {
@@ -21,6 +22,10 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   const [isVerifying, setIsVerifying] = useState(!!reference);
   const [verificationResult, setVerificationResult] = useState<PaystackVerifyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  const clearCart = useCartStore((state) => state.clearCart);
+  const { store } = useStorefront(slug);
+  const storeId = store?.id;
 
   useEffect(() => {
     if (!reference) return;
@@ -39,9 +44,17 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
     };
 
     verify();
-  }, [reference, slug]);
+  }, [reference, slug, storeId, clearCart]);
 
-  const { store } = useStorefront(slug);
+  // Effect to clear cart after successful verification or for COD
+  useEffect(() => {
+    // For Paystack: Clear if verification succeeded
+    // For COD: Clear if there's no reference (meaning we arrived here from checkout COD path)
+    if ((verificationResult && storeId) || (!reference && storeId)) {
+      clearCart(storeId);
+      sessionStorage.removeItem('buyNowProduct');
+    }
+  }, [verificationResult, reference, storeId, clearCart]);
 
   // Generate a placeholder order number if NOT verifying (e.g. for COD)
   const displayOrderNumber = verificationResult?.order?.id 

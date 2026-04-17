@@ -162,15 +162,12 @@ export function CreateStoreSheet({
       if (initializedForRef.current !== currentKey) {
         if (isEditMode && initialData) {
           // Format whatsapp from +234... to 0... for display
-          let formattedPhone = initialData.whatsappNumber || "";
-          if (formattedPhone.startsWith("+234")) {
-            formattedPhone = `0${formattedPhone.slice(4)}`;
-          }
-
           setFormData({
             ...defaultFormData,
             ...initialData,
-            whatsappNumber: formattedPhone,
+            whatsappNumber: initialData.whatsappNumber?.startsWith("+234") 
+              ? "0" + initialData.whatsappNumber.slice(4) 
+              : initialData.whatsappNumber || "",
             paymentMethods: {
               cash: false,
               card: false,

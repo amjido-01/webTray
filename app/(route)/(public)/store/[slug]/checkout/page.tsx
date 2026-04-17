@@ -77,8 +77,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const { slug } = use(params);
   const buyNowId = searchParams.get('buyNow');
 
-  const { allProducts, categories, store } = useStorefront(slug);
-  const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
+  const { allProducts, categories, store, isFetchingStore } = useStorefront(slug);
+  const storeId = categories[0]?.storeId || allProducts[0]?.storeId || store?.id;
 
   const cart = useCartStore((state) => state.cart);
   
@@ -109,6 +109,12 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const clearCart = useCartStore((state) => state.clearCart);
 
   const [step, setStep] = useState<'address' | 'review'>('address');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Sync with persistent store on mount
+  React.useEffect(() => {
+    setIsHydrated(true);
+  }, []);
   
   const subtotal = effectiveCart.reduce(
     (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
@@ -203,11 +209,6 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
         
         const response = await initializePaystackOrder(slug, payload);
         
-        // Clear cart if successful (unless it's a Buy Now)
-        if (!buyNowId && storeId) {
-          clearCart(storeId);
-        }
-
         // Redirect to Paystack's authorization URL
         window.location.href = response.payment.authorizationUrl;
       } catch (error: any) {
@@ -251,6 +252,17 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
       router.push(`/store/${slug}`);
     }
   };
+
+  if (!isHydrated || isFetchingStore) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-sm text-gray-500">Checking your cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (effectiveCart.length === 0) {
     return (
