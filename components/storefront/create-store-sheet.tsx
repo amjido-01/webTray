@@ -30,12 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import * as yup from "yup";
+import { toast } from "sonner";
+import { CreateStorePayload } from "@/hooks/use-store-front";
 
 export interface CreateStoreFormData {
   storeName: string;
   description: string;
   slogan: string;
   customDomain: string;
+  whatsappNumber: string;
   paymentMethods: { cash: boolean; card: boolean };
   deliveryOptions: { pickup: boolean; delivery: boolean };
   status: "active" | "inactive";
@@ -47,7 +51,7 @@ interface CreateStoreSheetProps {
   onOpenChange: (open: boolean) => void;
   isEditMode?: boolean;
   initialData?: Partial<CreateStoreFormData>;
-  onSubmit: (data: CreateStoreFormData) => Promise<void>;
+  onSubmit: (data: CreateStorePayload) => Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -56,11 +60,22 @@ const defaultFormData: CreateStoreFormData = {
   description: "",
   slogan: "",
   customDomain: "",
+  whatsappNumber: "",
   paymentMethods: { cash: false, card: false },
   deliveryOptions: { pickup: false, delivery: false },
   status: "active",
   currency: "NGN",
 };
+
+const storeSchema = yup.object().shape({
+  storeName: yup.string().required("Store name is required"),
+  description: yup.string().required("Description is required"),
+  whatsappNumber: yup
+    .string()
+    .required("WhatsApp number is required")
+    .matches(/^0\d{10}$/, "Must be a valid 11-digit number starting with 0"),
+  currency: yup.string().required("Currency is required"),
+});
 
 export function CreateStoreSheet({
   isOpen,
@@ -70,6 +85,7 @@ export function CreateStoreSheet({
   onSubmit,
   isSubmitting = false,
 }: CreateStoreSheetProps) {
+  console.log(initialData, "ini")
   const [formData, setFormData] = useState<CreateStoreFormData>(defaultFormData);
   const [uiOptions, setUiOptions] = useState({
     paystack: false,
@@ -78,6 +94,7 @@ export function CreateStoreSheet({
     inHouse: false,
     thirdParty: [] as string[],
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const initializedForRef = useRef<string | null>(null);
 
@@ -123,6 +140,7 @@ export function CreateStoreSheet({
         }
         initializedForRef.current = currentKey;
       }
+      setErrors({});
     } else {
       initializedForRef.current = null;
     }
@@ -130,18 +148,57 @@ export function CreateStoreSheet({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: CreateStoreFormData = {
-      ...formData,
-      paymentMethods: {
-        card: uiOptions.paystack,
-        cash: uiOptions.bankTransfer || uiOptions.cashOnDelivery,
-      },
-      deliveryOptions: {
-        pickup: uiOptions.inHouse,
-        delivery: uiOptions.thirdParty.length > 0,
-      },
-    };
-    await onSubmit(payload);
+    try {
+      await storeSchema.validate(formData, { abortEarly: false });
+
+      const hasPayment = uiOptions.paystack || uiOptions.bankTransfer || uiOptions.cashOnDelivery;
+      const hasDelivery = uiOptions.inHouse || uiOptions.thirdParty.length > 0;
+      
+      const newErrors: Record<string, string> = {};
+      if (!hasPayment) newErrors.paymentMethods = "At least one payment method is required";
+      if (!hasDelivery) newErrors.deliveryOptions = "At least one delivery option is required";
+      
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        toast.error("Please complete the form requirements");
+        return;
+      }
+
+      setErrors({});
+
+      // Transform 0xxx... to +234xxx...
+      const formattedWhatsApp = formData.whatsappNumber.startsWith("0")
+        ? `+234${formData.whatsappNumber.slice(1)}`
+        : formData.whatsappNumber;
+
+      const payload: CreateStorePayload = {
+        storeName: formData.storeName,
+        description: formData.description,
+        slogan: formData.slogan,
+        customDomain: formData.customDomain,
+        currency: formData.currency,
+        status: formData.status,
+        phone: formattedWhatsApp,
+        paymentMethods: {
+          card: uiOptions.paystack,
+          cash: uiOptions.bankTransfer || uiOptions.cashOnDelivery,
+        },
+        deliveryOptions: {
+          pickup: uiOptions.inHouse,
+          delivery: uiOptions.thirdParty.length > 0,
+        },
+      };
+      await onSubmit(payload);
+    } catch (err) {
+      if (err instanceof yup.ValidationError) {
+        const validationErrors: Record<string, string> = {};
+        err.inner.forEach((error) => {
+          if (error.path) validationErrors[error.path] = error.message;
+        });
+        setErrors(validationErrors);
+        toast.error("Please fix the errors in the form");
+      }
+    }
   };
 
   const thirdPartyServices = [
@@ -198,30 +255,37 @@ export function CreateStoreSheet({
                     <Input
                       id="storeName"
                       placeholder="My Store Name"
-                      required
+                      className={errors.storeName ? "border-red-500 focus-visible:ring-red-500" : ""}
                       value={formData.storeName}
                       onChange={(e) =>
                         setFormData({ ...formData, storeName: e.target.value })
                       }
                     />
+                    {errors.storeName && (
+                      <p className="text-xs text-red-500 mt-1">{errors.storeName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="slogan">Slogan (Optional)</Label>
                     <Input
                       id="slogan"
                       placeholder="Fresh and fast"
+                      className={errors.slogan ? "border-red-500 focus-visible:ring-red-500" : ""}
                       value={formData.slogan}
                       onChange={(e) =>
                         setFormData({ ...formData, slogan: e.target.value })
                       }
                     />
+                    {errors.slogan && (
+                      <p className="text-xs text-red-500 mt-1">{errors.slogan}</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="customDomain">Custom Domain (Optional)</Label>
-                    <div className="flex items-center gap-2 border rounded-md px-3 bg-gray-50/50">
+                    <div className={`flex items-center gap-2 border rounded-md px-3 bg-gray-50/50 ${errors.customDomain ? "border-red-500" : ""}`}>
                       <Globe className="w-4 h-4 text-muted-foreground" />
                       <Input
                         id="customDomain"
@@ -233,6 +297,9 @@ export function CreateStoreSheet({
                         }
                       />
                     </div>
+                    {errors.customDomain && (
+                      <p className="text-xs text-red-500 mt-1">{errors.customDomain}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency*</Label>
@@ -242,14 +309,33 @@ export function CreateStoreSheet({
                         setFormData({ ...formData, currency: val })
                       }
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className={`w-full ${errors.currency ? "border-red-500" : ""}`}>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.currency && (
+                      <p className="text-xs text-red-500 mt-1">{errors.currency}</p>
+                    )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsappNumber">Store WhatsApp Number*</Label>
+                  <Input
+                    id="whatsappNumber"
+                    placeholder="e.g. 08123456789"
+                    className={errors.whatsappNumber ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    value={formData.whatsappNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, whatsappNumber: e.target.value })
+                    }
+                  />
+                  {errors.whatsappNumber && (
+                    <p className="text-xs text-red-500 mt-1">{errors.whatsappNumber}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -257,13 +343,15 @@ export function CreateStoreSheet({
                   <Textarea
                     id="description"
                     placeholder="Briefly describe what your store sells..."
-                    required
-                    className="min-h-[80px]"
+                    className={`min-h-[80px] ${errors.description ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
                   />
+                  {errors.description && (
+                    <p className="text-xs text-red-500 mt-1">{errors.description}</p>
+                  )}
                 </div>
 
                 <div className="rounded-lg bg-[#D8DFFB] p-4">
@@ -295,9 +383,11 @@ export function CreateStoreSheet({
                 </div>
 
                 <div className="space-y-4">
-                  <Label className="text-base font-medium">Payment Methods*</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <Label className={`text-base font-medium ${errors.paymentMethods ? "text-red-500" : ""}`}>
+                    Payment Methods*
+                  </Label>
+                  <div className={`space-y-3 p-1 rounded-lg ${errors.paymentMethods ? "border border-red-200 bg-red-50/20" : ""}`}>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 bg-white">
                       <Checkbox
                         id="paystack"
                         checked={uiOptions.paystack}
@@ -320,12 +410,17 @@ export function CreateStoreSheet({
                       </div>
                     </div>
                   </div>
+                  {errors.paymentMethods && (
+                    <p className="text-xs text-red-500">{errors.paymentMethods}</p>
+                  )}
                 </div>
 
                 <div className="space-y-4">
-                  <Label className="text-base font-medium">Delivery Options*</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-blue-50/50 border-blue-100">
+                  <Label className={`text-base font-medium ${errors.deliveryOptions ? "text-red-500" : ""}`}>
+                    Delivery Options*
+                  </Label>
+                  <div className={`space-y-3 p-1 rounded-lg ${errors.deliveryOptions ? "border border-red-200 bg-red-50/20" : ""}`}>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg bg-blue-50/50 border-blue-100 bg-white">
                       <Checkbox
                         id="inHouse"
                         checked={uiOptions.inHouse}
@@ -360,6 +455,9 @@ export function CreateStoreSheet({
                       </div>
                     </div>
                   </div>
+                  {errors.deliveryOptions && (
+                    <p className="text-xs text-red-500">{errors.deliveryOptions}</p>
+                  )}
                 </div>
 
                 <div className="rounded-lg bg-[#D8DFFB] p-4 pb-8">

@@ -95,6 +95,7 @@ const ProductCard = React.memo<{
     const hasImages = product.images && product.images.length > 0;
 
     // Handle image area click
+    /* 
     const handleImageClick = () => {
       if (product.images && product.images.length >= 3) {
         toast.info("Image limit reached. Click 'Edit' to manage or replace images.");
@@ -102,6 +103,7 @@ const ProductCard = React.memo<{
       }
       fileInputRef.current?.click();
     };
+    */
 
     // Handle file selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,10 +129,10 @@ const ProductCard = React.memo<{
 
         {/* Image area */}
         <div
-          className="relative h-40 w-full overflow-hidden bg-gray-50 group cursor-pointer"
+          className="relative h-40 w-full overflow-hidden bg-gray-50 group"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          onClick={handleImageClick}
+          /* onClick={handleImageClick} */
         >
           {hasNoImage ? (
             <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 transition-all">
@@ -177,10 +179,11 @@ const ProductCard = React.memo<{
                   isHovering ? "text-gray-800" : ""
                 }`}
               >
-                {isHovering ? "Click to upload" : "No image"}
+                {/* {isHovering ? "Click to upload" : "No image"} */}
+                No image
               </p>
 
-              {/* Upload indicator on hover */}
+              {/* Upload indicator on hover - DISABLED
               {isHovering && (
                 <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
                   <div className="bg-white rounded-full p-3 shadow-lg">
@@ -188,6 +191,7 @@ const ProductCard = React.memo<{
                   </div>
                 </div>
               )}
+              */}
             </div>
           ) : (
             <>
@@ -195,12 +199,15 @@ const ProductCard = React.memo<{
                 src={imgSrc}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={() => setImgError(true)}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
 
-              {/* Hover overlay for existing image */}
+              {/* Simple subtle hover overlay */}
+              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              
+              {/* Hover overlay for existing image - DISABLED
               {isHovering && (
                 <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center transition-opacity">
                   <div className="bg-white rounded-full p-3 shadow-lg mb-2">
@@ -211,6 +218,7 @@ const ProductCard = React.memo<{
                   </p>
                 </div>
               )}
+              */}
             </>
           )}
 
@@ -513,25 +521,24 @@ export default function ManageProductTable() {
     if (!hasImageChanges) return;
 
     try {
-      // Delete all existing images if there are changes
-      if (originalImages.length > 0) {
-        await deleteProductImages(productId);
-      }
-
-      // Upload new images if any
+      // We don't need to delete all images first because uploadProductImages handles appending/syncing
       if (selectedImages.length > 0) {
         const formData = new FormData();
 
         for (const img of selectedImages) {
-          if (img instanceof File) {
-            formData.append("images", img);
-          } else {
-            // For existing URLs, send as imageUrls
+          // Sending everything under 'images' (some backends handle Files and URLs in the same array)
+          formData.append("images", img);
+          
+          // Fallback: also keep imageUrls if the backend specifically looks for it
+          if (typeof img === "string") {
             formData.append("imageUrls", img);
           }
         }
 
         await uploadProductImages({ productId, formData });
+      } else {
+        // If everything was removed, we still need to clear images on the backend
+        await deleteProductImages(productId);
       }
 
       setOriginalImages(
@@ -544,7 +551,7 @@ export default function ManageProductTable() {
     }
   };
 
-  // Handle inline image upload from product card
+  /* COMMENTED OUT: We want for now to only allow upload from the edit sheet
   const handleCardImageUpload = useCallback(
     async (productId: number, files: FileList) => {
       if (!storeId) {
@@ -619,6 +626,7 @@ export default function ManageProductTable() {
     },
     [storeId, storeProducts, uploadProductImages, deleteProductImages]
   );
+  */
 
   const handleToggleVisible = useCallback(
     async (productId: number, currentVisibility: boolean) => {
@@ -853,7 +861,7 @@ export default function ManageProductTable() {
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                     isUpdating={updatingProductId === product.id}
-                    onImageUpload={handleCardImageUpload}
+                    onImageUpload={() => {}} // Disabled for now
                     isUploadingImage={uploadingImageProductId === product.id}
                   />
                 );

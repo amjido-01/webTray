@@ -221,6 +221,7 @@ export const useProduct = () => {
       );
 
       if (data?.responseSuccessful) {
+        console.log(data?.responseBody, "upload")
         return data.responseBody?.product || null;
       }
       throw new Error(data?.responseMessage || "Failed to upload images");

@@ -3,7 +3,7 @@
 // ============================================
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { ApiResponse } from "@/types";
+import { ApiResponse, Store } from "@/types";
 
 export interface Category {
   id: number;
@@ -30,6 +30,7 @@ export interface Product {
 }
 
 export interface CategoriesResponse {
+  store: Store;
   categories: Category[];
   pagination: {
     page: number;
@@ -70,15 +71,15 @@ export const useStorefront = (slug: string) => {
   // 1. Fetch store categories by slug
   const categoriesQuery = useQuery({
     queryKey: storefrontKeys.categories(slug),
-    queryFn: async (): Promise<Category[]> => {
+    queryFn: async (): Promise<CategoriesResponse> => {
       const { data } = await api.get<ApiResponse<CategoriesResponse>>(
         `/storefront/${slug}`
       );
-      console.log(data?.responseBody, "llll")
       if (data?.responseSuccessful) {
-        return data.responseBody.categories || [];
+        console.log(data.responseBody, "data.responseBody")
+        return data.responseBody;
       }
-      throw new Error(data?.responseMessage || "Failed to fetch categories");
+      throw new Error(data?.responseMessage || "Failed to fetch storefront details");
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -126,8 +127,12 @@ export const useStorefront = (slug: string) => {
   };
 
   return {
+    // Store info
+    store: categoriesQuery.data?.store,
+    isFetchingStore: categoriesQuery.isLoading,
+
     // Categories
-    categories: categoriesQuery.data || [],
+    categories: categoriesQuery.data?.categories || [],
     isFetchingCategories: categoriesQuery.isLoading,
     categoriesError: categoriesQuery.error,
     refetchCategories: categoriesQuery.refetch,

@@ -64,6 +64,8 @@ export interface Store {
   slogan: string | null;
   slug?: string | null;
   customDomain: string | null;
+  logoUrl?: string | null;
+  phone: string;
   paymentMethods: {
     card: boolean;
     cash: boolean;
@@ -76,6 +78,7 @@ export interface Store {
   } | null;
   status?: string | null;
   online?: boolean;
+  isDeleted?: boolean;
   currency?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -196,6 +199,7 @@ export interface CreateRegistrationPayload {
   status: string;
   storeName: string;
   slogan: string;
+  phone: string;
   customeDomain: string;
   currency: string;
   paymentMethods: {

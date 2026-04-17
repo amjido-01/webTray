@@ -85,6 +85,10 @@ const step2Schema = yup.object().shape({
     .string()
     .min(1, "Please select a currency")
     .required("Currency is required"),
+  whatsappNumber: yup
+    .string()
+    .matches(/^(0|(\+234))\d{10}$/, "Please enter a valid 11-digit number")
+    .required("WhatsApp number is required"),
 });
 
 const step3Schema = yup.object().shape({
@@ -132,6 +136,7 @@ type FormData = {
   slogan?: string;
   customeDomain?: string;
   currency: string;
+  whatsappNumber: string;
   paymentMethods: {
     paystack: boolean;
     bankTransfer: boolean;
@@ -178,6 +183,7 @@ export default function WebTrayOnboarding() {
     slogan: "",
     customeDomain: "",
     currency: "NGN",
+    whatsappNumber: "",
     // Step 3 data
     paymentMethods: {
       paystack: false,
@@ -255,6 +261,12 @@ export default function WebTrayOnboarding() {
           .min(1, "Please select a currency")
           .required("Currency is required")
           .validate(value as string);
+      } else if (fieldPath === "whatsappNumber") {
+        await yup
+          .string()
+          .matches(/^(0|(\+234))\d{10}$/, "Please enter a valid 11-digit number")
+          .required("WhatsApp number is required")
+          .validate(value as string);
       } else if (fieldPath === "category.main") {
         await yup
           .array()
@@ -326,6 +338,7 @@ export default function WebTrayOnboarding() {
           "category.main",
           "storeName",
           "currency",
+          "whatsappNumber",
           "paymentMethods",
           "deliveryOptions",
         ]);
@@ -485,11 +498,15 @@ export default function WebTrayOnboarding() {
           bankTransfer: formData.paymentMethods.bankTransfer,
           cashOnDelivery: formData.paymentMethods.cashOnDelivery,
         },
+        phone: formData.whatsappNumber.startsWith('0') 
+          ? '+234' + formData.whatsappNumber.slice(1) 
+          : formData.whatsappNumber,
         deliveryOptions: {
           inHouse: formData.deliveryOptions.inHouse,
           thirdParty: formData.deliveryOptions.thirdParty,
         },
       };
+      console.log(payload, "payload")
       await registerBusiness(payload);
       router.push("/dashboard");
     } catch (error) {
@@ -913,6 +930,24 @@ export default function WebTrayOnboarding() {
                     </Select>
                     {renderFieldError("currency")}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp">WhatsApp Number*</Label>
+                  <Input
+                    id="whatsapp"
+                    placeholder="07038172450"
+                    value={formData.whatsappNumber}
+                    onChange={(e) =>
+                      handleInputChange("whatsappNumber", e.target.value)
+                    }
+                    onBlur={(e) =>
+                      handleInputBlur("whatsappNumber", e.target.value)
+                    }
+                    className={getFieldClassName("whatsappNumber")}
+                    required
+                  />
+                  {renderFieldError("whatsappNumber")}
                 </div>
 
                 <div className="rounded-lg bg-[#D8DFFB] p-4">

@@ -77,7 +77,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const { slug } = use(params);
   const buyNowId = searchParams.get('buyNow');
 
-  const { allProducts, categories } = useStorefront(slug);
+  const { allProducts, categories, store } = useStorefront(slug);
   const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
 
   const cart = useCartStore((state) => state.cart);
@@ -115,8 +115,6 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     0
   );
   const itemCount = effectiveCart.reduce((sum, item) => sum + item.cartQuantity, 0);
-  const deliveryFee = 2000;
-  const total = subtotal + deliveryFee;
 
   const { states, cities, isLoadingCities, fetchCities } = useNigeriaLocations();
 
@@ -136,6 +134,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
   const [shippingMethod, setShippingMethod] = useState('normal');
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isDelivery, setIsDelivery] = useState<boolean | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     const newInfo = { ...shippingInfo, [field]: value };
@@ -155,6 +154,11 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   };
 
   const handleContinue = async () => {
+    // First check delivery preference
+    if (isDelivery === null) {
+      setErrors((prev) => ({ ...prev, isDelivery: 'Please select whether to include the delivery fee' }));
+      return;
+    }
     try {
       // Validate all fields
       await shippingSchema.validate(shippingInfo, { abortEarly: false });
@@ -184,6 +188,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
       try {
         const payload = {
           callbackUrl: `${window.location.origin}/store/${slug}/order-success`,
+          isDelivery,
           customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
           phone: shippingInfo.phone,
           email: shippingInfo.email,
@@ -194,6 +199,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
           }))
         };
 
+        console.log(payload);
+        
         const response = await initializePaystackOrder(slug, payload);
         
         // Clear cart if successful (unless it's a Buy Now)
@@ -219,8 +226,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
       paymentMethod, 
       items: effectiveCart,
       subtotal,
-      deliveryFee,
-      total
+      isDelivery,
     });
     
     // TODO: Implement actual COD order creation endpoint if available
@@ -408,8 +414,18 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                         <p className="font-medium text-sm">Normal Shipping: 3-7 working days</p>
                       </div>
                     </div>
-                    <p className="font-bold">₦ {deliveryFee.toLocaleString()}</p>
+                    <p className="font-bold">₦ —</p>
                   </label>
+                </div>
+
+                {/* Delivery fee preference — confirmed on previous step */}
+                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                  <p className="text-sm text-gray-600">Delivery fee</p>
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    isDelivery ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {isDelivery ? 'Included' : 'Not included'}
+                  </span>
                 </div>
               </div>
 
@@ -497,11 +513,13 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                   </div>
                   <div className="flex justify-between">
                     <span>Delivery Fee</span>
-                    <span className="font-bold">₦ {deliveryFee.toLocaleString()}</span>
+                    <span className="font-medium text-gray-500 text-xs italic">
+                      {isDelivery === true ? 'Included (set by store)' : isDelivery === false ? 'Not included' : 'Not selected'}
+                    </span>
                   </div>
                   <div className="flex justify-between pt-3 border-t font-bold text-base">
                     <span>Total</span>
-                    <span className="text-blue-600">₦ {total.toLocaleString()}</span>
+                    <span className="text-blue-600">₦ {subtotal.toLocaleString()}</span>
                   </div>
                 </div>
                 <button
@@ -742,15 +760,62 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                 </div>
               </div>
 
+              {/* Delivery fee preference */}
+              <div className="border rounded-lg p-4 my-4">
+                <h2 className="font-bold text-[#4D4D4D] text-[14px] leading-[100%] mb-3">INCLUDE DELIVERY FEE?</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    id="delivery-yes"
+                    type="button"
+                    onClick={() => {
+                      setIsDelivery(true);
+                      if (errors.isDelivery) setErrors((prev) => ({ ...prev, isDelivery: '' }));
+                    }}
+                    className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                      isDelivery === true
+                        ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-600'
+                    }`}
+                  >
+                    Yes, include it
+                  </button>
+                  <button
+                    id="delivery-no"
+                    type="button"
+                    onClick={() => {
+                      setIsDelivery(false);
+                      if (errors.isDelivery) setErrors((prev) => ({ ...prev, isDelivery: '' }));
+                    }}
+                    className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
+                      isDelivery === false
+                        ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-600'
+                    }`}
+                  >
+                    No, exclude it
+                  </button>
+                </div>
+                {errors.isDelivery && (
+                  <p className="text-xs text-red-500 mt-2">{errors.isDelivery}</p>
+                )}
+                {isDelivery !== null && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    {isDelivery
+                      ? 'Delivery fee will be calculated by the store and added to your total.'
+                      : 'You will pay only for the items. Delivery fee will not be charged.'}
+                  </p>
+                )}
+              </div>
+
               <button
                 onClick={handleContinue}
-                className="w-full bg-gray-900 text-white py-3 rounded font-bold mt-6 hover:bg-gray-800 transition"
+                className="w-full bg-gray-900 text-white py-3 rounded font-bold mt-2 hover:bg-gray-800 transition"
               >
                 Continue to checkout
               </button>
                   <p className="text-center text-sm text-muted-foreground mt-3">or</p>
               <a
-                href={`https://wa.me/?text=${encodeURIComponent('Hello, I need help with my order on ' + slug)}`}
+                href={`https://wa.me/${store?.phone ? store.phone.replace(/[^0-9]/g, '') : ''}?text=${encodeURIComponent('Hello, I need help with my order on ' + slug)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-[#25D366] text-white py-3 rounded font-bold mt-3 hover:bg-[#20b858] transition flex items-center justify-center gap-2 shadow-sm"
@@ -905,13 +970,9 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
                   <span>Subtotal</span>
                   <span className="font-bold">₦ {subtotal.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span className="font-bold">₦ {deliveryFee.toLocaleString()}</span>
-                </div>
                 <div className="flex justify-between pt-3 border-t font-bold text-base">
                   <span>Total</span>
-                  <span className="text-blue-600">₦ {total.toLocaleString()}</span>
+                  <span className="text-blue-600">₦ {subtotal.toLocaleString()}</span>
                 </div>
               </div>
             </div>

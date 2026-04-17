@@ -15,10 +15,10 @@ export default function StoreHeader() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const { allProducts, categories } = useStorefront(slug);
+  const { allProducts, categories, store } = useStorefront(slug);
   
   // Resolve storeId from fetched data
-  const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
+  const storeId = categories[0]?.storeId || allProducts[0]?.storeId || store?.id;
 
   const cart = useCartStore((state) => state.cart);
   // Filter cart by current store
@@ -26,32 +26,25 @@ export default function StoreHeader() {
   const cartCount = storeCart.reduce((sum, item) => sum + item.cartQuantity, 0);
 
   useEffect(() => {
-    // Option 1: Format the slug to a readable name
-    if (slug) {
+    if (store?.storeName) {
+      setStoreName(store.storeName);
+    } else if (slug) {
+      // Fallback: Format the slug to a readable name
       const formattedName = slug
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
       setStoreName(formattedName);
     }
+  }, [slug, store?.storeName]);
 
-    // Option 2: Fetch store data from API (uncomment to use)
-    /*
-    const fetchStoreName = async () => {
-      try {
-        const response = await fetch(`/api/stores/${slug}`);
-        const data = await response.json();
-        setStoreName(data.name || "Store");
-      } catch (error) {
-        console.error("Error fetching store name:", error);
-      }
-    };
+  const handleContactOwner = () => {
+    if (!store?.phone) return;
     
-    if (slug) {
-      fetchStoreName();
-    }
-    */
-  }, [slug]);
+    // Clean phone number (remove +, spaces, etc) for WhatsApp link
+    const cleanPhone = store.phone.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleanPhone}`, "_blank");
+  };
 
   return (
     <>
@@ -62,9 +55,9 @@ export default function StoreHeader() {
             <div className="flex items-center gap-6">
               <h1 className="text-xl font-semibold">{storeName}</h1>
               <nav className="hidden md:flex gap-6">
-                <button className="text-sm text-gray-600 hover:text-gray-900">
+                <Link href={`/store/${slug}`} className="text-sm text-gray-600 hover:text-gray-900">
                   Home
-                </button>
+                </Link>
                 <button className="text-sm text-gray-600 hover:text-gray-900">
                   Products
                 </button>
@@ -89,7 +82,11 @@ export default function StoreHeader() {
                   </span>
                 )}
               </button>
-              <button className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition">
+              <button 
+                onClick={handleContactOwner}
+                disabled={!store?.phone}
+                className="bg-gray-900 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition disabled:opacity-50"
+              >
                 Contact
               </button>
             </div>

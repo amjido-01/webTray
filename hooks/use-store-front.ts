@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { ApiResponse } from "@/types";
+import { ApiResponse, Store } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 import { StoreFrontSummary, StoreProduct } from "@/types";
 import { toast } from "sonner";
@@ -10,29 +10,7 @@ interface StoreProductsResponse {
 }
 
 interface StoreFrontInfo {
-  store: {
-    id: number;
-    businessId: number;
-    storeName: string;
-    description?: string;
-    slogan: string;
-    slug?: string;
-    customDomain: string;
-    paymentMethods: {
-      card: boolean;
-      cash: boolean;
-    };
-    deliveryOptions: {
-      pickup: boolean;
-      delivery: boolean;
-    };
-    status: string;
-    online: boolean;
-    currency: string;
-    createdAt: string;
-    updatedAt: string;
-    isDeleted?: boolean;
-  };
+  store: Store;
   productCount: number;
 }
 
@@ -62,6 +40,7 @@ export interface CreateStorePayload {
   deliveryOptions: { pickup: boolean; delivery: boolean };
   status: "active" | "inactive";
   currency: string;
+  phone: string;
 }
 
 export interface UpdateStorePayload extends Partial<CreateStorePayload> {
@@ -269,47 +248,46 @@ export const useStoreFront = () => {
   });
 
   // New mutation: change store online status
- const changeStoreStatusMutation = useMutation({
-  mutationFn: async ({ storeId, onlineStatus }: ChangeStoreStatusPayload) => {
-    const { data } = await api.patch<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
-      `/storefront/status`,
-      { onlineStatus },
-      { params: { storeId } }
-    );
+  const changeStoreStatusMutation = useMutation({
+    mutationFn: async ({ storeId, onlineStatus }: ChangeStoreStatusPayload) => {
+      const { data } = await api.patch<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
+        `/storefront/status/${storeId}`,
+        { onlineStatus }
+      );
 
-    if (data?.responseSuccessful) return data.responseBody.store;
-    throw new Error(data?.responseMessage || 'Failed to update store status');
-  },
-  onMutate: async ({ storeId, onlineStatus }) => {
-    await queryClient.cancelQueries({ queryKey: storeFrontKeys.info(storeId) });
-    const previous = queryClient.getQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId));
-    if (previous) {
-      queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId), {
-        ...previous,
-        store: { ...previous.store, online: onlineStatus },
+      if (data?.responseSuccessful) return data.responseBody.store;
+      throw new Error(data?.responseMessage || 'Failed to update store status');
+    },
+    onMutate: async ({ storeId, onlineStatus }) => {
+      await queryClient.cancelQueries({ queryKey: storeFrontKeys.info(storeId) });
+      const previous = queryClient.getQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId));
+      if (previous) {
+        queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(storeId), {
+          ...previous,
+          store: { ...previous.store, online: onlineStatus },
+        });
+      }
+      return { previous };
+    },
+    onSuccess: (updatedStore) => {
+      // set returned store to cache to avoid flicker
+      queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(updatedStore.id), (prev) => {
+        if (!prev) return undefined;
+        return {
+          ...prev,
+          store: { ...prev.store, ...updatedStore },
+          productCount: prev.productCount // always preserve productCount
+        };
       });
-    }
-    return { previous };
-  },
-  onSuccess: (updatedStore) => {
-    // set returned store to cache to avoid flicker
-    queryClient.setQueryData<StoreFrontInfo>(storeFrontKeys.info(updatedStore.id), (prev) => {
-      if (!prev) return undefined;
-      return {
-        ...prev,
-        store: { ...prev.store, ...updatedStore },
-        productCount: prev.productCount // always preserve productCount
-      };
-    });
-    queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(updatedStore.id) });
-  },
-  onError: (error, variables, context) => {
-    if (context?.previous) {
-      queryClient.setQueryData(storeFrontKeys.info(variables.storeId), context.previous);
-    }
-    toast.error(error.message || 'Error updating store status');
-  },
-});
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(updatedStore.id) });
+    },
+    onError: (error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(storeFrontKeys.info(variables.storeId), context.previous);
+      }
+      toast.error(error.message || 'Error updating store status');
+    },
+  });
 
   // Create a new store
   const createStoreMutation = useMutation({
@@ -342,10 +320,9 @@ export const useStoreFront = () => {
   // Update existing store info
   const updateStoreMutation = useMutation({
     mutationFn: async ({ storeId, ...payload }: UpdateStorePayload) => {
-      const { data } = await api.put<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
-        `/storefront/info`,
-        payload,
-        { params: { storeId } }
+      const { data } = await api.patch<ApiResponse<{ store: StoreFrontInfo['store'] }>>(
+        `/storefront/${storeId}`,
+        payload
       );
       if (data?.responseSuccessful) return data.responseBody.store;
       throw new Error(data?.responseMessage || 'Failed to update store');

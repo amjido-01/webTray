@@ -18,6 +18,7 @@ import { useActiveStore } from "@/hooks/use-active-store";
 import { DomainSettingsSheet } from "@/components/storefront/domain-settings-sheet";
 import { CreateStoreSheet, CreateStoreFormData } from "@/components/storefront/create-store-sheet";
 import { useState } from "react";
+import { CreateStorePayload } from "@/hooks/use-store-front";
 import { Badge } from "@/components/ui/badge";
 import { StoreFrontSkeleton } from "@/components/storefront/store-front-skeleton";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -25,6 +26,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
+  
   console.log(activeStore, "activeStore")
   const { refreshStores } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +76,7 @@ export default function Page() {
   }
 
   const storeId = storeInfo?.store?.id ?? activeStore.id;
+  console.log(storeInfo, "storeId")
   const isStoreOnline = storeInfo?.store?.online ?? false;
 
   const displayOnlineStatus =
@@ -83,8 +86,8 @@ export default function Page() {
 
   const handleToggleStoreOnline = async (checked: boolean) => {
     if (!storeId || isUpdatingStoreStatus) return;
-
-    // ✅ Set pending status immediately
+    console.log(storeId, "storeId")
+    // ✅ Set pending status immediately  
     setPendingOnlineStatus(checked);
 
     try {
@@ -114,7 +117,7 @@ export default function Page() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleUpdate = async (data: CreateStoreFormData) => {
+  const handleUpdate = async (data: CreateStorePayload) => {
     try {
       await updateStore({ storeId, ...data });
       setIsOpen(false);
@@ -124,7 +127,7 @@ export default function Page() {
     }
   };
 
-  const handleCreate = async (data: CreateStoreFormData) => {
+  const handleCreate = async (data: CreateStorePayload) => {
     try {
       await createStore(data);
       setIsOpen(false);
@@ -142,6 +145,8 @@ export default function Page() {
       storeName: storeInfo?.store?.storeName || activeStore.storeName || "",
       description: (storeInfo?.store as { description?: string })?.description || "",
       slogan: storeInfo?.store?.slogan || "",
+      // logoUrl: storeInfo?.store?.logoUrl || "",
+      whatsappNumber: storeInfo?.store?.phone || "",
       customDomain: storeInfo?.store?.customDomain || "",
       currency: storeInfo?.store?.currency || "NGN",
       status: (storeInfo?.store?.status as "active" | "inactive") || "active",

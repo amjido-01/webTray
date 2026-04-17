@@ -66,6 +66,7 @@ export const useUser = () => {
       >("/user/complete", payload);
 
       if (data?.responseSuccessful) {
+        console.log(data?.responseBody, "register")
         return data.responseBody;
       }
       throw new Error(data?.responseMessage || "Failed to register business");

@@ -4,6 +4,7 @@ import React, { use, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Package, Mail, Bell, Loader2, XCircle, ArrowLeft } from 'lucide-react';
 import { verifyPaystackPayment, PaystackVerifyResponse } from '@/lib/api/storefront';
+import { useStorefront } from '@/hooks/use-customer-store';
 import { toast } from 'sonner';
 
 interface OrderSuccessPageProps {
@@ -39,6 +40,8 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
 
     verify();
   }, [reference, slug]);
+
+  const { store } = useStorefront(slug);
 
   // Generate a placeholder order number if NOT verifying (e.g. for COD)
   const displayOrderNumber = verificationResult?.order?.id 
@@ -77,6 +80,14 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
       </div>
     );
   }
+
+
+  const handleContactSupport = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!store?.phone) return;
+    const cleanPhone = store.phone.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleanPhone}`, "_blank");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50 flex items-center justify-center p-4">
@@ -171,9 +182,13 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
           <div className="mt-10 pt-8 border-t border-[#F1F5F9]">
             <p className="text-sm text-[#64748B]">
               Need help with your order?{' '}
-              <a href="#" className="text-[#3366FF] hover:underline font-bold">
+              <button 
+                onClick={handleContactSupport}
+                className="text-[#3366FF] hover:underline font-bold disabled:opacity-50"
+                disabled={!store?.phone}
+              >
                 Contact Support
-              </a>
+              </button>
             </p>
           </div>
         </div>

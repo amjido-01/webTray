@@ -2,7 +2,7 @@
 import { PageHeader } from "../page-header";
 import { CreateStoreSheet, CreateStoreFormData } from "./create-store-sheet";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useStoreFront } from "@/hooks/use-store-front";
+import { useStoreFront, CreateStorePayload } from "@/hooks/use-store-front";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -19,7 +19,7 @@ export default function StoreFrontHeader() {
     setIsOpen(true);
   };
 
-  const handleCreate = async (data: CreateStoreFormData) => {
+  const handleCreate = async (data: CreateStorePayload) => {
     try {
       await createStore(data);
       setIsOpen(false);
