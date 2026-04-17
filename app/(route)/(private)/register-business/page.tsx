@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as yup from "yup";
 import {
   ArrowLeft,
@@ -10,6 +10,8 @@ import {
   Check,
   SettingsIcon,
   AlertCircle,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +38,7 @@ import { useUser } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useStoreFront } from "@/hooks/use-store-front";
 
 // Yup validation schemas
 const step1Schema = yup.object().shape({
@@ -153,8 +156,13 @@ type ValidationErrors = Partial<Record<keyof FormData | string, string>>;
 export default function WebTrayOnboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const { registerBusiness, isRegisteringBusiness } = useUser();
+  const { uploadStoreLogo, isUploadingLogo } = useStoreFront();
   const router = useRouter();
   const { user } = useAuthStore();
+  
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Guard: Redirect if business is already registered
   useEffect(() => {
@@ -507,7 +515,20 @@ export default function WebTrayOnboarding() {
         },
       };
       console.log(payload, "payload")
-      await registerBusiness(payload);
+      const registerResponse = await registerBusiness(payload);
+      
+      // Sequential Logo Upload if present
+      if (logoFile && registerResponse?.store?.id) {
+        try {
+          const uploadData = new FormData();
+          uploadData.append("image", logoFile);
+          await uploadStoreLogo({ storeId: registerResponse.store.id, formData: uploadData });
+        } catch (uploadError) {
+          console.error("Logo upload failed after registration:", uploadError);
+          toast.error("Business registered, but logo upload failed. You can update it later in the dashboard.");
+        }
+      }
+
       router.push("/dashboard");
     } catch (error) {
       console.error("Registration failed:", error);
@@ -863,6 +884,63 @@ export default function WebTrayOnboarding() {
                 <CardDescription>Configure your online store</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Store Logo Upload Area */}
+                <div className="flex flex-col items-center justify-center py-4 border-b border-dashed mb-6">
+                  <div 
+                    className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 group cursor-pointer hover:border-blue-400 transition-all"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {logoPreview ? (
+                      <Image
+                        src={logoPreview}
+                        alt="Logo preview"
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                        {formData.storeName ? (
+                          <span className="text-2xl font-bold text-blue-600 bg-blue-50 w-full h-full flex items-center justify-center">
+                            {formData.storeName.charAt(0).toUpperCase()}
+                          </span>
+                        ) : (
+                          <Package className="w-8 h-8" />
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+
+                    {isUploadingLogo && (
+                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setLogoFile(file);
+                        const reader = new FileReader();
+                        reader.onloadend = () => setLogoPreview(reader.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  
+                  <div className="text-center mt-3">
+                    <p className="text-sm font-medium text-gray-700">Store Logo</p>
+                    <p className="text-xs text-gray-500">Recommended: Square, max 2MB</p>
+                  </div>
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="store-name">Store Name*</Label>

@@ -8,7 +8,7 @@ import { useState } from "react";
 
 export default function StoreFrontHeader() {
   const { user, refreshStores } = useAuthStore();
-  const { createStore, isCreatingStore } = useStoreFront();
+  const { createStore, isCreatingStore, uploadStoreLogo } = useStoreFront();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleAddStoreDrawer = () => {
@@ -19,9 +19,14 @@ export default function StoreFrontHeader() {
     setIsOpen(true);
   };
 
-  const handleCreate = async (data: CreateStorePayload) => {
+  const handleCreate = async (data: CreateStorePayload, logoFile?: File | null) => {
     try {
-      await createStore(data);
+      const newStore = await createStore(data);
+      if (logoFile && newStore?.id) {
+        const uploadData = new FormData();
+        uploadData.append("image", logoFile);
+        await uploadStoreLogo({ storeId: newStore.id, formData: uploadData });
+      }
       setIsOpen(false);
     } catch {
       // Error toast is already shown by the mutation

@@ -5,6 +5,7 @@ import { ShoppingCart } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useCartStore } from "@/store/use-cart-store";
 import { useStorefront } from "@/hooks/use-customer-store";
 import CartSidebar from "./cart-sidebar";
@@ -53,7 +54,19 @@ export default function StoreHeader() {
           <div className="flex items-center justify-between">
             {/* Left section */}
             <div className="flex items-center gap-6">
-              <h1 className="text-xl font-semibold">{storeName}</h1>
+              <div className="flex items-center gap-3">
+                {store?.logoUrl && (
+                  <div className="relative w-10 h-10 overflow-hidden rounded-md border border-gray-100">
+                    <Image 
+                      src={store.logoUrl} 
+                      alt={storeName} 
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <h1 className="text-xl font-bold tracking-tight text-gray-900">{storeName}</h1>
+              </div>
               <nav className="hidden md:flex gap-6">
                 <Link href={`/store/${slug}`} className="text-sm text-gray-600 hover:text-gray-900">
                   Home

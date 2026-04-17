@@ -2,6 +2,7 @@
 
 import StoreFrontHeader from "@/components/storefront/store-front-header";
 import { Edit, Globe, Copy, Check, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
@@ -50,13 +51,14 @@ export default function Page() {
     isCreatingStore,
     updateStore,
     isUpdatingStore,
+    uploadStoreLogo,
+    isUploadingLogo,
   } = useStoreFront();
 
 
  if (storeLoading || isFetchingStoreInfo) {
     return <StoreFrontSkeleton />;
   }
-
   // Guard: Ensure we have an active store
   if (!activeStore) {
     return (
@@ -76,7 +78,6 @@ export default function Page() {
   }
 
   const storeId = storeInfo?.store?.id ?? activeStore.id;
-  console.log(storeInfo, "storeId")
   const isStoreOnline = storeInfo?.store?.online ?? false;
 
   const displayOnlineStatus =
@@ -86,7 +87,6 @@ export default function Page() {
 
   const handleToggleStoreOnline = async (checked: boolean) => {
     if (!storeId || isUpdatingStoreStatus) return;
-    console.log(storeId, "storeId")
     // ✅ Set pending status immediately  
     setPendingOnlineStatus(checked);
 
@@ -117,9 +117,14 @@ export default function Page() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleUpdate = async (data: CreateStorePayload) => {
+  const handleUpdate = async (data: CreateStorePayload, logoFile?: File | null) => {
     try {
-      await updateStore({ storeId, ...data });
+      const updated = await updateStore({ storeId, ...data });
+      if (logoFile && storeId) {
+        const uploadData = new FormData();
+        uploadData.append("image", logoFile);
+        await uploadStoreLogo({ storeId, formData: uploadData });
+      }
       setIsOpen(false);
       setIsEditMode(false);
     } catch {
@@ -127,11 +132,24 @@ export default function Page() {
     }
   };
 
-  const handleCreate = async (data: CreateStorePayload) => {
+  const handleCreate = async (data: CreateStorePayload, logoFile?: File | null) => {
+    console.log("handleCreate invoked. Data:", data, "logoFile present:", !!logoFile);
     try {
-      await createStore(data);
+      console.log("Creating store with payload:", data);
+      const newStore = await createStore(data);
+      console.log("Store created successfully:", newStore);
+      
+      if (logoFile && newStore?.id) {
+        console.log("Preparing logo upload for new store ID:", newStore.id);
+        const uploadData = new FormData();
+        uploadData.append("image", logoFile);
+        await uploadStoreLogo({ storeId: newStore.id, formData: uploadData });
+        console.log("Logo uploaded successfully for new store");
+      }
+      
       setIsOpen(false);
-    } catch {
+    } catch (error) {
+      console.error("Store creation flow failed:", error);
       // Error toast is already shown by the mutation
     }
   };
@@ -142,10 +160,11 @@ export default function Page() {
     const pm = storeInfo?.store?.paymentMethods as Record<string, boolean> | null | undefined;
     const dl = storeInfo?.store?.deliveryOptions as Record<string, unknown> | null | undefined;
     setInitialFormData({
+      id: storeInfo?.store?.id || activeStore.id,
       storeName: storeInfo?.store?.storeName || activeStore.storeName || "",
-      description: (storeInfo?.store as { description?: string })?.description || "",
       slogan: storeInfo?.store?.slogan || "",
-      // logoUrl: storeInfo?.store?.logoUrl || "",
+      logoUrl: storeInfo?.store?.logoUrl || "",
+      description: storeInfo?.store?.description || "",
       whatsappNumber: storeInfo?.store?.phone || "",
       customDomain: storeInfo?.store?.customDomain || "",
       currency: storeInfo?.store?.currency || "NGN",
@@ -253,12 +272,38 @@ export default function Page() {
           {/* Left Column - Store Information Card */}
           <Card className="flex flex-col shadow-none rounded-none">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-900">
-                Store Information
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Basic details about your store
-              </p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    Store Information
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Basic details about your store
+                  </p>
+                </div>
+                {/* Store Logo */}
+                <div className="shrink-0">
+                  {storeInfo?.store?.logoUrl ? (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+                      <Image
+                        src={storeInfo.store.logoUrl}
+                        alt={storeInfo.store.storeName || "Store logo"}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-100 shadow-sm flex items-center justify-center">
+                      <span className="text-blue-600 font-bold text-xl">
+                        {(storeInfo?.store?.storeName || activeStore.storeName || "S")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="flex-1 space-y-4">
               <div>
@@ -270,8 +315,7 @@ export default function Page() {
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">Description</h3>
                 <p className="text-gray-600">
-                  {/* {storeInfo?.store?.description || */}
-                  Premium coffee and fresh pastries delivered to your door
+                  {storeInfo?.store?.description || ""}
                 </p>
               </div>
               <div>

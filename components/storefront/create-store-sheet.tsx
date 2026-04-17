@@ -21,8 +21,12 @@ import {
   Truck,
   Globe,
   Loader2,
+  Camera,
+  X,
 } from "lucide-react";
+import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useStoreFront } from "@/hooks/use-store-front";
 import {
   Select,
   SelectContent,
@@ -35,11 +39,13 @@ import { toast } from "sonner";
 import { CreateStorePayload } from "@/hooks/use-store-front";
 
 export interface CreateStoreFormData {
+  id?: number | string;
   storeName: string;
   description: string;
   slogan: string;
   customDomain: string;
   whatsappNumber: string;
+  logoUrl?: string;
   paymentMethods: { cash: boolean; card: boolean };
   deliveryOptions: { pickup: boolean; delivery: boolean };
   status: "active" | "inactive";
@@ -51,7 +57,7 @@ interface CreateStoreSheetProps {
   onOpenChange: (open: boolean) => void;
   isEditMode?: boolean;
   initialData?: Partial<CreateStoreFormData>;
-  onSubmit: (data: CreateStorePayload) => Promise<void>;
+  onSubmit: (data: CreateStorePayload, logoFile?: File | null) => Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -85,7 +91,6 @@ export function CreateStoreSheet({
   onSubmit,
   isSubmitting = false,
 }: CreateStoreSheetProps) {
-  console.log(initialData, "ini")
   const [formData, setFormData] = useState<CreateStoreFormData>(defaultFormData);
   const [uiOptions, setUiOptions] = useState({
     paystack: false,
@@ -97,6 +102,56 @@ export function CreateStoreSheet({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const initializedForRef = useRef<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadStoreLogo, isUploadingLogo, activeStore } = useStoreFront();
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (initialData?.logoUrl) {
+      setLogoPreview(initialData.logoUrl);
+    } else {
+      setLogoPreview(null);
+    }
+    setLogoFile(null); // Reset when data changes
+  }, [initialData?.logoUrl]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log(file, "file")
+    setLogoFile(file);
+
+    // Local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // If in edit mode, upload immediately
+    if (isEditMode) {
+      const storeIdToUse = formData.id || activeStore?.id;
+      if (!storeIdToUse) {
+        toast.error("Store ID not found");
+        return;
+      }
+
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+
+      try {
+        console.log("Uploading logo for storeId:", storeIdToUse);
+        const updatedStore = await uploadStoreLogo({ storeId: storeIdToUse, formData: uploadData });
+        if (updatedStore?.logoUrl) {
+          setLogoPreview(updatedStore.logoUrl);
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+      }
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -106,9 +161,16 @@ export function CreateStoreSheet({
       // Only initialize if we haven't already for this session
       if (initializedForRef.current !== currentKey) {
         if (isEditMode && initialData) {
+          // Format whatsapp from +234... to 0... for display
+          let formattedPhone = initialData.whatsappNumber || "";
+          if (formattedPhone.startsWith("+234")) {
+            formattedPhone = `0${formattedPhone.slice(4)}`;
+          }
+
           setFormData({
             ...defaultFormData,
             ...initialData,
+            whatsappNumber: formattedPhone,
             paymentMethods: {
               cash: false,
               card: false,
@@ -188,7 +250,8 @@ export function CreateStoreSheet({
           delivery: uiOptions.thirdParty.length > 0,
         },
       };
-      await onSubmit(payload);
+      console.log("Submitting store form. logoFile present:", !!logoFile);
+      await onSubmit(payload, logoFile);
     } catch (err) {
       if (err instanceof yup.ValidationError) {
         const validationErrors: Record<string, string> = {};
@@ -197,6 +260,9 @@ export function CreateStoreSheet({
         });
         setErrors(validationErrors);
         toast.error("Please fix the errors in the form");
+      } else {
+        console.error("Non-validation error in handleSubmit:", err);
+        toast.error("An unexpected error occurred. Please try again.");
       }
     }
   };
@@ -242,11 +308,59 @@ export function CreateStoreSheet({
             <div className="space-y-8 p-6">
               {/* Step 2 mirrored: Store Setup */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <Package className="w-4 h-4 text-blue-600" />
+                <div className="flex items-start justify-between gap-4 py-4 border-b border-dashed mb-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Package className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-lg text-slate-900">Store Setup</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Configure your basic store details and identity.</p>
                   </div>
-                  <h3 className="font-semibold text-lg text-slate-900">Store Setup</h3>
+
+                  {/* Smaller Logo Upload Section in Top Right */}
+                  <div className="shrink-0 flex flex-col items-center">
+                    <div 
+                      className="relative group cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 group-hover:border-blue-400 transition-colors bg-gray-50 flex items-center justify-center overflow-hidden">
+                        {logoPreview ? (
+                          <Image 
+                            src={logoPreview} 
+                            alt="Logo Preview" 
+                            width={64} 
+                            height={64} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center text-gray-400 group-hover:text-blue-500">
+                            <Camera className="w-5 h-5 mb-0.5" />
+                            <span className="text-[8px] font-medium">Logo</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {isUploadingLogo && (
+                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-xl">
+                          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                        </div>
+                      )}
+
+                      <div className="absolute -bottom-1 -right-1 bg-white p-1 rounded-full shadow-sm border border-gray-100 text-blue-600 group-hover:bg-blue-50">
+                        <Camera className="w-3 h-3" />
+                      </div>
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                    />
+                    <p className="text-[8px] text-gray-400 mt-1 text-center whitespace-nowrap">Square, max 2MB</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

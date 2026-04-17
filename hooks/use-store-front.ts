@@ -289,6 +289,31 @@ export const useStoreFront = () => {
     },
   });
 
+  // ✅ NEW: Upload Store Logo
+  const uploadStoreLogoMutation = useMutation({
+    mutationFn: async ({ storeId, formData }: { storeId: number | string; formData: FormData }) => {
+      const { data } = await api.post<ApiResponse<{ store: Store }>>(
+        `/storefront/image`,
+        formData,
+        {
+          params: { storeId },
+        }
+      );
+
+      if (data?.responseSuccessful) return data.responseBody.store;
+      throw new Error(data?.responseMessage || 'Failed to upload logo');
+    },
+    onSuccess: (_, variables) => {
+      const storeId = variables.storeId;
+      toast.success('Logo uploaded successfully!');
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.info(storeId) });
+      queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(storeId) });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error uploading logo');
+    },
+  });
+
   // Create a new store
   const createStoreMutation = useMutation({
     mutationFn: async (payload: CreateStorePayload) => {
@@ -358,6 +383,7 @@ export const useStoreFront = () => {
     updateStoreMutation.mutateAsync(payload);
 
   return {
+    activeStore,
     storefrontSummary: storeFrontSummaryQuery.data,
     isFetchingStorefrontSummary: storeFrontSummaryQuery.isLoading,
     storefrontSummaryError: storeFrontSummaryQuery.error,
@@ -384,6 +410,10 @@ export const useStoreFront = () => {
     // ✅ Store Status Mutations
     changeStoreStatus,
     isUpdatingStoreStatus: changeStoreStatusMutation.isPending,
+
+    // ✅ Logo Mutations
+    uploadStoreLogo: uploadStoreLogoMutation.mutateAsync,
+    isUploadingLogo: uploadStoreLogoMutation.isPending,
 
     // ✅ Create / Update Store
     createStore,

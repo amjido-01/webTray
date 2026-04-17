@@ -63,6 +63,7 @@ export interface Store {
   storeName: string | null;
   slogan: string | null;
   slug?: string | null;
+  description: string | null;
   customDomain: string | null;
   logoUrl?: string | null;
   phone: string;
