@@ -24,7 +24,7 @@ interface CartSidebarProps {
 export default function CartSidebar({ showCart, setShowCart }: CartSidebarProps) {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   
   const { allProducts, categories } = useStorefront(slug);
   const storeId = categories[0]?.storeId || allProducts[0]?.storeId;
