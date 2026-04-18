@@ -34,7 +34,7 @@ export default function CustomerDetailPage({
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const tabFromUrl = searchParams.get("tab") || "overview";
+  const tabFromUrl = searchParams?.get("tab") || "overview";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
   const { customers, isLoading } = useCustomer();

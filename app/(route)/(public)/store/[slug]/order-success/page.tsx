@@ -17,7 +17,7 @@ export default function OrderSuccessPage({ params }: OrderSuccessPageProps) {
   const searchParams = useSearchParams();
   const { slug } = use(params);
   
-  const reference = searchParams.get('reference') || searchParams.get('trxref');
+  const reference = searchParams?.get('reference') || searchParams?.get('trxref');
   
   const [isVerifying, setIsVerifying] = useState(!!reference);
   const [verificationResult, setVerificationResult] = useState<PaystackVerifyResponse | null>(null);

@@ -29,7 +29,7 @@ type AlertState = {
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const token = searchParams?.get("token")
   const { resetPassword } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [alert, setAlert] = useState<AlertState>({

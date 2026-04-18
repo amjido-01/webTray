@@ -14,7 +14,7 @@ import Link from "next/link";
 
 function OTPContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email");
+  const email = searchParams?.get("email");
   const router = useRouter();
   const { verifyOtp, resendOtp } = useAuthStore();
 

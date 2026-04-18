@@ -75,7 +75,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { slug } = use(params);
-  const buyNowId = searchParams.get('buyNow');
+  const buyNowId = searchParams?.get('buyNow');
 
   const { allProducts, categories, store, isFetchingStore } = useStorefront(slug);
   const storeId = categories[0]?.storeId || allProducts[0]?.storeId || store?.id;
