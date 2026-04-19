@@ -27,7 +27,7 @@ export function SiteHeader() {
             <Link href="/notification" aria-label="Notification">
               <Settings className="text-[#808080]" />
             </Link>
-            <Link href="/notification" aria-label="Notification">
+            <Link href="/profile" aria-label="Profile">
               <User className="text-[#808080]" />
             </Link>
             <Link href="/notification" aria-label="Notification">

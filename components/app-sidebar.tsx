@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Store, ShoppingCart, ChartSpline, ReceiptText } from "lucide-react"
 import {
   IconChartBar,
   IconFolder,
@@ -40,12 +41,12 @@ const data = {
     {
       title: "Order",
       url: "/dashboard/order",
-      icon: IconChartBar,
+      icon: ShoppingCart,
     },
     {
       title: "Storefront",
       url: "/dashboard/storefront",
-      icon: IconFolder,
+      icon: Store,
     },
     {
       title: "Customer",
@@ -55,7 +56,12 @@ const data = {
     {
       title: "Analytics",
       url: "/dashboard/analytics",
-      icon: IconUsers,
+      icon: ChartSpline,
+    },
+    {
+      title: "Subscription",
+      url: "/dashboard/subscription",
+      icon: ReceiptText,
     },
   ],
 }
