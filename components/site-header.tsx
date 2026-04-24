@@ -24,14 +24,14 @@ export function SiteHeader() {
         {/* Right section */}
         <div className="ml-auto flex items-center gap-8">
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/notification" aria-label="Notification">
-              <Settings className="text-[#808080]" />
+            <Link href="/dashboard/settings" aria-label="Settings">
+              <Settings className={pathname.startsWith("/dashboard/settings") ? "text-[#365BEB]" : "text-[#808080]"} />
             </Link>
             <Link href="/profile" aria-label="Profile">
-              <User className="text-[#808080]" />
+              <User className={pathname.startsWith("/profile") ? "text-[#365BEB]" : "text-[#808080]"} />
             </Link>
             <Link href="/notification" aria-label="Notification">
-              <Bell className="text-[#808080]" />
+              <Bell className={pathname.startsWith("/notification") ? "text-[#365BEB]" : "text-[#808080]"} />
             </Link>
           </div>
 

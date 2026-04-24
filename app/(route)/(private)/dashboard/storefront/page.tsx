@@ -28,7 +28,6 @@ export default function Page() {
   // Use the safe hook to get activeStore
   const { activeStore, isLoading: storeLoading } = useActiveStore();
   
-  console.log(activeStore, "activeStore")
   const { refreshStores } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -133,18 +132,13 @@ export default function Page() {
   };
 
   const handleCreate = async (data: CreateStorePayload, logoFile?: File | null) => {
-    console.log("handleCreate invoked. Data:", data, "logoFile present:", !!logoFile);
     try {
-      console.log("Creating store with payload:", data);
       const newStore = await createStore(data);
-      console.log("Store created successfully:", newStore);
       
       if (logoFile && newStore?.id) {
-        console.log("Preparing logo upload for new store ID:", newStore.id);
         const uploadData = new FormData();
         uploadData.append("image", logoFile);
         await uploadStoreLogo({ storeId: newStore.id, formData: uploadData });
-        console.log("Logo uploaded successfully for new store");
       }
       
       setIsOpen(false);
@@ -167,6 +161,7 @@ export default function Page() {
       description: storeInfo?.store?.description || "",
       whatsappNumber: storeInfo?.store?.phone || "",
       customDomain: storeInfo?.store?.customDomain || "",
+      category: storeInfo?.store?.category || "",
       currency: storeInfo?.store?.currency || "NGN",
       status: (storeInfo?.store?.status as "active" | "inactive") || "active",
       paymentMethods: {

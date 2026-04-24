@@ -81,6 +81,7 @@ export interface Store {
   online?: boolean;
   isDeleted?: boolean;
   currency?: string | null;
+  category?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -202,6 +203,7 @@ export interface CreateRegistrationPayload {
   slogan: string;
   phone: string;
   customeDomain: string;
+  storeCategory: string;
   currency: string;
   paymentMethods: {
     paystack: boolean;
@@ -312,4 +314,56 @@ export interface StoreProduct {
   feature: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SubscriptionLimits {
+  maxProducts: number;
+  hasCustomDomain: boolean;
+  hasInventoryManagement: boolean;
+  analyticsLevel: string;
+  supportLevel: string;
+}
+
+export interface SubscriptionInfo {
+  tier: "STARTER" | "GROWTH" | "BUSINESS";
+  status: "TRIAL" | "ACTIVE" | "EXPIRED" | "CANCELLED";
+  expiryDate: string;
+  daysLeft: number;
+  limits: SubscriptionLimits;
+}
+
+export interface PricingPlan {
+  id: number;
+  name: string;
+  price: string;
+  duration: string;
+  description: string;
+  features: string[];
+  tier: "STARTER" | "GROWTH" | "BUSINESS";
+  isFreeTrialAllowed: boolean;
+  trialDays: number;
+  maxProducts: number;
+  hasCustomDomain: boolean;
+  hasInventoryManagement: boolean;
+  analyticsLevel: string;
+  supportLevel: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
+}
+
+export interface SubscribePayload {
+  businessId: number;
+  tier: "STARTER" | "GROWTH" | "BUSINESS";
+  callback_url: string;
+}
+
+export interface SubscribeResponse {
+  authorization_url: string;
+  reference: string;
+}
+
+export interface VerifySubscriptionResponse {
+  status: "SUCCESS" | "FAILED" | "PENDING";
 }

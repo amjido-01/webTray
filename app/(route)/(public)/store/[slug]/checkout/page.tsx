@@ -253,6 +253,30 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
     }
   };
 
+  const whatsappMessage = useMemo(() => {
+    if (!store || effectiveCart.length === 0) return "";
+
+    const itemsList = effectiveCart
+      .map(
+        (item) =>
+          `- ${item.cartQuantity}x ${item.name} (₦ ${parseFloat(
+            item.price
+          ).toLocaleString()})`
+      )
+      .join("\n");
+
+    const storeBaseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    
+    // Use the first product's URL to ensure WhatsApp picks up its OG image
+    const firstProductUrl = effectiveCart[0]?.id 
+      ? `${storeBaseUrl}/store/${slug}/product/${effectiveCart[0].id}`
+      : `${storeBaseUrl}/store/${slug}`;
+
+    const message = `Hello! I'm interested in the following items from *${store.storeName || "your store"}*:\n\n${itemsList}\n\n*Subtotal:* ₦ ${subtotal.toLocaleString()}\n\n*View more details here:* ${firstProductUrl}`;
+
+    return encodeURIComponent(message);
+  }, [store, effectiveCart, subtotal, slug]);
+
   if (!isHydrated || isFetchingStore) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -827,7 +851,7 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               </button>
                   <p className="text-center text-sm text-muted-foreground mt-3">or</p>
               <a
-                href={`https://wa.me/${store?.phone ? store.phone.replace(/[^0-9]/g, '') : ''}?text=${encodeURIComponent('Hello, I need help with my order on ' + slug)}`}
+                href={`https://wa.me/${store?.phone ? store.phone.replace(/[^0-9]/g, '') : ''}?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-[#25D366] text-white py-3 rounded font-bold mt-3 hover:bg-[#20b858] transition flex items-center justify-center gap-2 shadow-sm"

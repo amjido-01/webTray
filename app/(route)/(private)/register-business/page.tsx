@@ -58,8 +58,6 @@ const step1Schema = yup.object().shape({
     main: yup
       .array()
       .of(yup.string())
-      .min(1, "Please select at least one category")
-      .required(),
   }),
   address: yup
     .string()
@@ -84,6 +82,7 @@ const step2Schema = yup.object().shape({
     .required("Store name is required"),
   slogan: yup.string().optional(),
   customeDomain: yup.string().optional(),
+  storeCategory: yup.string().required("Store category is required"),
   currency: yup
     .string()
     .min(1, "Please select a currency")
@@ -138,6 +137,7 @@ type FormData = {
   storeName: string;
   slogan?: string;
   customeDomain?: string;
+  storeCategory: string;
   currency: string;
   whatsappNumber: string;
   paymentMethods: {
@@ -162,6 +162,7 @@ export default function WebTrayOnboarding() {
   
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [customBusinessCategory, setCustomBusinessCategory] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Guard: Redirect if business is already registered
@@ -190,6 +191,7 @@ export default function WebTrayOnboarding() {
     storeName: "",
     slogan: "",
     customeDomain: "",
+    storeCategory: "",
     currency: "NGN",
     whatsappNumber: "",
     // Step 3 data
@@ -263,6 +265,11 @@ export default function WebTrayOnboarding() {
           .min(2, "Store name must be at least 2 characters")
           .required("Store name is required")
           .validate(value as string);
+      } else if (fieldPath === "storeCategory") {
+        await yup
+          .string()
+          .required("Store category is required")
+          .validate(value as string);
       } else if (fieldPath === "currency") {
         await yup
           .string()
@@ -279,6 +286,7 @@ export default function WebTrayOnboarding() {
         await yup
           .array()
           .of(yup.string())
+          .optional()
           .min(1, "Please select at least one category")
           .validate(value as string[]);
       } else if (fieldPath === "paymentMethods") {
@@ -323,6 +331,12 @@ export default function WebTrayOnboarding() {
   // Check if all required fields are filled for final submission
   const validateAllFields = async () => {
     try {
+      const hasCategory = formData.category.main.length > 0 || customBusinessCategory.trim().length > 0;
+      if (!hasCategory) {
+        setFieldErrors((prev) => ({ ...prev, "category.main": "Please select at least one category or enter a custom one" }));
+        return false;
+      }
+
       await fullFormSchema.validate(formData, { abortEarly: false });
       return true;
     } catch (error) {
@@ -345,6 +359,7 @@ export default function WebTrayOnboarding() {
           "contactInfo.email",
           "category.main",
           "storeName",
+          "storeCategory",
           "currency",
           "whatsappNumber",
           "paymentMethods",
@@ -489,7 +504,10 @@ export default function WebTrayOnboarding() {
         businessType: formData.businessType,
         description: formData.description,
         category: {
-          main: formData.category.main.join(", "),
+          main: [
+            ...formData.category.main,
+            ...(customBusinessCategory.trim() ? [customBusinessCategory.trim()] : []),
+          ].join(", "),
         },
         address: formData.address,
         contactInfo: {
@@ -500,6 +518,7 @@ export default function WebTrayOnboarding() {
         storeName: formData.storeName,
         slogan: formData.slogan || "",
         customeDomain: formData.customeDomain || "",
+        storeCategory: formData.storeCategory,
         currency: formData.currency,
         paymentMethods: {
           paystack: formData.paymentMethods.paystack,
@@ -514,7 +533,6 @@ export default function WebTrayOnboarding() {
           thirdParty: formData.deliveryOptions.thirdParty,
         },
       };
-      console.log(payload, "payload")
       const registerResponse = await registerBusiness(payload);
       
       // Sequential Logo Upload if present
@@ -708,32 +726,57 @@ export default function WebTrayOnboarding() {
                     {renderFieldError("businessName")}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="business-type">Business Type*</Label>
-                    <Select
-                      value={formData.businessType}
-                      onValueChange={(value) => {
-                        handleInputChange("businessType", value);
-                        handleInputBlur("businessType", value);
-                      }}
-                      required
-                    >
-                      <SelectTrigger
-                        className={`w-full ${getFieldClassName(
-                          "businessType"
-                        )}`}
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="business-type">Business Type*</Label>
+                      {formData.businessType !== "" && !["retail", "restaurant", "service", "manufacturing", "wholesale"].includes(formData.businessType) ? (
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="h-auto p-0 text-xs"
+                          onClick={() => handleInputChange("businessType", "")}
+                        >
+                          Back to options
+                        </Button>
+                      ) : null}
+                    </div>
+                    
+                    {["retail", "restaurant", "service", "manufacturing", "wholesale", ""].includes(formData.businessType) ? (
+                      <Select
+                        value={formData.businessType}
+                        onValueChange={(value) => {
+                          handleInputChange("businessType", value);
+                          handleInputBlur("businessType", value);
+                        }}
+                        required
                       >
-                        <SelectValue placeholder="Select business type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="retail">Retail</SelectItem>
-                        <SelectItem value="restaurant">Restaurant</SelectItem>
-                        <SelectItem value="service">Service</SelectItem>
-                        <SelectItem value="manufacturing">
-                          Manufacturing
-                        </SelectItem>
-                        <SelectItem value="wholesale">Wholesale</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          className={`w-full ${getFieldClassName(
+                            "businessType"
+                          )}`}
+                        >
+                          <SelectValue placeholder="Select business type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="retail">Retail</SelectItem>
+                          <SelectItem value="restaurant">Restaurant</SelectItem>
+                          <SelectItem value="service">Service</SelectItem>
+                          <SelectItem value="manufacturing">
+                            Manufacturing
+                          </SelectItem>
+                          <SelectItem value="wholesale">Wholesale</SelectItem>
+                          <SelectItem value="others">Others (Type custom)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder="Type your business type"
+                        value={formData.businessType === "others" ? "" : formData.businessType}
+                        onChange={(e) => handleInputChange("businessType", e.target.value)}
+                        onBlur={(e) => handleInputBlur("businessType", e.target.value)}
+                        className={getFieldClassName("businessType")}
+                        autoFocus
+                      />
+                    )}
                     {renderFieldError("businessType")}
                   </div>
                 </div>
@@ -868,6 +911,40 @@ export default function WebTrayOnboarding() {
                           </Label>
                         </div>
                       ))}
+                      <div className="flex items-center gap-2 pt-2">
+                        {!customBusinessCategory ? (
+                          <Button
+                            type="button"
+                            variant="default"
+                            size="sm"
+                            className="text-xs h-8"
+                            onClick={() => setCustomBusinessCategory(" ")}
+                          >
+                            Others
+                          </Button>
+                        ) : (
+                          <div className="flex flex-col gap-2 w-full">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs text-gray-500">Custom Category</Label>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-xs"
+                                onClick={() => setCustomBusinessCategory("")}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="Type your category..."
+                              value={customBusinessCategory.trim()}
+                              onChange={(e) => setCustomBusinessCategory(e.target.value)}
+                              className="h-8 text-sm"
+                              autoFocus
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {renderFieldError("category.main")}
@@ -972,8 +1049,8 @@ export default function WebTrayOnboarding() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                <div className="grid gap-4 md:grid-cols-1">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="domain">Custom Domain (Optional)</Label>
                     <Input
                       id="domain"
@@ -983,7 +1060,66 @@ export default function WebTrayOnboarding() {
                         handleInputChange("customeDomain", e.target.value)
                       }
                     />
+                  </div> */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="storeCategory">Store Category*</Label>
+                      {formData.storeCategory === "others" || !categories.find(c => c.id === formData.storeCategory) && formData.storeCategory !== "" ? (
+                        <Button 
+                          type="button" 
+                          variant="link" 
+                          className="h-auto p-0 text-xs"
+                          onClick={() => {
+                            handleInputChange("storeCategory", "");
+                            handleInputBlur("storeCategory", "");
+                          }}
+                        >
+                          Back to options
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    {categories.find(c => c.id === formData.storeCategory) || formData.storeCategory === "" ? (
+                      <Select
+                        value={formData.storeCategory}
+                        onValueChange={(value) => {
+                          handleInputChange("storeCategory", value);
+                          handleInputBlur("storeCategory", value);
+                        }}
+                      >
+                        <SelectTrigger
+                          className={`w-full ${getFieldClassName("storeCategory")}`}
+                        >
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="others">Others (Type custom)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder="Type your category"
+                        value={formData.storeCategory === "others" ? "" : formData.storeCategory}
+                        onChange={(e) => {
+                          handleInputChange("storeCategory", e.target.value);
+                        }}
+                        onBlur={(e) => {
+                          handleInputBlur("storeCategory", e.target.value);
+                        }}
+                        className={getFieldClassName("storeCategory")}
+                        autoFocus
+                      />
+                    )}
+                    {renderFieldError("storeCategory")}
                   </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency*</Label>
                     <Select
@@ -1008,24 +1144,23 @@ export default function WebTrayOnboarding() {
                     </Select>
                     {renderFieldError("currency")}
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp Number*</Label>
-                  <Input
-                    id="whatsapp"
-                    placeholder="07038172450"
-                    value={formData.whatsappNumber}
-                    onChange={(e) =>
-                      handleInputChange("whatsappNumber", e.target.value)
-                    }
-                    onBlur={(e) =>
-                      handleInputBlur("whatsappNumber", e.target.value)
-                    }
-                    className={getFieldClassName("whatsappNumber")}
-                    required
-                  />
-                  {renderFieldError("whatsappNumber")}
+                  <div className="space-y-2">
+                    <Label htmlFor="whatsapp">WhatsApp Number*</Label>
+                    <Input
+                      id="whatsapp"
+                      placeholder="07038172450"
+                      value={formData.whatsappNumber}
+                      onChange={(e) =>
+                        handleInputChange("whatsappNumber", e.target.value)
+                      }
+                      onBlur={(e) =>
+                        handleInputBlur("whatsappNumber", e.target.value)
+                      }
+                      className={getFieldClassName("whatsappNumber")}
+                      required
+                    />
+                    {renderFieldError("whatsappNumber")}
+                  </div>
                 </div>
 
                 <div className="rounded-lg bg-[#D8DFFB] p-4">

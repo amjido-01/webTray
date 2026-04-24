@@ -35,6 +35,7 @@ export interface CreateStorePayload {
   storeName: string;
   description: string;
   slogan: string;
+  category: string;
   customDomain?: string;
   paymentMethods: { cash: boolean; card: boolean };
   deliveryOptions: { pickup: boolean; delivery: boolean };

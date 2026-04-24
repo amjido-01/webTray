@@ -1,67 +1,89 @@
 import Image from "next/image"
+import { Star } from "lucide-react"
+import left from "@/public/left.svg"
+import right from "@/public/right.svg"
 
 export function Testimonials() {
   const testimonials = [
     {
-      role: "Restaurant Owner - User Tester",
-      quote:
-        "Before WebTray, I was tracking inventory on paper and handling orders through WhatsApp. Now, everything is in one place, and I actually have time to focus on other things.",
-      name: "Chika Obi",
-      image: "/ts1.png", // <-- Replace with real image
+      name: "Adam Zakariyya",
+      quote: "Thanks we have platform like this.",
+      image: "/ts1.png",
     },
     {
-      role: "Retail Shop Owner - User Tester",
-      quote:
-        "Adding products and managing stock takes me just a few minutes now. The dashboard is clean and easy — even my staff can use it without extra training",
-      name: "Umar Haruna",
+      name: "Jibril Ala",
+      quote: "The smartest online inventory systems for everyone.",
       image: "/ts2.png",
     },
     {
-      role: "Juice Bar Startup - User Tester",
-      quote:
-        "I launched my online storefront in a single afternoon. Customers can order directly, and I don't have to explain my menu over and over again.",
-      name: "Zainab Yusuf",
+      name: "Boyd Poundz",
+      quote: "Might be the best eccomerce tool I have seen so far",
       image: "/ts3.png",
     },
     {
-      role: "Service Provider (Salon) - User Tester",
-      quote:
-        "Bookings used to be messy with phone calls and missed messages. WebTray gave me a simple way to manage appointments, and my clients love it.",
-      name: "Adeshina Mariam",
+      name: "Suleiman Kabiru Adam",
+      quote: "Best inventory and business management software on the internet.",
       image: "/ts4.png",
     },
     {
-      role: "Small Business Manager - User Tester",
-      quote:
-        "What I like most is the clarity. I can see revenue, orders, and customers on one screen — it makes decision-making so much faster.",
-      name: "Tunde Adeyayo",
+      name: "Mustapha Ali Isah",
+      quote: "Very helpful for business growth and inventory management.",
       image: "/ts5.png",
     },
     {
-      role: "Market Vendor Going Digital - User Tester",
+      name: "Abubakar Muhammad Ala",
       quote:
-        "I never thought I could have my own online shop, but WebTray made it easy. My business looks professional now, and I'm reaching more customers.",
-      name: "Grace Eze",
+        "This software has genuinely helped me grow and manage my businesses more efficiently. I truly appreciate having a product like this available.",
       image: "/ts6.png",
+    },
+    {
+      name: "Vivian Ihechidare chigbu",
+      quote: "Is very nice, good and excellent.",
+      image: "/ts1.png",
+    },
+    {
+      name: "John Agbo",
+      quote:
+        "Webtray is a smart inventory management software that’s easy to use and highly efficient. It helps track stock.",
+      image: "/ts2.png",
+    },
+    {
+      name: "Ajao Ola",
+      quote: "Good and stress free.",
+      image: "/ts3.png",
     },
   ]
 
   return (
-    <section className="py16 md:py24 mx-auto mt-[112px] md:mt-[164px] px-4 sm:px-6 lg:px-8 pt16 pb8">
+    <section className="py-16 md:py-24 mx-auto mt-[112px] md:mt-[164px] px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative">
+      <Image
+        className="absolute w-[300px] h-[300px] -left-5 top-22"
+        src={left}
+        alt="confeti"
+      />
+       <Image
+        className="absolute -z-5 w-[300px] h-[300px] -right-5 top-80"
+        src={right}
+        alt="confeti"
+      />
       <div className="mx-auto max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-[40px] font-bold mb-4 text-balance text-[24px] text-[#1A1A1A] leading-[100%]">Testimonials</h2>
-          <p className="text-[16px] font-normal leading-[24px] text-[#4D4D4D] text-pretty">What our user testers are saying about us</p>
+          <h2 className="text-3xl md:text-[40px] font-bold mb-4 text-balance text-[#1A1A1A] leading-tight">
+            Testimonials
+          </h2>
+          <p className="text-[16px] font-normal leading-[24px] text-[#4D4D4D] text-pretty">
+            What our customers are saying about us
+          </p>
         </div>
 
-        <div className=" grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-6 border-2 border-gray-100 transition-shadow flex flex-col"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden">
+                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                   <Image
                     src={testimonial.image}
                     alt={testimonial.name}
@@ -70,12 +92,18 @@ export function Testimonials() {
                     className="w-full h-full object-cover rounded-full"
                   />
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm text-balance text-[#1A1A1A] text-[14px] leading-[100%]">{testimonial.role}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-[#1A1A1A] truncate">{testimonial.name}</p>
+                  <div className="flex items-center gap-0.5 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-[#FFB800] text-[#FFB800]" />
+                    ))}
+                  </div>
                 </div>
               </div>
-              <p className="text-[#1A1A1A] leading-[22px] mb-4 text-pretty text-[14px] font-medium">{testimonial.quote}</p>
-              <p className="text-sm leading-[100%] text-[#4D4D4D] text-[12px] font-normal">{testimonial.name}</p>
+              <p className="text-[#1A1A1A] leading-[22px] mb-4 text-pretty text-[14px] font-medium flex-grow">
+                {testimonial.quote}
+              </p>
             </div>
           ))}
         </div>

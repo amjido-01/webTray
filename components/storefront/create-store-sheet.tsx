@@ -43,6 +43,7 @@ export interface CreateStoreFormData {
   storeName: string;
   description: string;
   slogan: string;
+  category: string;
   customDomain: string;
   whatsappNumber: string;
   logoUrl?: string;
@@ -65,6 +66,7 @@ const defaultFormData: CreateStoreFormData = {
   storeName: "",
   description: "",
   slogan: "",
+  category: "",
   customDomain: "",
   whatsappNumber: "",
   paymentMethods: { cash: false, card: false },
@@ -76,6 +78,7 @@ const defaultFormData: CreateStoreFormData = {
 const storeSchema = yup.object().shape({
   storeName: yup.string().required("Store name is required"),
   description: yup.string().required("Description is required"),
+  category: yup.string().required("Category is required"),
   whatsappNumber: yup
     .string()
     .required("WhatsApp number is required")
@@ -160,6 +163,7 @@ export function CreateStoreSheet({
       
       // Only initialize if we haven't already for this session
       if (initializedForRef.current !== currentKey) {
+        console.log("CreateStoreSheet initializing with:", initialData);
         if (isEditMode && initialData) {
           // Format whatsapp from +234... to 0... for display
           setFormData({
@@ -234,6 +238,7 @@ export function CreateStoreSheet({
         storeName: formData.storeName,
         description: formData.description,
         slogan: formData.slogan,
+        category: formData.category,
         customDomain: formData.customDomain,
         currency: formData.currency,
         status: formData.status,
@@ -263,6 +268,15 @@ export function CreateStoreSheet({
       }
     }
   };
+
+  const categories = [
+    { id: "food", label: "Food & Beverages" },
+    { id: "electronics", label: "Electronics" },
+    { id: "health", label: "Health & Beauty" },
+    { id: "clothing", label: "Clothing & Accessories" },
+    { id: "home", label: "Home & Garden" },
+    { id: "books", label: "Books & Media" },
+  ];
 
   const thirdPartyServices = [
     { id: "gokada", label: "Gokada" },
@@ -393,8 +407,55 @@ export function CreateStoreSheet({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="category">Store Category*</Label>
+                      {formData.category === "others" || !categories.find(c => c.id === formData.category) && formData.category !== "" ? (
+                        <Button 
+                          type="button" 
+                          variant="link" 
+                          className="h-auto p-0 text-xs"
+                          onClick={() => setFormData({ ...formData, category: "" })}
+                        >
+                          Back to options
+                        </Button>
+                      ) : null}
+                    </div>
+                    
+                    {categories.find(c => c.id === formData.category) || formData.category === "" ? (
+                      <Select
+                        value={formData.category}
+                        onValueChange={(val) =>
+                          setFormData({ ...formData, category: val })
+                        }
+                      >
+                        <SelectTrigger className={`w-full ${errors.category ? "border-red-500" : ""}`}>
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="others">Others (Type custom)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        placeholder="Type your category"
+                        value={formData.category === "others" ? "" : formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className={errors.category ? "border-red-500" : ""}
+                        autoFocus
+                      />
+                    )}
+                    {errors.category && (
+                      <p className="text-xs text-red-500 mt-1">{errors.category}</p>
+                    )}
+                  </div>
+                  {/* <div className="space-y-2">
                     <Label htmlFor="customDomain">Custom Domain (Optional)</Label>
                     <div className={`flex items-center gap-2 border rounded-md px-3 bg-gray-50/50 ${errors.customDomain ? "border-red-500" : ""}`}>
                       <Globe className="w-4 h-4 text-muted-foreground" />
@@ -411,8 +472,11 @@ export function CreateStoreSheet({
                     {errors.customDomain && (
                       <p className="text-xs text-red-500 mt-1">{errors.customDomain}</p>
                     )}
-                  </div>
-                  <div className="space-y-2">
+                  </div> */}
+                  
+                </div>
+
+                <div className="space-y-2 w-full">
                     <Label htmlFor="currency">Currency*</Label>
                     <Select
                       value={formData.currency}
@@ -420,7 +484,7 @@ export function CreateStoreSheet({
                         setFormData({ ...formData, currency: val })
                       }
                     >
-                      <SelectTrigger className={`w-full ${errors.currency ? "border-red-500" : ""}`}>
+                      <SelectTrigger className={`w-[100%] ${errors.currency ? "border-red-500" : ""}`}>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -431,7 +495,6 @@ export function CreateStoreSheet({
                       <p className="text-xs text-red-500 mt-1">{errors.currency}</p>
                     )}
                   </div>
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="whatsappNumber">Store WhatsApp Number*</Label>
