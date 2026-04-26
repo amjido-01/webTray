@@ -24,6 +24,7 @@ export default async function middleware(req: NextRequest) {
   // Get access token from cookies
   const accessToken = req.cookies.get("accessToken")?.value;
   const refreshToken = req.cookies.get("refreshToken")?.value;
+  console.log("refreshToken", refreshToken);
 
   // Determine if user has any valid session (either token exists)
   const hasSession = !!(accessToken || refreshToken);

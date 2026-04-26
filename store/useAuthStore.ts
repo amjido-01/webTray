@@ -138,6 +138,7 @@ export const useAuthStore = create<AuthState>()(
           const { user, business, accessToken, refreshToken } = responseBody;
           const fetchedStores = business?.store ?? [];
 
+
           Cookies.set("accessToken", accessToken, cookieOptions);
           Cookies.set("refreshToken", refreshToken, refreshCookieOptions);
 
