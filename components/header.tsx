@@ -6,11 +6,13 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/useAuthStore"
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { user, _hasHydrated } = useAuthStore()
   
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "unset"
@@ -61,15 +63,25 @@ export default function Header() {
             </nav>
             
             <div className="hidden md:flex items-center space-x-4">
-             
-              <Button 
-                size="lg" 
-                className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
-               
-              ><Link href="/wait-list">
-                 Join Waitlist
-              </Link>
-              </Button>
+              {!_hasHydrated ? (
+                <div className="h-10 w-28 animate-pulse rounded-full bg-gray-100" />
+              ) : user ? (
+                <Button 
+                  size="lg" 
+                  className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Dashboard
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  className="rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white px-[16px] py-[14px]"
+                  onClick={() => router.push("/wait-list")}
+                >
+                  Join Waitlist
+                </Button>
+              )}
             </div>
             {/* <div className="hidden md:flex items-center space-x-4">
               <Button 
@@ -172,13 +184,31 @@ export default function Header() {
                     </Link>
                     Get Started for Free
                   </Button> */}
-                  <Button 
-                    size="lg" 
-                    className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
-                    onClick={() => router.push("/wait-list")}
-                  >
-                    Join Waitlist
-                  </Button>
+                  {!_hasHydrated ? (
+                    <div className="h-10 w-full animate-pulse rounded-full bg-gray-100" />
+                  ) : user ? (
+                    <Button 
+                      size="lg" 
+                      className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        router.push("/dashboard")
+                      }}
+                    >
+                      Dashboard
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="lg" 
+                      className="w-full rounded-full bg-[#111827] hover:bg-[#30343e] font-medium text-[16px] text-white"
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        router.push("/wait-list")
+                      }}
+                    >
+                      Join Waitlist
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

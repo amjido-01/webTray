@@ -3,8 +3,7 @@ import { Lato } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/lib/react-query-provider";
-import { AuthHydrationGate } from "@/components/auth-hydration-gate";
-import { AuthInitializer } from "@/components/auth-initializer";
+
 
 const lato = Lato({
   weight: ["300", "400", "700", "900"],
@@ -28,11 +27,7 @@ export default function RootLayout({
      <html lang="en">
       <body className={lato.className}>
         <ReactQueryProvider>
-          <AuthHydrationGate>
-            <AuthInitializer>
-            <main>{children}</main>
-            </AuthInitializer>
-          </AuthHydrationGate>
+          <main>{children}</main>
         </ReactQueryProvider>
 
         <Toaster />
