@@ -1,9 +1,10 @@
-// ============================================
-// FILE: hooks/use-storefront.ts
-// ============================================
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { ApiResponse, Store } from "@/types";
+import { useEffect } from "react";
+
+// Initialize the same broadcast channel for cross-tab synchronization
+const syncChannel = typeof window !== "undefined" ? new BroadcastChannel("webtray_store_sync") : null;
 
 export interface Category {
   id: number;
@@ -68,6 +69,24 @@ export const storefrontKeys = {
 };
 
 export const useStorefront = (slug: string) => {
+  const queryClient = useQueryClient();
+
+  // Listen for updates from other tabs (like the Dashboard)
+  useEffect(() => {
+    if (!syncChannel) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      // If any store/product update happens, we refresh the storefront data
+      if (event.data.type === "PRODUCT_UPDATED" || event.data.type === "STORE_STATUS_UPDATED") {
+        console.log("[Sync] Update received from dashboard, refreshing storefront...");
+        queryClient.invalidateQueries({ queryKey: storefrontKeys.store(slug) });
+      }
+    };
+
+    syncChannel.addEventListener("message", handleMessage);
+    return () => syncChannel.removeEventListener("message", handleMessage);
+  }, [slug, queryClient]);
+
   // 1. Fetch store categories by slug
   const categoriesQuery = useQuery({
     queryKey: storefrontKeys.categories(slug),
@@ -146,4 +165,4 @@ export const useStorefront = (slug: string) => {
     // Products by Category (hook to use)
     useProductsByCategory,
   };
-};
+};

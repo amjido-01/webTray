@@ -5,6 +5,9 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { StoreFrontSummary, StoreProduct } from "@/types";
 import { toast } from "sonner";
 
+// Initialize a broadcast channel for cross-tab synchronization
+const syncChannel = typeof window !== "undefined" ? new BroadcastChannel("webtray_store_sync") : null;
+
 interface StoreProductsResponse {
   products: StoreProduct[];
 }
@@ -178,6 +181,8 @@ export const useStoreFront = () => {
       queryClient.invalidateQueries({
         queryKey: storeFrontKeys.products(updatedProduct.storeId),
       });
+      // Notify other tabs to refresh
+      syncChannel?.postMessage({ type: "PRODUCT_UPDATED", storeId: updatedProduct.storeId });
     },
     onError: (error: Error, variables, context) => {
       // Rollback on error
@@ -281,6 +286,8 @@ export const useStoreFront = () => {
         };
       });
       queryClient.invalidateQueries({ queryKey: storeFrontKeys.summary(updatedStore.id) });
+      // Notify other tabs to refresh
+      syncChannel?.postMessage({ type: "STORE_STATUS_UPDATED", storeId: updatedStore.id });
     },
     onError: (error, variables, context) => {
       if (context?.previous) {
