@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import Cookies from "js-cookie";
+import { LoadingScreen } from "./ui/loading-screen";
 
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { checkAuth, _hasHydrated, isLoggedIn } = useAuthStore();
@@ -33,14 +34,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
 
    // Show loading only during initial load
   if (isInitializing) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;

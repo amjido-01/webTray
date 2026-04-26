@@ -71,7 +71,7 @@ export default function Component() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="p-4">
         <div className="flex items-center gap-2">
-          <Image src="/logo.svg" width={140} height={40} alt="logo" />
+          <Image src="/webtraylogo.png" width={140} height={40} alt="logo" />
         </div>
       </div>
 

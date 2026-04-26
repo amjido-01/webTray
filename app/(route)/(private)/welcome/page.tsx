@@ -66,7 +66,7 @@ useEffect(() => {
       />
 
       <header className="p-6">
-        <Image src="/logo.svg" alt="logo" width={100} height={24} />
+        <Image src="/webtraylogo.png" alt="logo" width={100} height={24} />
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
