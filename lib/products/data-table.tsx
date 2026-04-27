@@ -112,8 +112,11 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center">
-                  No results.
+                <TableCell colSpan={columns.length} className="h-40 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-gray-500">
+                    <span className="text-sm font-medium">No products found</span>
+                    <p className="text-sm">Try adjusting your filters or add a new product to get started.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

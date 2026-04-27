@@ -157,7 +157,6 @@ export default function ProductsTable() {
 
   if (isFetchingProducts) return <TableSkeleton />;
   if (productsError) return <div>Error loading products</div>;
-  if (!products || products.length === 0) return <div>No products found</div>;
 
   return (
     <>

@@ -19,8 +19,8 @@ interface StoreFrontSlideProps {
   autoPlayInterval?: number
 }
 
-const StoreFrontSlide = ({ 
-  slides: customSlides, 
+const StoreFrontSlide = ({
+  slides: customSlides,
   autoPlayInterval = 5000
 }: StoreFrontSlideProps) => {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -77,7 +77,7 @@ const StoreFrontSlide = ({
   return (
     <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden rounded-lg">
       {/* Slides */}
-      <div 
+      <div
         className="flex h-full transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
@@ -92,7 +92,7 @@ const StoreFrontSlide = ({
               priority={slide.id === 1}
               quality={85}
             />
-            
+
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
 
@@ -142,7 +142,7 @@ const StoreFrontSlide = ({
       >
         <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
       </button>
-      
+
       <button
         onClick={nextSlide}
         className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 bg-white/30 hover:bg-white/50 backdrop-blur-sm rounded-full p-2 md:p-3 transition-all duration-200 group"
@@ -157,11 +157,10 @@ const StoreFrontSlide = ({
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`transition-all duration-300 rounded-full ${
-              index === currentSlide 
-                ? 'w-8 h-2 bg-white' 
+            className={`transition-all duration-300 rounded-full ${index === currentSlide
+                ? 'w-8 h-2 bg-white'
                 : 'w-2 h-2 bg-white/60 hover:bg-white/80'
-            }`}
+              }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}

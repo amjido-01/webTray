@@ -18,16 +18,16 @@ interface StorefrontUIProps {
 
 export default function StorefrontUI({ slug }: StorefrontUIProps) {
   const router = useRouter();
-  const { 
-    categories, 
-    isFetchingCategories, 
+  const {
+    categories,
+    isFetchingCategories,
     categoriesError,
-    allProducts, 
-    isFetchingAllProducts, 
+    allProducts,
+    isFetchingAllProducts,
     allProductsError,
-    useProductsByCategory 
+    useProductsByCategory
   } = useStorefront(slug);
-  
+
   const addToCart = useCartStore((state) => state.addToCart);
 
   // We use sessionStorage to remember filters when navigating back from a product page
@@ -42,9 +42,9 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
     }
     return [];
   });
-  
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem(SEARCH_KEY) || "";
@@ -90,23 +90,23 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
   const { data: categoryProducts = [], isLoading: isFetchingCategoryProducts } =
     useProductsByCategory(selectedCategoryIds);
 
-  const isFetchingProducts = selectedCategoryIds.length > 0 
-    ? isFetchingCategoryProducts 
+  const isFetchingProducts = selectedCategoryIds.length > 0
+    ? isFetchingCategoryProducts
     : isFetchingAllProducts;
 
   const displayProducts = useMemo(() => {
     const activeProducts = selectedCategoryIds.length > 0 ? categoryProducts : allProducts;
-    
+
     let visibleProducts = activeProducts.filter((product) => product.visible);
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      visibleProducts = visibleProducts.filter(p => 
-        p.name.toLowerCase().includes(query) || 
+      visibleProducts = visibleProducts.filter(p =>
+        p.name.toLowerCase().includes(query) ||
         (p.description && p.description.toLowerCase().includes(query))
       );
     }
-    
+
     // Sort so featured equal true is first
     return visibleProducts.sort((a, b) => {
       if (a.feature && !b.feature) return -1;
@@ -171,7 +171,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
 
   if (categoriesError || allProductsError) {
     const errorMessage = (categoriesError as Error)?.message || (allProductsError as Error)?.message || "This store is currently offline or does not exist.";
-    
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md w-full p-8 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -182,7 +182,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Store Unavailable</h2>
 
-          <button 
+          <button
             onClick={() => router.push('/')}
             className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors duration-200"
           >
@@ -215,14 +215,12 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
               <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <p className="text-gray-600 font-medium whitespace-nowrap">
                   {selectedCategoryIds.length > 0
-                    ? `Showing products from ${
-                        selectedCategoryIds.length
-                      } categor${
-                        selectedCategoryIds.length === 1 ? "y" : "ies"
-                      }`
+                    ? `Showing products from ${selectedCategoryIds.length
+                    } categor${selectedCategoryIds.length === 1 ? "y" : "ies"
+                    }`
                     : "No category selected"}
                 </p>
-                
+
                 <div className="relative w-full sm:w-64 lg:w-72">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-4 w-4 text-gray-400" />
@@ -270,8 +268,8 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
                   <p className="text-gray-500 mb-4">
                     {selectedCategoryIds.length > 0
                       ? `No products available in ${selectedCategoryIds
-                          .map((id) => getCategoryName(id))
-                          .join(", ")}`
+                        .map((id) => getCategoryName(id))
+                        .join(", ")}`
                       : "Please select a category to view products."}
                   </p>
                   {selectedCategoryIds.length > 0 && (
@@ -291,7 +289,7 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
                 onAddToCart={handleAddToCart}
                 slug={slug}
               />
-              
+
               {/* Pagination Controls */}
               {totalPages > 1 && !isFetchingProducts && (
                 <div className="flex justify-center items-center gap-2 mt-12 mb-4">
@@ -302,17 +300,16 @@ export default function StorefrontUI({ slug }: StorefrontUIProps) {
                   >
                     Previous
                   </button>
-                  
+
                   <div className="flex gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
                     {Array.from({ length: totalPages }).map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`w-9 h-9 text-sm flex-shrink-0 flex items-center justify-center rounded transition ${
-                          currentPage === i + 1 
-                            ? 'bg-gray-900 text-white font-medium' 
+                        className={`w-9 h-9 text-sm flex-shrink-0 flex items-center justify-center rounded transition ${currentPage === i + 1
+                            ? 'bg-gray-900 text-white font-medium'
                             : 'hover:bg-gray-100 text-gray-700'
-                        }`}
+                          }`}
                       >
                         {i + 1}
                       </button>

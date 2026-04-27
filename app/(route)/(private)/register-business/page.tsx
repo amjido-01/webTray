@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import * as yup from "yup";
 import {
   ArrowLeft,
@@ -54,11 +54,11 @@ const step1Schema = yup.object().shape({
     .string()
     .min(10, "Description must be at least 10 characters")
     .required("Description is required"),
-  category: yup.object().shape({
-    main: yup
-      .array()
-      .of(yup.string())
-  }),
+  // category: yup.object().shape({
+  //   main: yup
+  //     .array()
+  //     .of(yup.string())
+  // }),
   address: yup
     .string()
     .min(5, "Please enter a valid address")
@@ -126,9 +126,9 @@ type FormData = {
   businessName: string;
   businessType: string;
   description: string;
-  category: {
-    main: string[];
-  };
+  // category: {
+  //   main: string[];
+  // };
   address: string;
   contactInfo: {
     phone: string;
@@ -173,15 +173,16 @@ export default function WebTrayOnboarding() {
   }, [user, router]);
   const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  
 
   const [formData, setFormData] = useState<FormData>({
     // Step 1 data
     businessName: "",
     businessType: "",
     description: "",
-    category: {
-      main: [],
-    },
+    // category: {
+    //   main: [],
+    // },
     address: "",
     contactInfo: {
       phone: "",
@@ -205,6 +206,33 @@ export default function WebTrayOnboarding() {
       thirdParty: [],
     },
   });
+
+  // Step completion logic
+  const isStep1Complete = useMemo(() => {
+    try {
+      // const hasCategory = formData.category.main.length > 0 || customBusinessCategory.trim().length > 0;
+      // if (!hasCategory) return false;
+      return step1Schema.isValidSync(formData);
+    } catch (e) {
+      return false;
+    }
+  }, [formData]); // removed customBusinessCategory as dependency
+
+  const isStep2Complete = useMemo(() => {
+    try {
+      return step2Schema.isValidSync(formData);
+    } catch (e) {
+      return false;
+    }
+  }, [formData]);
+
+  const isStep3Complete = useMemo(() => {
+    try {
+      return step3Schema.isValidSync(formData);
+    } catch (e) {
+      return false;
+    }
+  }, [formData]);
 
   // Validate individual fields on blur/change
   const validateField = async (
@@ -282,13 +310,13 @@ export default function WebTrayOnboarding() {
           .matches(/^(0|(\+234))\d{10}$/, "Please enter a valid 11-digit number")
           .required("WhatsApp number is required")
           .validate(value as string);
-      } else if (fieldPath === "category.main") {
-        await yup
-          .array()
-          .of(yup.string())
-          .optional()
-          .min(1, "Please select at least one category")
-          .validate(value as string[]);
+      // } else if (fieldPath === "category.main") {
+      //   await yup
+      //     .array()
+      //     .of(yup.string())
+      //     .optional()
+      //     .min(1, "Please select at least one category")
+      //     .validate(value as string[]);
       } else if (fieldPath === "paymentMethods") {
         const paymentMethods = value as {
           paystack: boolean;
@@ -331,11 +359,11 @@ export default function WebTrayOnboarding() {
   // Check if all required fields are filled for final submission
   const validateAllFields = async () => {
     try {
-      const hasCategory = formData.category.main.length > 0 || customBusinessCategory.trim().length > 0;
-      if (!hasCategory) {
-        setFieldErrors((prev) => ({ ...prev, "category.main": "Please select at least one category or enter a custom one" }));
-        return false;
-      }
+      // const hasCategory = formData.category.main.length > 0 || customBusinessCategory.trim().length > 0;
+      // if (!hasCategory) {
+      //   setFieldErrors((prev) => ({ ...prev, "category.main": "Please select at least one category or enter a custom one" }));
+      //   return false;
+      // }
 
       await fullFormSchema.validate(formData, { abortEarly: false });
       return true;
@@ -357,7 +385,7 @@ export default function WebTrayOnboarding() {
           "address",
           "contactInfo.phone",
           "contactInfo.email",
-          "category.main",
+          // "category.main",
           "storeName",
           "storeCategory",
           "currency",
@@ -371,21 +399,21 @@ export default function WebTrayOnboarding() {
     }
   };
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    let newCategories: string[];
-    if (checked) {
-      newCategories = [...formData.category.main, category];
-    } else {
-      newCategories = formData.category.main.filter((c) => c !== category);
-    }
-    setFormData((prev) => ({
-      ...prev,
-      category: { main: newCategories },
-    }));
-    // Validate categories
-    setTouchedFields((prev) => new Set(prev).add("category.main"));
-    validateField("category.main", newCategories);
-  };
+  // const handleCategoryChange = (category: string, checked: boolean) => {
+  //   let newCategories: string[];
+  //   if (checked) {
+  //     newCategories = [...formData.category.main, category];
+  //   } else {
+  //     newCategories = formData.category.main.filter((c) => c !== category);
+  //   }
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     category: { main: newCategories },
+  //   }));
+  //   // Validate categories
+  //   setTouchedFields((prev) => new Set(prev).add("category.main"));
+  //   validateField("category.main", newCategories);
+  // };
 
   const handlePaymentMethodChange = (
     method: keyof typeof formData.paymentMethods,
@@ -504,10 +532,11 @@ export default function WebTrayOnboarding() {
         businessType: formData.businessType,
         description: formData.description,
         category: {
-          main: [
-            ...formData.category.main,
-            ...(customBusinessCategory.trim() ? [customBusinessCategory.trim()] : []),
-          ].join(", "),
+          main: "",
+          // [
+          //   ...formData.category.main,
+          //   ...(customBusinessCategory.trim() ? [customBusinessCategory.trim()] : []),
+          // ].join(", "),
         },
         address: formData.address,
         contactInfo: {
@@ -643,14 +672,12 @@ export default function WebTrayOnboarding() {
             <div className="flex items-center">
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                  currentStep > 1
-                    ? "bg-blue-600"
-                    : currentStep === 1
+                  isStep1Complete || currentStep === 1
                     ? "bg-blue-600"
                     : "bg-gray-200"
                 }`}
               >
-                {currentStep > 1 ? (
+                {isStep1Complete ? (
                   <Check className="h-6 w-6 text-white" />
                 ) : (
                   <Package
@@ -665,14 +692,12 @@ export default function WebTrayOnboarding() {
             <div className="flex items-center">
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                  currentStep > 2
-                    ? "bg-blue-600"
-                    : currentStep === 2
+                  isStep2Complete || currentStep === 2
                     ? "bg-blue-600"
                     : "border-[0.09rem]"
                 }`}
               >
-                {currentStep > 2 ? (
+                {isStep2Complete ? (
                   <Check className="h-6 w-6 text-white" />
                 ) : (
                   <ShoppingCart
@@ -687,14 +712,20 @@ export default function WebTrayOnboarding() {
             <div className="flex items-center">
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                  currentStep === 3 ? "bg-blue-600" : "border-[0.09rem]"
+                  isStep3Complete || currentStep === 3
+                    ? "bg-blue-600"
+                    : "border-[0.09rem]"
                 }`}
               >
-                <SettingsIcon
-                  className={`h-6 w-6 ${
-                    currentStep === 3 ? "text-white" : "text-[#DADADA]"
-                  }`}
-                />
+                {isStep3Complete ? (
+                  <Check className="h-6 w-6 text-white" />
+                ) : (
+                  <SettingsIcon
+                    className={`h-6 w-6 ${
+                      currentStep === 3 ? "text-white" : "text-[#DADADA]"
+                    }`}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -853,7 +884,7 @@ export default function WebTrayOnboarding() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* <div className="space-y-4">
                   <Label className="text-base font-medium">
                     Business Categories*
                   </Label>
@@ -948,7 +979,7 @@ export default function WebTrayOnboarding() {
                     </div>
                   </div>
                   {renderFieldError("category.main")}
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           )}
