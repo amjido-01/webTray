@@ -12,6 +12,13 @@ const publicRoutes = ["/about", "/contact", "/pricing", "/features", "/"];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  const userAgent = req.headers.get("user-agent") || "";
+
+  // 🤖 Allow Social Media Crawlers to bypass everything to read OG tags
+  const isBot = /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|googlebot/i.test(userAgent);
+  if (isBot) {
+    return NextResponse.next();
+  }
 
   const isProtectedRoute = protectedPatterns.some(
     (pattern) => path === pattern || path.startsWith(`${pattern}/`)
