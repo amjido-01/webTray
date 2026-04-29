@@ -35,6 +35,51 @@ export interface PaystackVerifyResponse {
 }
 
 /**
+ * Fetch store details by slug (Server-side)
+ */
+export const getStoreBySlug = async (slug: string) => {
+  try {
+    const { data } = await publicApi.get<ApiResponse<any>>(`/storefront/${slug}`);
+    if (data?.responseSuccessful) {
+      return data.responseBody.store;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching store by slug:", error);
+    return null;
+  }
+};
+
+/**
+ * Fetch all products for a store (Server-side)
+ */
+export const getStoreProducts = async (slug: string) => {
+  try {
+    const { data } = await publicApi.get<ApiResponse<any>>(`/storefront/products/${slug}?limit=1000`);
+    if (data?.responseSuccessful) {
+      return data.responseBody.products || [];
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching store products:", error);
+    return [];
+  }
+};
+
+/**
+ * Fetch a single product by ID (Server-side)
+ */
+export const getProductById = async (slug: string, productId: string) => {
+  try {
+    const products = await getStoreProducts(slug);
+    return products.find((p: any) => p.id.toString() === productId) || null;
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    return null;
+  }
+};
+
+/**
  * Initialize a Paystack-based order on the storefront
  */
 export const initializePaystackOrder = async (

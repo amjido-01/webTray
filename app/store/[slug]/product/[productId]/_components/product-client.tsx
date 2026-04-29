@@ -13,14 +13,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useStorefront } from "@/hooks/use-customer-store";
-import { useCartStore } from "@/store/use-cart-store"; // Add this import
+import { useCartStore } from "@/store/use-cart-store";
 import { toast } from "sonner";
 
-interface ProductDetailPageProps {
-  params: Promise<{
-    slug: string;
-    productId: string;
-  }>;
+interface ProductClientProps {
+  slug: string;
+  productId: string;
 }
 
 // Product Detail Loading Skeleton
@@ -129,12 +127,8 @@ const ProductDetailSkeleton = () => {
   );
 };
 
-export default function ProductDetailPage({ params }: ProductDetailPageProps) {
+export const ProductClient = ({ slug, productId }: ProductClientProps) => {
   const router = useRouter();
-
-  // Unwrap params using React.use()
-  const { slug, productId } = use(params);
-
   const { allProducts, isFetchingAllProducts, categories } = useStorefront(slug);
   const addToCart = useCartStore((state) => state.addToCart);
   const [quantity, setQuantity] = useState(1);
@@ -422,7 +416,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <h2 className="text-lg font-bold mb-3">Product Details</h2>
           <p className="text-sm text-gray-700 leading-relaxed">
             {product.description ||
-              "High-quality premium organic green tea leaves, carefully harvested from the lush hills of Japan, known for their vibrant color and rich flavor. These leaves are packed with antioxidants and provide a refreshing, invigorating taste that delights the senses."}
+              "High-quality premium organic green tea leaves, carefully harvested from the lush hills of Japan, known for their vibrant color and rich flavor."}
           </p>
         </div>
 
@@ -501,4 +495,4 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       </div>
     </div>
   );
-}
+};
