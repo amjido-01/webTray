@@ -65,6 +65,14 @@ export function NavUser({
   }
 };
 
+const handleSubscriptionClick = () => {
+  // Close the dropdown if it's open
+  // Since we don't have the state here, we'll rely on the natural behavior
+  // or you can pass a close handler if needed.
+  router.push('/dashboard/subscription');
+};
+
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -113,9 +121,9 @@ export function NavUser({
                 <IconUserCircle />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSubscriptionClick}>
                 <IconCreditCard />
-                Billing
+                Subscription
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconNotification />

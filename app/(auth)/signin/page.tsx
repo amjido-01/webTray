@@ -149,7 +149,15 @@ export default function LoginPage() {
                     {errors.password.message}
                   </p>
                 )}
+
+
+              <div className="w-full">
+                <Link href="/forgot-password" className="text-[#365BEB] hover:text-blue-700 text-[14px] leading-[22px]">
+                  Forgot password
+                </Link>
               </div>
+              </div>
+
 
               {submitSuccess && (
                 <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">

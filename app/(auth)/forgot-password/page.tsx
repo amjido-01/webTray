@@ -75,7 +75,7 @@ export default function Component() {
         </div>
       </div>
 
-      <div className="flex-col flex items-center justify-start w-[30%] mx-auto ">
+      <div className="flex-col flex items-center justify-start w-[40%] mx-auto ">
 
         {showSuccessAlert && submitSuccess && (
           <CustomAlert
@@ -102,7 +102,7 @@ export default function Component() {
             secure link to reset it, no stress.
           </p>
         </div>
-        
+
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 w-full ">
           <div>
@@ -148,7 +148,7 @@ export default function Component() {
           <div className="text-center">
             <p className="text-gray-600">
               {"Remember your password?"}
-              <button className="text-blue-600 hover:text-blue-800 font-medium">
+              <button className="text-blue-600 ml-2 hover:text-blue-800 font-medium">
                 Log In
               </button>
             </p>

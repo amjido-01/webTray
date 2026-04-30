@@ -22,6 +22,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import Image from "next/image"
 import Link from "next/link"
@@ -68,27 +69,30 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuthStore()
+  const { isMobile } = useSidebar()
   return (
     <Sidebar className="" collapsible="offcanvas" {...props}>
-      <SidebarHeader className="my-[30px]">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-               <Link href="#" className="flex items-center z-[60]">
-              <Image src="/webtraylogo.png" width={140} height={40} alt="logo" />
-            </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
+      {!isMobile && (
+        <SidebarHeader className="my-[30px]">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="data-[slot=sidebar-menu-button]:!p-1.5"
+              >
+                <Link href="#" className="flex items-center z-[60]">
+                  <Image src="/webtraylogo.png" width={140} height={40} alt="logo" />
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+      )}
+      <SidebarContent className={isMobile ? "flex-none" : ""}>
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
-       {user && <NavUser user={user} />}
+      <SidebarFooter className={isMobile ? "mt-10" : ""}>
+        {user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   )

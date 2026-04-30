@@ -2,6 +2,34 @@ import axios from "axios";
 import { BASE_URL } from "@/constants/api";
 import Cookies from "js-cookie";
 
+const AUTH_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/verify",
+  "/auth/forgot",
+  "/auth/reset",
+  "/auth/refresh",
+];
+
+const isAuthRequest = (url?: string) => {
+  if (!url) return false;
+  return AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+};
+
+const shouldRedirectToSignin = () => {
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  // Don't redirect if we are already on auth pages or a storefront
+  const isAuthPage =
+    path === "/signin" ||
+    path === "/signup" ||
+    path.startsWith("/forgot-password") ||
+    path.startsWith("/reset-password") ||
+    path.startsWith("/otp-verification");
+  const isStorePage = path.startsWith("/store/");
+  return !isAuthPage && !isStorePage;
+};
+
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
@@ -68,8 +96,8 @@ const handleRefresh = async (refreshToken: string): Promise<string> => {
     
     Cookies.remove("accessToken");
     Cookies.remove("refreshToken");
-    
-    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/store/")) {
+
+    if (shouldRedirectToSignin()) {
       // console.log("[Auth] Redirecting to signin due to refresh failure.");
       window.location.href = "/signin";
     }
@@ -109,19 +137,24 @@ api.interceptors.response.use(
 
     // Handle 401 (Expired) or your backend's 500 (Missing)
     const isUnauthorized = error.response?.status === 401;
-    const isMissingTokenError = 
-      error.response?.status === 500 && 
-      (error.response?.data?.responseMessage?.toLowerCase().includes("no token") || 
-       error.response?.data?.message?.toLowerCase().includes("no token"));
+    const isMissingTokenError =
+      error.response?.status === 500 &&
+      (error.response?.data?.responseMessage?.toLowerCase().includes("no token") ||
+        error.response?.data?.message?.toLowerCase().includes("no token"));
 
-    if ((isUnauthorized || isMissingTokenError) && !originalRequest._retry) {
+    // Robust check: Only attempt refresh/redirect if it's NOT an auth request
+    if (
+      (isUnauthorized || isMissingTokenError) &&
+      !originalRequest._retry &&
+      !isAuthRequest(originalRequest.url)
+    ) {
       // console.log(`[Auth] Reactive refresh triggered by ${error.response?.status} error at: ${originalRequest.url}`);
       originalRequest._retry = true;
       const refreshToken = Cookies.get("refreshToken");
 
       if (!refreshToken) {
         // console.warn("[Auth] No refresh token available. Cannot refresh.");
-        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/store/")) {
+        if (shouldRedirectToSignin()) {
           window.location.href = "/signin";
         }
         return Promise.reject(error);

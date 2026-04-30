@@ -87,7 +87,6 @@ function ResetPasswordContent() {
         newPassword: data.password,
         confirmNewPassword: data.confirmPassword,
       }
-
       await resetPassword(payload)
 
       setIsSuccess(true)
