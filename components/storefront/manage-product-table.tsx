@@ -366,8 +366,9 @@ export default function ManageProductTable() {
 
   const { categories } = useCategory();
 
-  // Track which product is uploading images
+  // Track image operations
   const [uploadingImageProductId, setUploadingImageProductId] = useState<number | null>(null);
+  const [deletingImageIndex, setDeletingImageIndex] = useState<number | null>(null);
 
   // Table controls
   const [globalFilter, setGlobalFilter] = useState("");
@@ -392,8 +393,6 @@ export default function ManageProductTable() {
 
   // Image management state
   const [selectedImages, setSelectedImages] = useState<(string | File)[]>([]);
-  const [originalImages, setOriginalImages] = useState<string[]>([]);
-  const [hasImageChanges, setHasImageChanges] = useState(false);
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -407,21 +406,21 @@ export default function ManageProductTable() {
   useEffect(() => {
     if (editingProduct?.images) {
       setSelectedImages(editingProduct.images);
-      setOriginalImages(editingProduct.images);
-      setHasImageChanges(false);
     }
   }, [editingProduct]);
 
-  // Check if images have changed
+  // Keep editing product in sync with store updates
   useEffect(() => {
-    const changed =
-      selectedImages.length !== originalImages.length ||
-      selectedImages.some((img, idx) => {
-        if (img instanceof File) return true;
-        return img !== originalImages[idx];
-      });
-    setHasImageChanges(changed);
-  }, [selectedImages, originalImages]);
+    if (editingProduct && isEditSheetOpen && storeProducts) {
+      const current = storeProducts.find((p) => p.id === editingProduct.id);
+      // Only update if images actually changed on the backend
+      if (current && JSON.stringify(current.images) !== JSON.stringify(editingProduct.images)) {
+        setEditingProduct(current);
+      }
+    }
+  }, [storeProducts, isEditSheetOpen, editingProduct?.id]);
+
+
 
   // Categories map
   const categoriesMap = useMemo(() => {
@@ -474,7 +473,7 @@ export default function ManageProductTable() {
   // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !editingProduct) return;
 
     if (selectedImages.length + files.length > 3) {
       toast.error("Maximum 3 images allowed");
@@ -499,15 +498,45 @@ export default function ManageProductTable() {
     }
 
     if (validFiles.length > 0) {
-      setSelectedImages((prev) => [...prev, ...validFiles].slice(0, 3));
+      const formData = new FormData();
+      validFiles.forEach((file) => formData.append("images", file));
+
+      try {
+        await uploadProductImages({
+          productId: editingProduct.id,
+          formData,
+        });
+        toast.success("Image uploaded successfully");
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+      }
     }
 
     e.target.value = "";
   };
 
   // Remove image
-  const handleRemoveImage = (index: number) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = async (index: number) => {
+    if (!editingProduct) return;
+    const imageUrl = selectedImages[index];
+
+    if (typeof imageUrl === "string") {
+      setDeletingImageIndex(index);
+      try {
+        await deleteProductImages({
+          productId: editingProduct.id,
+          imageUrls: [imageUrl],
+        });
+        toast.success("Image removed successfully");
+      } catch (error) {
+        console.error("Failed to delete image:", error);
+      } finally {
+        setDeletingImageIndex(null);
+      }
+    } else {
+      // Local removal for files not yet uploaded
+      setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   // Get image preview URL
@@ -516,40 +545,7 @@ export default function ManageProductTable() {
     return URL.createObjectURL(img);
   };
 
-  // Save images
-  const handleSaveImages = async (productId: number) => {
-    if (!hasImageChanges) return;
 
-    try {
-      // We don't need to delete all images first because uploadProductImages handles appending/syncing
-      if (selectedImages.length > 0) {
-        const formData = new FormData();
-
-        for (const img of selectedImages) {
-          // Sending everything under 'images' (some backends handle Files and URLs in the same array)
-          formData.append("images", img);
-          
-          // Fallback: also keep imageUrls if the backend specifically looks for it
-          if (typeof img === "string") {
-            formData.append("imageUrls", img);
-          }
-        }
-
-        await uploadProductImages({ productId, formData });
-      } else {
-        // If everything was removed, we still need to clear images on the backend
-        await deleteProductImages(productId);
-      }
-
-      setOriginalImages(
-        selectedImages.filter((img) => typeof img === "string") as string[],
-      );
-      setHasImageChanges(false);
-    } catch (error) {
-      console.error("Failed to save images:", error);
-      throw error;
-    }
-  };
 
   /* COMMENTED OUT: We want for now to only allow upload from the edit sheet
   const handleCardImageUpload = useCallback(
@@ -725,7 +721,7 @@ export default function ManageProductTable() {
     if (!editingProduct || !storeId) return;
 
     try {
-      // Update product details first
+      // Update product details
       await updateProduct({
         id: editingProduct.id,
         name: formData.name,
@@ -734,15 +730,9 @@ export default function ManageProductTable() {
         description: formData.description,
       });
 
-      // Then save images if changed
-      if (hasImageChanges) {
-        await handleSaveImages(editingProduct.id);
-      }
-
       setIsEditSheetOpen(false);
       setEditingProduct(null);
       setSelectedImages([]);
-      setOriginalImages([]);
     } catch (error) {
       console.error("Failed to update product:", error);
     }
@@ -1013,15 +1003,22 @@ export default function ManageProductTable() {
                           src={previewUrl}
                           alt={`Product ${index + 1}`}
                           fill
-                          className="object-cover"
+                          className={`object-cover transition-opacity ${deletingImageIndex === index ? "opacity-40" : "opacity-100"}`}
                         />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                        {deletingImageIndex === index ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                            <Loader2 className="w-4 h-4 text-white animate-spin" />
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            disabled={deletingImageIndex !== null || isUploadingImages}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
                         <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
                           {index === 0 ? "Main" : index + 1}
                         </div>
@@ -1066,12 +1063,6 @@ export default function ManageProductTable() {
                 <div className="text-[11px] text-muted-foreground bg-gray-50 px-2 py-1.5 rounded">
                   JPG, PNG, WebP • Max 5MB • First image is main
                 </div>
-
-                {hasImageChanges && (
-                  <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-1.5 rounded">
-                    Images have been modified. Click Save to apply changes.
-                  </div>
-                )}
               </div>
 
               {/* Product Name */}

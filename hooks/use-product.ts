@@ -227,23 +227,14 @@ export const useProduct = () => {
       throw new Error(data?.responseMessage || "Failed to upload images");
     },
     onSuccess: (updatedProduct) => {
-      // Guard: if the backend didn't return a product, just invalidate to refetch
-      if (!updatedProduct) {
-        if (storeId) {
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
-          });
-        }
-        toast.success("Images uploaded successfully");
-        return;
+      if (storeId) {
+        invalidateStoreQueries(storeId);
       }
 
-      if (storeId) {
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            Array.isArray(query.queryKey) && query.queryKey.includes(storeId),
-        });
+      // Guard: if the backend didn't return a product, just return
+      if (!updatedProduct) {
+        toast.success("Images uploaded successfully");
+        return;
       }
 
       queryClient.setQueryData<Product[]>(
@@ -270,28 +261,48 @@ export const useProduct = () => {
 
   // ✅ NEW: Delete Product Images
   const deleteProductImagesMutation = useMutation({
-    mutationFn: async (productId: number): Promise<void> => {
+    mutationFn: async ({
+      productId,
+      imageUrls,
+    }: {
+      productId: number;
+      imageUrls?: string[];
+    }): Promise<void> => {
       const { data } = await api.delete<ApiResponse<object>>(
         `/inventory/product/image/${productId}`,
-        { params: { storeId } },
+        {
+          params: { storeId },
+          data: imageUrls ? { imageUrlsToDelete: imageUrls } : undefined,
+        },
       );
 
       if (!data?.responseSuccessful) {
         throw new Error(data?.responseMessage || "Failed to delete images");
       }
+      console.log(data?.responseBody, "delete");
     },
-    onSuccess: (_, productId) => {
-      // Update the product in cache to have empty images
+    onSuccess: (_, { productId, imageUrls }) => {
+      // Invalidate all queries related to this store to ensure sync across different hooks
       if (storeId) {
+        invalidateStoreQueries(storeId);
+
+        // Also update the specific product keys for safety
         queryClient.setQueryData<Product[]>(
           productKeys.products(storeId),
           (old) => {
             if (!old) return old;
-            return old.map((product) =>
-              product.id === productId
-                ? { ...product, images: [] }
-                : product
-            );
+            return old.map((product) => {
+              if (product.id === productId) {
+                if (!imageUrls) return { ...product, images: [] };
+                return {
+                  ...product,
+                  images: product.images?.filter(
+                    (img) => !imageUrls.includes(img),
+                  ),
+                };
+              }
+              return product;
+            });
           },
         );
 
@@ -299,8 +310,12 @@ export const useProduct = () => {
           productKeys.product(productId, storeId),
           (old) => {
             if (!old) return old;
-            return { ...old, images: [] };
-          }
+            if (!imageUrls) return { ...old, images: [] };
+            return {
+              ...old,
+              images: old.images?.filter((img) => !imageUrls.includes(img)),
+            };
+          },
         );
       }
     },
