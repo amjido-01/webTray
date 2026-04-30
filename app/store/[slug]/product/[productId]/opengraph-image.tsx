@@ -80,7 +80,7 @@ export default async function Image({
               border: "1px solid #f3f4f6",
             }}
           >
-            {product.images?.[0] ? (
+            {product.images?.[0] && !product.images[0].toLowerCase().endsWith(".svg") ? (
               <img
                 src={product.images[0]}
                 style={{

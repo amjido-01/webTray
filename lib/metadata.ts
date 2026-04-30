@@ -22,6 +22,7 @@ export function constructMetadata({
       title,
       description,
       url,
+      type: url?.includes("/product/") ? "article" : "website",
       ...(image && {
         images: [
           {

@@ -1,4 +1,5 @@
 import { publicApi } from "../axios";
+import { BASE_URL } from "@/constants/api";
 import { ApiResponse, Store, Order } from "@/types";
 
 export interface CreateStorefrontOrderPayload {
@@ -39,7 +40,10 @@ export interface PaystackVerifyResponse {
  */
 export const getStoreBySlug = async (slug: string) => {
   try {
-    const { data } = await publicApi.get<ApiResponse<any>>(`/storefront/${slug}`);
+    const res = await fetch(`${BASE_URL}/storefront/${slug}`, {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
+    const data = await res.json();
     if (data?.responseSuccessful) {
       return data.responseBody.store;
     }
@@ -55,7 +59,10 @@ export const getStoreBySlug = async (slug: string) => {
  */
 export const getStoreProducts = async (slug: string) => {
   try {
-    const { data } = await publicApi.get<ApiResponse<any>>(`/storefront/products/${slug}?limit=1000`);
+    const res = await fetch(`${BASE_URL}/storefront/products/${slug}?limit=1000`, {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
+    const data = await res.json();
     if (data?.responseSuccessful) {
       return data.responseBody.products || [];
     }

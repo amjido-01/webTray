@@ -86,7 +86,7 @@ export default async function Image({
               fontWeight: "bold",
             }}
           >
-            {store?.logoUrl ? (
+            {store?.logoUrl && !store.logoUrl.toLowerCase().endsWith(".svg") ? (
               <img
                 src={store.logoUrl}
                 style={{
