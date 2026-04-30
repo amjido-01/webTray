@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Webtray | Smart Inventory Management Software",
     description: "All-in-one SME commerce platform. Everything your business needs to thrive, in one powerful place.",
-    url: "https://webtray.ng",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://webtray.ng",
     siteName: "Webtray",
     locale: "en_US",
     type: "website",

@@ -25,9 +25,10 @@ export async function generateMetadata({
   }
 
   return constructMetadata({
-    title: `${product.name} | ${store?.name || "Webtray Store"}`,
-    description: product.description || `Buy ${product.name} at ${store?.name || "our store"}.`,
-    image: `/store/${slug}/product/${productId}/opengraph-image`,
+    title: `${product.name} | ${store?.storeName || "Webtray Store"}`,
+    description: product.description || `Buy ${product.name} at ${store?.storeName || "our store"}.`,
+    image: null, // Let Next.js auto-detect opengraph-image.tsx
+    url: `${process.env.NEXT_PUBLIC_APP_URL || "https://webtray.ng"}/store/${slug}/product/${productId}`,
   });
 }
 

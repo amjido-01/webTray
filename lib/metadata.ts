@@ -6,12 +6,14 @@ export function constructMetadata({
   image = "/api/og", // Default OG image fallback
   icons = "/favicon.ico",
   noIndex = false,
+  url,
 }: {
   title?: string;
   description?: string;
   image?: string | null;
   icons?: string;
   noIndex?: boolean;
+  url?: string;
 } = {}): Metadata {
   return {
     title,
@@ -19,19 +21,22 @@ export function constructMetadata({
     openGraph: {
       title,
       description,
-      images: image
-        ? [
-            {
-              url: image,
-            },
-          ]
-        : [],
+      url,
+      ...(image && {
+        images: [
+          {
+            url: image,
+          },
+        ],
+      }),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : [],
+      ...(image && {
+        images: [image],
+      }),
       creator: "@webtray",
     },
     icons,
