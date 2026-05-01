@@ -50,6 +50,7 @@ export const useSubscription = () => {
         "/subscription/pricing-plans"
       );
       if (data?.responseSuccessful) {
+        console.log(data.responseBody, "this")
         return data.responseBody;
       }
       throw new Error(data?.responseMessage || "Failed to fetch pricing plans");

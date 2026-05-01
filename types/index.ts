@@ -336,6 +336,7 @@ export interface PricingPlan {
   id: number;
   name: string;
   price: string;
+  slashedPrice?: string;
   duration: string;
   description: string;
   features: string[];
