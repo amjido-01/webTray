@@ -7,7 +7,8 @@ import {
   IconFolder,
   IconUsers,
   IconLayoutDashboard,
-  IconPackage
+  IconPackage,
+  IconWallet,
 } from "@tabler/icons-react"
 import { useAuthStore } from "@/store/useAuthStore"
 // import { NavDocuments } from "@/components/nav-documents"
@@ -53,6 +54,11 @@ const data = {
       title: "Customer",
       url: "/dashboard/customer",
       icon: IconUsers,
+    },
+    {
+      title: "Wallet",
+      url: "/dashboard/wallet",
+      icon: IconWallet,
     },
     // {
     //   title: "Analytics",
