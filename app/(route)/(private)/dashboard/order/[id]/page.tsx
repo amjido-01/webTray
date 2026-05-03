@@ -1,7 +1,5 @@
-import React from 'react'
+import OrderDetailsClient from "./_components/order-details-client";
 
 export default function Page() {
-  return (
-    <div>Coming soon!</div>
-  )
+  return <OrderDetailsClient />;
 }

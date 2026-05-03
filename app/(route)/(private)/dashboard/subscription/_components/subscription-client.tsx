@@ -26,7 +26,11 @@ export function SubscriptionClient() {
     subscribe,
     isSubscribing,
     useVerifySubscription,
-    refetchSubscription
+    refetchSubscription,
+    history,
+    isFetchingHistory,
+    cancelSubscription,
+    isCancelling,
   } = useSubscription();
 
   // Verification Logic
@@ -59,9 +63,14 @@ export function SubscriptionClient() {
     }
   };
 
-  const handleCancelPlan = () => {
-    setIsCancelModalOpen(false);
-    setIsSuccessModalOpen(true);
+  const handleCancelPlan = async () => {
+    try {
+      await cancelSubscription();
+      setIsCancelModalOpen(false);
+      setIsSuccessModalOpen(true);
+    } catch (error) {
+      // Error handled by hook toast
+    }
   };
 
   const tiers = ["STARTER", "GROWTH", "BUSINESS"] as const;
@@ -137,7 +146,7 @@ export function SubscriptionClient() {
   const currentPlan = sortedPlans.find(p => p.tier === subscription?.tier);
 
   return (
-    <div className="flex flex-col gap-8 p-6 md:p-6 max-w-6xl w-full relative">
+    <div className="flex flex-col gap-8 p-2 md:p-2 max-w-6xl w-full relative">
       {isVerifying && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
@@ -179,7 +188,8 @@ export function SubscriptionClient() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="flex flex-col gap-4 mt-4 rounded-[24px] p-4 bg-[#FFFFFF]">
+        <div className="flex flex-col gap-2 mt-4">
         <h2 className="text-[16px] leading-[24px] font-bold text-[#4D4D4D]">Your Plan</h2>
         <p className="text-[#4D4D4D] text-[16px] font-regular leading-[100%] ">Choose the plan that fits your workflow.</p>
       </div>
@@ -263,23 +273,24 @@ export function SubscriptionClient() {
           );
         })}
       </div>
+      </div>
 
       {/* Payment Section */}
-      <div className="flex flex-col gap-4 mt-4">
-        <h2 className="text-lg font-bold text-gray-900">Payment</h2>
+      <div className="flex flex-col gap-4 rounded-[24px] p-4 bg-[#FFFFFF]">
+        <h2 className="text-[16px] font-bold text-[#4D4D4D]">Payment</h2>
         <div className="flex items-center gap-3 text-gray-600 p-1">
           <div className="flex -space-x-2">
              <div className="h-6 w-6 rounded-full bg-blue-600" />
              <div className="h-6 w-6 rounded-full bg-blue-400/50" />
           </div>
-          <span className="font-medium text-[15px] text-gray-700">Mastercard • • • • 1555</span>
+          <span className="font-regular text-[16px] text-[#4D4D4D]">Mastercard • • • • 1555</span>
         </div>
       </div>
 
       <hr className="border-gray-100" />
 
       {/* Invoices Section */}
-      <div className="flex flex-col gap-6 mt-4">
+      <div className="flex flex-col gap-6 rounded-[24px] p-4 bg-[#FFFFFF]">
         <h2 className="text-lg font-bold text-gray-900">Invoices</h2>
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left min-w-[600px] border-collapse">
@@ -292,26 +303,45 @@ export function SubscriptionClient() {
               </tr>
             </thead>
             <tbody className="text-gray-800 text-[15px]">
-              <tr className="border-b border-gray-50 last:border-0">
-                <td className="py-5">Apr 3, 2026</td>
-                <td className="py-5">NGN 5,000.00</td>
-                <td className="py-5">Paid</td>
-                <td className="py-5 text-right">
-                  <button className="text-gray-600 hover:text-blue-600 font-semibold underline decoration-gray-300 underline-offset-4 hover:decoration-blue-400 transition-all">
-                    View
-                  </button>
-                </td>
-              </tr>
-              <tr className="border-b border-gray-50 last:border-0">
-                <td className="py-5">Apr 3, 2026</td>
-                <td className="py-5">NGN 5,000.00</td>
-                <td className="py-5">Paid</td>
-                <td className="py-5 text-right">
-                  <button className="text-gray-600 hover:text-blue-600 font-semibold underline decoration-gray-300 underline-offset-4 hover:decoration-blue-400 transition-all">
-                    View
-                  </button>
-                </td>
-              </tr>
+              {isFetchingHistory ? (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-600" />
+                  </td>
+                </tr>
+              ) : history && history.length > 0 ? (
+                history.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-50 last:border-0">
+                    <td className="py-5">
+                      {new Date(item.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="py-5">NGN {parseInt(item.amount).toLocaleString()}</td>
+                    <td className="py-5">
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium capitalize",
+                        item.status === "SUCCESS" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                      )}>
+                        {item.status.toLowerCase()}
+                      </span>
+                    </td>
+                    <td className="py-5 text-right">
+                      <button className="text-gray-600 hover:text-blue-600 font-semibold underline decoration-gray-300 underline-offset-4 hover:decoration-blue-400 transition-all">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center text-gray-500">
+                    No invoices found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -320,21 +350,22 @@ export function SubscriptionClient() {
       <hr className="border-gray-100" />
 
       {/* Cancellation Section */}
-      <div className="flex flex-row justify-between items-center bg-transparent mt-4">
+      {/* <div className="flex flex-row justify-between items-center rounded-[24px] p-4 bg-[#FFFFFF]">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-bold text-gray-900">Cancellation</h2>
           <p className="text-[15px] text-gray-500 font-medium">Cancel plan</p>
         </div>
         <button 
           onClick={() => setIsCancelModalOpen(true)}
-          className="bg-[#eb4b4b] text-white px-8 py-3 text-sm rounded-full font-bold hover:bg-[#d94444] transition-all shadow-sm hover:shadow-md"
+          disabled={isCancelling || !subscription || subscription.status === "CANCELLED"}
+          className="bg-[#eb4b4b] text-white px-8 py-3 text-sm rounded-full font-bold hover:bg-[#d94444] transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Cancel Plan
+          {isCancelling ? <Loader2 className="w-4 h-4 animate-spin" /> : "Cancel Plan"}
         </button>
-      </div>
+      </div> */}
 
       {/* Cancel Confirmation Modal */}
-      <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+      {/* <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-8 md:p-10 border-0 shadow-xl rounded-[24px] gap-0" showCloseButton={false}>
           <div className="flex flex-col items-center justify-center w-full text-center">
             <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center mb-6">
@@ -356,14 +387,16 @@ export function SubscriptionClient() {
               </button>
               <button 
                 onClick={handleCancelPlan}
-                className="w-full py-3 rounded-full bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all shadow-md"
+                disabled={isCancelling}
+                className="w-full py-3 rounded-full bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all shadow-md flex items-center justify-center gap-2"
               >
+                {isCancelling && <Loader2 className="w-4 h-4 animate-spin" />}
                 Cancel Plan
               </button>
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Success Modal */}
       <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>

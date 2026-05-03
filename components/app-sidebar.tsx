@@ -54,16 +54,16 @@ const data = {
       url: "/dashboard/customer",
       icon: IconUsers,
     },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: ChartSpline,
-    },
-    {
-      title: "Subscription",
-      url: "/dashboard/subscription",
-      icon: ReceiptText,
-    },
+    // {
+    //   title: "Analytics",
+    //   url: "/dashboard/analytics",
+    //   icon: ChartSpline,
+    // },
+    // {
+    //   title: "Subscription",
+    //   url: "/dashboard/subscription",
+    //   icon: ReceiptText,
+    // },
   ],
 }
 

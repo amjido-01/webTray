@@ -2,6 +2,7 @@
 "use client"
 import { ColumnDef } from "@tanstack/react-table"
 import { Order } from "@/types";
+import Link from "next/link";
 import { capitalizeFirstLetter } from "../capitalize";
 import { getOrderStatus, getStatusColor, getTypeColor } from "./get-status";
 import { formatCurrency } from "../format-currency";
@@ -92,6 +93,21 @@ export const createColumns = (): ColumnDef<Order>[] => [
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
             {status}
           </span>
+        </div>
+      );
+    },
+  },
+  {
+    header: "Action",
+    cell: ({ row }) => {
+      const order = row.original;
+      return (
+        <div className="py-5">
+          <Link href={`/dashboard/order/${order.id}`}>
+            <button className="text-[#A4A4A4] hover:text-[#365BEB] font-medium text-sm">
+              View
+            </button>
+          </Link>
         </div>
       );
     },

@@ -368,3 +368,25 @@ export interface SubscribeResponse {
 export interface VerifySubscriptionResponse {
   status: "SUCCESS" | "FAILED" | "PENDING";
 }
+
+export interface PaymentHistory {
+  id: number;
+  businessId: number;
+  amount: string;
+  status: "SUCCESS" | "FAILED" | "PENDING";
+  reference: string;
+  tier: "STARTER" | "GROWTH" | "BUSINESS";
+  createdAt: string;
+  updatedAt: string;
+  paymentDetails?: {
+    channel: string;
+    currency: string;
+    gateway_response: string;
+    paidAt: string;
+  };
+}
+
+export interface CancelSubscriptionResponse {
+  status: "CANCELLED";
+  message: string;
+}

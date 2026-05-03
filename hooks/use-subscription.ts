@@ -8,6 +8,8 @@ import {
   SubscribePayload,
   SubscribeResponse,
   VerifySubscriptionResponse,
+  PaymentHistory,
+  CancelSubscriptionResponse,
 } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -17,6 +19,7 @@ export const subscriptionKeys = {
   info: (businessId?: number) => [...subscriptionKeys.all, "info", businessId] as const,
   plans: () => [...subscriptionKeys.all, "plans"] as const,
   verify: (reference: string) => [...subscriptionKeys.all, "verify", reference] as const,
+  history: (businessId?: number) => [...subscriptionKeys.all, "history", businessId] as const,
 };
 
 export const useSubscription = () => {
@@ -57,6 +60,24 @@ export const useSubscription = () => {
     },
   });
 
+  // Fetch payment history
+  const historyQuery = useQuery({
+    queryKey: subscriptionKeys.history(businessId),
+    queryFn: async (): Promise<PaymentHistory[]> => {
+      const { data } = await api.get<ApiResponse<PaymentHistory[]>>(
+        "/subscription/payment-history",
+        {
+          params: { businessId },
+        }
+      );
+      if (data?.responseSuccessful) {
+        return data.responseBody;
+      }
+      throw new Error(data?.responseMessage || "Failed to fetch payment history");
+    },
+    enabled: !!businessId,
+  });
+
   // Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: async (payload: Omit<SubscribePayload, "businessId">): Promise<SubscribeResponse> => {
@@ -77,6 +98,28 @@ export const useSubscription = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || "Subscription failed");
+    },
+  });
+
+  // Cancel mutation
+  const cancelMutation = useMutation({
+    mutationFn: async (): Promise<CancelSubscriptionResponse> => {
+      if (!businessId) throw new Error("Business ID is missing");
+      const { data } = await api.post<ApiResponse<CancelSubscriptionResponse>>(
+        "/subscription/cancel",
+        { businessId }
+      );
+      if (data?.responseSuccessful) {
+        return data.responseBody;
+      }
+      throw new Error(data?.responseMessage || "Failed to cancel subscription");
+    },
+    onSuccess: () => {
+      toast.success("Subscription cancelled successfully");
+      queryClient.invalidateQueries({ queryKey: subscriptionKeys.info(businessId) });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to cancel subscription");
     },
   });
 
@@ -119,7 +162,18 @@ export const useSubscription = () => {
     isSubscribing: subscribeMutation.isPending,
     subscribeError: subscribeMutation.error,
 
+    // Cancel
+    cancelSubscription: cancelMutation.mutateAsync,
+    isCancelling: cancelMutation.isPending,
+    cancelError: cancelMutation.error,
+
     // Verify (Helper hook exposed)
     useVerifySubscription,
+
+    // History
+    history: historyQuery.data,
+    isFetchingHistory: historyQuery.isLoading,
+    historyError: historyQuery.error,
+    refetchHistory: historyQuery.refetch,
   };
 };

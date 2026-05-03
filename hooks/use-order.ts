@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import api from "@/lib/axios";
-import { ApiResponse, Order, OrderSummary } from "@/types";
+import { ApiResponse, Order, OrderSummary, Customer, Product } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export interface OrderItem {
@@ -52,6 +52,13 @@ export interface OrderResponse {
 
 export interface OrdersResponse {
   orders: ApiOrder[];
+}
+
+export interface OrderDetail {
+  order: Order;
+  customer: Customer;
+  products: Product[];
+  orderItems: ApiOrderItem[];
 }
 
 // ✅ Updated orderKeys to always include storeId
@@ -123,8 +130,8 @@ export const useOrder = () => {
   const useOrderQuery = (id: number) =>
     useQuery({
       queryKey: orderKeys.order(id, storeId),
-      queryFn: async (): Promise<Order> => {
-        const { data } = await api.get<ApiResponse<{ order: Order }>>(
+      queryFn: async (): Promise<OrderDetail> => {
+        const { data } = await api.get<ApiResponse<OrderDetail>>(
           `/inventory/order/${id}`,
           {
             params: {
@@ -133,7 +140,8 @@ export const useOrder = () => {
           }
         );
         if (data?.responseSuccessful) {
-          return data.responseBody.order;
+          console.log(data.responseBody, "single order");
+          return data.responseBody;
         }
         throw new Error(data?.responseMessage || "Failed to fetch order");
       },
