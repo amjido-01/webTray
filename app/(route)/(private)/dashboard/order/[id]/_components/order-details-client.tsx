@@ -325,9 +325,9 @@ export default function OrderDetailsClient() {
         </div>
       </div>
 
-      <div className="mt-12 text-center text-gray-500">
-        <p className="text-sm">
-          Need help with your order? <Link href="/contact" className="text-blue-600 font-bold hover:underline">Contact Support</Link>
+      <div className="mt-12 text-center">
+        <p className="text-sm text-[#1A1A1A]">
+          Need help with your order? <Link href="/contact" className="text-[#365BEB] font-bold hover:underline">Contact Support</Link>
         </p>
       </div>
     </div>
