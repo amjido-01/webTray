@@ -30,7 +30,7 @@ export function NavMain({
           {items.map((item) => {
             const isActive = pathname === item.url || pathname.startsWith(item.url + "/")
             return (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.title} id={`nav-${item.title.toLowerCase()}`}>
                 <Link href={item.url} passHref>
                   <SidebarMenuButton
                     tooltip={item.title}
