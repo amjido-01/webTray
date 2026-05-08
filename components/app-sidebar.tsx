@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isMobile } = useSidebar()
   return (
     <Sidebar className="" collapsible="offcanvas" {...props}>
-      {!isMobile && (
+      {!isMobile ? (
         <SidebarHeader className="my-[30px]">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -92,6 +92,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+        </SidebarHeader>
+      ) : (
+        <SidebarHeader className="pt-8 pb-2 px-6">
+          <h2 className="text-xl font-bold text-[#111827]">Menu</h2>
+          <p className="text-sm text-[#808080]">Select a tool to continue</p>
         </SidebarHeader>
       )}
       <SidebarContent className={isMobile ? "flex-none" : ""}>

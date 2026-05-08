@@ -14,7 +14,7 @@ export function SiteHeader() {
   const { subscription } = useSubscription();
 
   return (
-    <header className="mt-[34px] mb-[24px] bg-[#FFFFFF] rounded-full border flex h-[69px] shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="mt-[34px] bg-[#ffffff] border mb-[24px] rounded-full flex h-[69px] shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ml-1 hidden md:flex" />
         <Separator
@@ -37,20 +37,18 @@ export function SiteHeader() {
 
         {/* Right section */}
         <div className="ml-auto flex items-center gap-8">
-          <div className="hidden md:flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
             <Link href="/dashboard/settings" aria-label="Settings">
-              <Settings className={pathname.startsWith("/dashboard/settings") ? "text-[#365BEB]" : "text-[#808080]"} />
+              <Settings className={cn("w-5 h-5 md:w-6 md:h-6", pathname.startsWith("/dashboard/settings") ? "text-[#365BEB]" : "text-[#808080]")} />
             </Link>
-            <Link href="/profile" aria-label="Profile">
-              <User className={pathname.startsWith("/profile") ? "text-[#365BEB]" : "text-[#808080]"} />
-            </Link>
-            <Link href="/notification" aria-label="Notification">
-              <Bell className={pathname.startsWith("/notification") ? "text-[#365BEB]" : "text-[#808080]"} />
+            {/* <Link href="/profile" aria-label="Profile">
+              <User className={cn("w-5 h-5 md:w-6 md:h-6", pathname.startsWith("/profile") ? "text-[#365BEB]" : "text-[#808080]")} />
+            </Link> */}
+            <Link href="/dashboard/notification" aria-label="Notification">
+              <Bell className={cn("w-5 h-5 md:w-6 md:h-6", pathname.startsWith("/dashboard/notification") ? "text-[#365BEB]" : "text-[#808080]")} />
             </Link>
           </div>
 
-          {/* Mobile Trigger on Right */}
-          <SidebarTrigger className="flex md:hidden" />
         </div>
       </div>
     </header>

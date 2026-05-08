@@ -19,6 +19,8 @@ export function SubscriptionClient() {
   
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [subscribingTier, setSubscribingTier] = useState<string | null>(null);
   const { 
     subscription, 
@@ -50,7 +52,15 @@ export function SubscriptionClient() {
     }
   }, [verifyData, refetchSubscription, router]);
 
-  const handleSubscribe = async (tier: "STARTER" | "GROWTH" | "BUSINESS") => {
+  const initiateSubscription = (plan: PricingPlan) => {
+    setSelectedPlan(plan);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const handleConfirmSubscribe = async () => {
+    if (!selectedPlan) return;
+    
+    const tier = selectedPlan.tier as "STARTER" | "GROWTH" | "BUSINESS";
     try {
       setSubscribingTier(tier);
       const callback_url = `${window.location.origin}/dashboard/subscription`;
@@ -61,6 +71,7 @@ export function SubscriptionClient() {
       }
     } catch (error: any) {
       setSubscribingTier(null);
+      setIsCheckoutModalOpen(false);
       toast.error(error.message || "Failed to initialize subscription");
     }
   };
@@ -182,7 +193,7 @@ export function SubscriptionClient() {
           </div>
           <button 
             disabled={isSubscribing}
-            onClick={() => handleSubscribe(subscription.tier as any)}
+            onClick={() => initiateSubscription(currentPlan!)}
             className="bg-gray-900 text-white px-10 py-3 rounded-full text-[14px] leading-[100%] font-regular flex items-center justify-center gap-2 min-w-[120px] hover:bg-black transition-all shadow-lg active:scale-95 disabled:opacity-70"
           >
             {isSubscribing && subscribingTier === subscription.tier ? <Loader2 className="w-4 h-4 animate-spin" /> : "Renew"}
@@ -258,7 +269,7 @@ export function SubscriptionClient() {
               <div className="mt-auto pt-8">
                 <button
                   disabled={isCurrent || isSubscribing}
-                  onClick={() => handleSubscribe(plan.tier)}
+                  onClick={() => initiateSubscription(plan)}
                   className={cn(
                     "w-full py-3 px-6 rounded-full font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2",
                     isCurrent 
@@ -418,6 +429,69 @@ export function SubscriptionClient() {
                 </DialogDescription>
               </DialogHeader>
            </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Checkout Confirmation Modal */}
+      <Dialog open={isCheckoutModalOpen} onOpenChange={setIsCheckoutModalOpen}>
+        <DialogContent className="sm:max-w-[500px] p-0 border-0 shadow-2xl rounded-[32px] overflow-hidden gap-0" showCloseButton={false}>
+          <div className="p-8 md:p-10 flex flex-col gap-8">
+            <div className="flex flex-col items-center justify-center text-center gap-4">
+              <div className="h-16 w-16 bg-blue-50 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="space-y-2">
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  Confirm Plan Change
+                </DialogTitle>
+                <DialogDescription className="text-gray-500 text-[15px]">
+                  You are about to switch to the <span className="font-bold text-gray-900">{selectedPlan?.name}</span> plan. Please review your selection below.
+                </DialogDescription>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-[24px] p-6 space-y-4">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                <span className="text-gray-500 font-medium">Selected Plan</span>
+                <span className="font-bold text-gray-900">{selectedPlan?.name}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-500 font-medium">Billing Cycle</span>
+                <span className="font-bold text-gray-900">Monthly</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-gray-500 font-medium">Total Amount</span>
+                <div className="flex flex-col items-end">
+                  <span className="text-xl font-bold text-blue-600">
+                    ₦{selectedPlan ? parseInt(selectedPlan.price).toLocaleString() : "0"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleConfirmSubscribe}
+                disabled={isSubscribing}
+                className="w-full h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-[16px] shadow-lg shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-70"
+              >
+                {isSubscribing ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : "Confirm & Proceed to Payment"}
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsCheckoutModalOpen(false)}
+                disabled={isSubscribing}
+                className="w-full h-12 rounded-full font-bold text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

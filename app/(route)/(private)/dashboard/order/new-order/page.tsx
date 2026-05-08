@@ -68,10 +68,6 @@ const orderValidationSchema = yup.object({
     .required("Cart cannot be empty"),
 
   paymentMethod: yup.string().required("Please select payment method"),
-  onlinePaymentType: yup.string().when("paymentMethod", {
-    is: "online",
-    then: (schema) => schema.required("Please select online payment type"),
-  }),
 });
 
 export default function AddOrderPage() {
@@ -281,8 +277,8 @@ export default function AddOrderPage() {
         customerName: formData.customerName,
         phone: formData.customerPhone,
         orderItems,
-        paymentMethod: formData.paymentMethod,
-        onlinePaymentType: formData.onlinePaymentType || undefined,
+        paymentMethod: formData.paymentMethod === "POS" ? "online" : "offline",
+        onlinePaymentType: formData.paymentMethod === "POS" ? "POS" : undefined,
       };
 
       // Submit order
@@ -405,7 +401,7 @@ export default function AddOrderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 md:p-6">
+    <div className="min-h-screen bg-gray-50 md:p-6 no-print">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-center justify-between p-2 md:p-4 bg-white rounded-lg">
           <div className="flex items-center gap-2">
@@ -596,9 +592,13 @@ export default function AddOrderPage() {
                       id="paymentMethod"
                       value={paymentMethod}
                       onChange={(e) => {
-                        setPaymentMethod(e.target.value);
-                        if (e.target.value !== "online")
+                        const val = e.target.value;
+                        setPaymentMethod(val);
+                        if (val === "POS") {
+                          setOnlinePaymentType("POS");
+                        } else {
                           setOnlinePaymentType("");
+                        }
                         if (errors.paymentMethod) {
                           setErrors((prev) => ({
                             ...prev,
@@ -614,9 +614,9 @@ export default function AddOrderPage() {
                       disabled={isAddingOrder}
                     >
                       <option value="">Select payment method</option>
-                      <option value="offline">Cash</option>
-                      <option value="offline">Transfer</option>
-                      <option value="online">POS</option>
+                      <option value="CASH">Cash</option>
+                      <option value="TRANSFER">Transfer</option>
+                      <option value="POS">POS</option>
                     </select>
                     {errors.paymentMethod && (
                       <p className="text-red-500 text-sm mt-1">

@@ -45,6 +45,7 @@ export default function CustomerDetailPage({
   }
 
   const customer = customers?.find((c) => c.id.toString() === id);
+  console.log(customer);
 
   if (!customer) {
     return (
@@ -62,6 +63,9 @@ export default function CustomerDetailPage({
 
     router.push(`?tab=${tab}`, { scroll: false });
   };
+
+
+  const repeatOrderRate = customer?.totalOrders > 0 ? (customer?.totalOrders / customer?.totalSpent) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,7 +226,7 @@ export default function CustomerDetailPage({
                       Address
                     </label>
                     <p className="text-gray-900 mt-1">
-                      123 Lekki Avenue Lagos, Lagos 106104
+                      {customer?.address || "No Address"}
                     </p>
                   </div>
                 </CardContent>
@@ -242,14 +246,14 @@ export default function CustomerDetailPage({
                     <label className="text-sm font-medium text-gray-700">
                       Lifetime Value
                     </label>
-                    <p className="text-gray-900 mt-1 text-lg">{`₦ ${customer?.totalSpent}`}</p>
+                    <p className="text-gray-900 mt-1 text-lg">{formatCurrency(customer?.totalSpent)}</p>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-gray-700">
                       Repeat Order Rate
                     </label>
-                    <p className="text-gray-900 mt-1 text-lg">70%</p>
+                    <p className="text-gray-900 mt-1 text-lg">{repeatOrderRate.toFixed(2)}%</p>
                   </div>
 
                   <div>
@@ -285,7 +289,7 @@ export default function CustomerDetailPage({
 
           {activeTab === "preferences" && (
             <div className="text-center py-8 text-gray-600">
-              <p>Preferences content goes here</p>
+              <p>soon...</p>
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const steps = [
   {
@@ -35,14 +36,30 @@ export function OnboardingWizard() {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  
+  const { user, completedOnboardingUsers, setCompletedOnboarding } = useAuthStore();
 
   // We add a tiny delay before showing the wizard to let the dashboard render
   useEffect(() => {
+    if (!user) return;
+    
+    // Check if user has already completed onboarding
+    if (completedOnboardingUsers[user.id]) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       setVisible(true);
     }, 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [user, completedOnboardingUsers]);
+
+  const handleClose = () => {
+    setVisible(false);
+    if (user) {
+      setCompletedOnboarding(user.id, true);
+    }
+  };
 
   useEffect(() => {
     if (!visible) return;
@@ -149,7 +166,7 @@ export function OnboardingWizard() {
 
         <div className="flex justify-between items-center mt-1">
           <button 
-            onClick={() => setVisible(false)} 
+            onClick={handleClose} 
             className="text-[#808080] text-sm font-medium hover:text-[#4D4D4D] transition-colors"
           >
             Skip Tour
@@ -168,7 +185,7 @@ export function OnboardingWizard() {
               className="bg-[#365BEB] hover:bg-[#365BEB]/90 text-white rounded-full h-9 px-6" 
               onClick={() => {
                 if (step === steps.length - 1) {
-                  setVisible(false);
+                  handleClose();
                 } else {
                   setStep(s => s + 1);
                 }

@@ -24,6 +24,7 @@ export default function InventoryStatCard() {
   if (isLoading) {
     return <InventoryPageSkeleton />;
   }
+  console.log("Inventory Summary", inventorySummary);
    
   if (inventorySummaryError) {
     return (

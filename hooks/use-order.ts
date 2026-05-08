@@ -13,6 +13,8 @@ export interface CreateOrderPayload {
   customerName: string;
   phone: string;
   orderItems: OrderItem[];
+  paymentMethod?: string;
+  onlinePaymentType?: string;
 }
 
 export interface UpdateOrderPayload {
