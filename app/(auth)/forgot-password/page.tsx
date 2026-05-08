@@ -14,6 +14,7 @@ import { CustomAlert } from "@/components/CustomAlert";
 import { useAlertManager } from "@/hooks/use-alert-manager";
 import { Loader2Icon } from "lucide-react";
 import { ForgetPasswordFormData, forgetPasswordschema } from "@/schemas/forget-password.schema";
+import Link from "next/link";
 
 
 type FormData = ForgetPasswordFormData;
@@ -148,9 +149,9 @@ export default function Component() {
           <div className="text-center">
             <p className="text-gray-600">
               {"Remember your password?"}
-              <button className="text-blue-600 ml-2 hover:text-blue-800 font-medium">
+              <Link href="/signin" className="text-blue-600 ml-2 hover:text-blue-800 font-medium">
                 Log In
-              </button>
+              </Link>
             </p>
           </div>
         </form>
