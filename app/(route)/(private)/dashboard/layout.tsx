@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
+import { OnboardingWizard } from "@/components/onboarding-wizard"
 import {
   SidebarInset,
   SidebarProvider,
@@ -24,6 +25,7 @@ export default function DashboardLayout({
         <SiteHeader />
         <main className="flex flex-1 overflow-auto flex-col p-4 bg-[#F8F8F8]">{children}</main>
       </SidebarInset>
+      <OnboardingWizard />
     </SidebarProvider>
   )
 }
