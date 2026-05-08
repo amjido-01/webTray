@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 export function SubscriptionClient() {
   const searchParams = useSearchParams();
@@ -329,9 +331,10 @@ export function SubscriptionClient() {
                       </span>
                     </td>
                     <td className="py-5 text-right">
-                      <button className="text-gray-600 hover:text-blue-600 font-semibold underline decoration-gray-300 underline-offset-4 hover:decoration-blue-400 transition-all">
+                      <Button variant="outline" size="sm" className="rounded-full px-4 h-8 text-[#676767] border-gray-200 flex items-center gap-2 ml-auto">
+                        <Eye className="h-4 w-4 text-[#999999]" />
                         View
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))

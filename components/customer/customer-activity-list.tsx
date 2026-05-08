@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Eye } from "lucide-react";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -97,7 +97,14 @@ export default function CustomerActivityList({
 
                   <div className="flex items-center gap-2">
                     <Link href={`/dashboard/order/${order.id}`}>
-                      <Button size="sm" variant="outline">View</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full px-4 h-8 text-[#676767] border-gray-200 flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4 text-[#999999]" />
+                        View
+                      </Button>
                     </Link>
                   </div>
                 </div>
